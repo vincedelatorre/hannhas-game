@@ -106,8 +106,9 @@ IMPORTED = {}   # layout id -> StaticMesh
 
 
 def source_path(fname):
-    # prefer the Blender-cleaned file (Assets/Clean), fall back to the raw download
-    for d in (os.path.join(SOURCE_DIR, "Clean"), SOURCE_DIR):
+    # prefer the high-detail models (Assets/HiRes), cleaned first, then the original set
+    hires = os.path.join(SOURCE_DIR, "HiRes")
+    for d in (os.path.join(hires, "Clean"), hires, os.path.join(SOURCE_DIR, "Clean"), SOURCE_DIR):
         p = os.path.normpath(os.path.join(d, fname))
         if os.path.exists(p):
             return p

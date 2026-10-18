@@ -40,6 +40,9 @@ def main():
     print("High-detail models")
     for p in m.get("hires", []):
         get(p["url"], os.path.join(OUT, "HiRes", p["name"]))
+    print("Textures")
+    for t in m.get("materials", []):
+        get(t["url"], os.path.join(OUT, "Textures", t["name"]))
     print("Done. Next: Blender/cleanup_props.py and Blender/merge_character_animations.py")
 
 

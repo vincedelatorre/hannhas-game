@@ -98,5 +98,43 @@
       "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_225116_9c08dd4b-ba39-40fd-9dca-50916dea6b25.glb",
       "note": "Tripo H3.1 multiview, 2 views, up to 300k faces, PBR"
     }
-  ]
+  ],
+  "materials": [
+    {
+      "name": "T_Sand_Dry_BaseColor.png",
+      "job": "bdffc58b-1b7d-45ce-ae8c-6732b33a80fd",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234517_bdffc58b-1b7d-45ce-ae8c-6732b33a80fd.png"
+    },
+    {
+      "name": "T_Sand_Wet_BaseColor.png",
+      "job": "ed8498ef-4b6b-48e2-8391-0f6a1b81275a",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234515_ed8498ef-4b6b-48e2-8391-0f6a1b81275a.png"
+    },
+    {
+      "name": "T_JungleFloor_BaseColor.png",
+      "job": "b87f8ac4-fb5c-44c0-9134-c4846233f3a6",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234515_b87f8ac4-fb5c-44c0-9134-c4846233f3a6.png"
+    },
+    {
+      "name": "T_Bamboo_Woven_BaseColor.png",
+      "job": "510bf30e-9c9b-4560-a505-06e786d0bd88",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234518_510bf30e-9c9b-4560-a505-06e786d0bd88.png"
+    },
+    {
+      "name": "T_Thatch_BaseColor.png",
+      "job": "8b5122f7-baf2-46fc-b737-37a01f4f2dbe",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234516_8b5122f7-baf2-46fc-b737-37a01f4f2dbe.png"
+    },
+    {
+      "name": "T_Rock_Coastal_BaseColor.png",
+      "job": "ffa4d9f4-3945-445c-ae02-9d2c9df0e857",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234528_ffa4d9f4-3945-445c-ae02-9d2c9df0e857.png"
+    },
+    {
+      "name": "T_TidePool_Floor_BaseColor.png",
+      "job": "3edbefff-fe26-472d-bea4-8ad8e6f5583f",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234527_3edbefff-fe26-472d-bea4-8ad8e6f5583f.png"
+    }
+  ],
+  "_materials_note": "2880x2880 tileable base-color maps. Make normal/roughness/AO with Substance Sampler or Materialize, then build landscape layers and master materials in Unreal."
 }
