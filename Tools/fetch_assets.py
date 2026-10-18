@@ -40,6 +40,11 @@ def main():
     print("High-detail models")
     for p in m.get("hires", []):
         get(p["url"], os.path.join(OUT, "HiRes", p["name"]))
+    for name, ch in m.get("characters_hires", {}).items():
+        print(f"{name} (high detail)")
+        get(ch["base_model"], os.path.join(OUT, "HiRes", name, "_BaseModel.glb"))
+        for clip, url in ch["clips"].items():
+            get(url, os.path.join(OUT, "HiRes", name, f"{clip}.glb"))
     print("Textures")
     for t in m.get("materials", []):
         get(t["url"], os.path.join(OUT, "Textures", t["name"]))

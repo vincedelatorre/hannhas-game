@@ -81,22 +81,64 @@
   },
   "hires": [
     {
-      "name": "SM_PearlCove_Clubhouse_HiRes.glb",
+      "name": "SM_PearlCove_Clubhouse.glb",
       "job": "e01a2946-a360-4577-a806-904687e9bf57",
       "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_225107_e01a2946-a360-4577-a806-904687e9bf57.glb",
-      "note": "Tripo H3.1 multiview, 4 views, detailed geometry+texture, PBR, up to 800k faces (Nanite)"
+      "note": "Tripo H3.1, 4 views, up to 800k faces (Nanite)"
     },
     {
-      "name": "Wren_HiRes_Unrigged.glb",
-      "job": "21277794-699d-4638-a4c0-27b3b296ef9e",
-      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_225112_21277794-699d-4638-a4c0-27b3b296ef9e.glb",
-      "note": "Tripo H3.1 multiview, 3 views, quad, 60k faces, PBR; auto-rig failed twice on this mesh - rig in Blender or regenerate with Meshy multi-image + rigging"
-    },
-    {
-      "name": "SM_PalmTree_HiRes.glb",
+      "name": "SM_PalmTree.glb",
       "job": "9c08dd4b-ba39-40fd-9dca-50916dea6b25",
       "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_225116_9c08dd4b-ba39-40fd-9dca-50916dea6b25.glb",
-      "note": "Tripo H3.1 multiview, 2 views, up to 300k faces, PBR"
+      "note": "Tripo H3.1, 2 views, up to 300k faces"
+    },
+    {
+      "name": "SM_Hibiscus.glb",
+      "job": "f86be0cc-560e-4767-a5cf-757cb60950e5",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234547_f86be0cc-560e-4767-a5cf-757cb60950e5.glb",
+      "note": "Tripo H3.1 multiview, detailed geometry+texture, PBR, 200k faces"
+    },
+    {
+      "name": "SM_Boulder_Mossy.glb",
+      "job": "f1503ccd-8a97-406d-9e04-a4acdfd3cf5f",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234550_f1503ccd-8a97-406d-9e04-a4acdfd3cf5f.glb",
+      "note": "Tripo H3.1 multiview, detailed geometry+texture, PBR, 500k faces (Nanite)"
+    },
+    {
+      "name": "SM_Shells_Cluster.glb",
+      "job": "ca042e58-2606-469d-ab2d-d214b7271e50",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234555_ca042e58-2606-469d-ab2d-d214b7271e50.glb",
+      "note": "Tripo H3.1 multiview, detailed geometry+texture, PBR, 150k faces"
+    },
+    {
+      "name": "SM_PalmSwing.glb",
+      "job": "8571b7da-d69e-4764-9d9c-8a9e0ef7471e",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234559_8571b7da-d69e-4764-9d9c-8a9e0ef7471e.glb",
+      "note": "Tripo H3.1 multiview, detailed geometry+texture, PBR, 200k faces"
+    },
+    {
+      "name": "SM_TikiTorch.glb",
+      "job": "18b81119-54a8-463b-ae43-8df30d7e3328",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234621_18b81119-54a8-463b-ae43-8df30d7e3328.glb",
+      "note": "Tripo H3.1 multiview, detailed geometry+texture, PBR, 100k faces"
+    },
+    {
+      "name": "SM_Driftwood.glb",
+      "job": "0ab05cff-4616-45c3-a48a-e1f923b8c94f",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234627_0ab05cff-4616-45c3-a48a-e1f923b8c94f.glb",
+      "note": "Tripo H3.1 multiview, detailed geometry+texture, PBR, 300k faces (Nanite)"
+    },
+    {
+      "name": "SM_TreasureChest.glb",
+      "job": "c3482477-4de6-42c6-b65b-06ba64bc1ce6",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234631_c3482477-4de6-42c6-b65b-06ba64bc1ce6.glb",
+      "note": "Tripo H3.1 multiview, detailed geometry+texture, PBR, 150k faces"
+    },
+    {
+      "name": "SM_Clam_Pearl.glb",
+      "job": "d72154bc-96f7-4693-86ba-f2e8313b5635",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234634_d72154bc-96f7-4693-86ba-f2e8313b5635.glb",
+      "note": "Tripo H3.1 multiview, detailed geometry+texture, PBR, 100k faces; attach to the hand_r socket"
     }
   ],
   "materials": [
@@ -136,5 +178,31 @@
       "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234527_3edbefff-fe26-472d-bea4-8ad8e6f5583f.png"
     }
   ],
-  "_materials_note": "2880x2880 tileable base-color maps. Make normal/roughness/AO with Substance Sampler or Materialize, then build landscape layers and master materials in Unreal."
+  "_materials_note": "2880x2880 tileable base-color maps. Make normal/roughness/AO with Substance Sampler or Materialize, then build landscape layers and master materials in Unreal.",
+  "_hires_note": "High-detail replacements, same file names, saved to Assets/HiRes. ue_build_pearl_cove.py uses them automatically when present. The earlier unrigged Tripo Wren (21277794) is superseded by characters_hires.Wren.",
+  "characters_hires": {
+    "Wren": {
+      "note": "Meshy multi-image from the 3 hi-res turnaround views, quad 100k, PBR, auto-rigged A-pose, 1.6 m",
+      "base_model": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234402_ba9988ce-554d-4046-a004-53ec295c33e1.glb",
+      "clips": {
+        "Idle": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234402_ba9988ce-554d-4046-a004-53ec295c33e1.glb",
+        "Run": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235045_f38a21af-31a1-48e0-80e1-afdf4e36f163.glb",
+        "Sprint": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235246_0d7893e9-151d-4ca5-adb0-f347ae3a77d3.glb",
+        "Jump": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235248_70300f26-a7d1-40fa-94cd-f52ba85e3a9b.glb",
+        "Backflip": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235251_c1c47278-6b96-4a35-96df-8fca882a6019.glb",
+        "WaterCast": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235253_fe3d8ed5-b4c4-4bb8-854c-f2ed31ee8785.glb",
+        "LoveHeart": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235256_290b90ae-e628-4d32-aaeb-5fe2ea63eed3.glb"
+      }
+    },
+    "Boy": {
+      "note": "Meshy multi-image from 3 hi-res turnaround views, quad 100k, PBR, auto-rigged A-pose, 1.65 m; powers TBD",
+      "base_model": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234544_17394b47-45be-4fba-81d0-2b84b176dafc.glb",
+      "clips": {
+        "Idle": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234544_17394b47-45be-4fba-81d0-2b84b176dafc.glb",
+        "Run": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235325_0ea036e2-db78-481a-b02f-8aa25f46a8bf.glb",
+        "Jump": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235327_0d0252ae-32c1-48e9-9c3c-58270a0da060.glb",
+        "Backflip": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235330_2be1fe06-9c45-41b9-97da-8924f2dd54e0.glb"
+      }
+    }
+  }
 }

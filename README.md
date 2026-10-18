@@ -18,7 +18,7 @@ The full plan is in the "Pearl Cove — Starting Zone Build Bible" doc (see `Des
 | Path | What it is |
 | --- | --- |
 | `docs/index.html` | The playable browser prototype (served by GitHub Pages) |
-| `Tools/asset_manifest.json` | Every generated 3D file (clubhouse, 9 props, Wren + 7 clips, Boy + 4 clips) with download links |
+| `Tools/asset_manifest.json` | Every generated 3D file and texture with download links: the original set, plus the high-detail set (`hires`, `characters_hires`, `materials`) |
 | `Tools/fetch_assets.py` | Downloads them all into `Assets/` (run on your machine) |
 | `Blender/cleanup_props.py` | Real-world size, bottom-centre origin, LOD1/LOD2 for every prop |
 | `Blender/merge_character_animations.py` | Combines one character's clip GLBs into a single rig + FBX for Unreal |
@@ -36,10 +36,17 @@ The editable Blender blockout of the cove lives in the Higgsfield 3D project
 
 ```bash
 python Tools/fetch_assets.py
-blender -b -P Blender/cleanup_props.py -- --dir Assets --out Assets/Clean
-blender -b -P Blender/merge_character_animations.py -- --name Wren --dir Assets/Wren --out Export
-blender -b -P Blender/merge_character_animations.py -- --name Boy  --dir Assets/Boy  --out Export
+blender -b -P Blender/cleanup_props.py -- --dir Assets/HiRes --out Assets/HiRes/Clean
+blender -b -P Blender/merge_character_animations.py -- --name Wren --dir Assets/HiRes/Wren --out Export
+blender -b -P Blender/merge_character_animations.py -- --name Boy  --dir Assets/HiRes/Boy  --out Export
 ```
+
+The high-detail set (`Assets/HiRes`) is what the game should use: every prop and both characters
+rebuilt from 2K turnaround views with detailed geometry and PBR materials. The Unreal script picks
+them up automatically and falls back to the original models for anything missing. Seven tileable
+4K-class textures land in `Assets/Textures` for the landscape and building materials.
+The prompts that made all of it are in `Design/PROMPTS.md`. The new clubhouse may face a different
+way than the old one; if it does, change `ASSET_YAW_OFFSET` in the Unreal script.
 
 Then in Unreal 5.8 (Third Person template, C++):
 
