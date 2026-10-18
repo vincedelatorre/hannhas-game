@@ -1,12 +1,23 @@
 # Hannah's Game — Pearl Cove starting zone kit
 
-Everything needed to stand up the game's first zone (the beach cove and clubhouse) in
-Unreal Engine 5.8. The full plan is in the "Pearl Cove — Starting Zone Build Bible" doc.
+## [▶ Play Hannah's Game](https://vincedelatorre.github.io/hannhas-game/)
+
+A browser prototype of Pearl Cove: explore the beach and clubhouse, collect glowing
+shells, ride the water slide, refill the tide pools with water power, cheer up the
+seagull with love power, and open the treasure chest. Works with keyboard and mouse or touch.
+
+> One-time setup for the Play link: in this repo go to **Settings → Pages**, set
+> **Source** to *Deploy from a branch*, choose branch **main** and folder **/docs**, then Save.
+> The link goes live a minute later. You can also open `docs/index.html` in any browser.
+
+Everything else here stands up the same zone in Unreal Engine 5.8 (the real game).
+The full plan is in the "Pearl Cove — Starting Zone Build Bible" doc (see `Design/`).
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
+| `docs/index.html` | The playable browser prototype (served by GitHub Pages) |
 | `Tools/asset_manifest.json` | Every generated 3D file (clubhouse, 9 props, Wren + 7 clips, Boy + 4 clips) with download links |
 | `Tools/fetch_assets.py` | Downloads them all into `Assets/` (run on your machine) |
 | `Blender/cleanup_props.py` | Real-world size, bottom-centre origin, LOD1/LOD2 for every prop |
