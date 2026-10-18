@@ -1,0 +1,40 @@
+{
+  "_readme": "Every 3D file generated for Pearl Cove on 2026-10-18 (Higgsfield). fetch_assets.py downloads them into ../Assets with these names. Characters land in Assets/<Character>/<Clip>.glb, ready for Blender/merge_character_animations.py.",
+  "props": [
+    {"name": "SM_PearlCove_Clubhouse.glb", "job": "fc9b8f90-e46b-4d71-ba66-e1087816b6a2", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212409_fc9b8f90-e46b-4d71-ba66-e1087816b6a2.glb", "note": "hero placeholder, ~200k tris, PBR"},
+    {"name": "SM_PalmTree.glb", "job": "c9ea5372-2b93-43b0-b0de-19fe024f7b16", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212709_c9ea5372-2b93-43b0-b0de-19fe024f7b16.glb"},
+    {"name": "SM_PalmSwing.glb", "job": "a31a0e5c-e377-49a5-a3d2-dac9ebe7f770", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212712_a31a0e5c-e377-49a5-a3d2-dac9ebe7f770.glb"},
+    {"name": "SM_Shells_Cluster.glb", "job": "5b656183-65e6-45a8-9bb6-67761006d1c9", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212714_5b656183-65e6-45a8-9bb6-67761006d1c9.glb"},
+    {"name": "SM_Boulder_Mossy.glb", "job": "35ff1edc-2fab-44e6-9225-6304ef6bf9ad", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212718_35ff1edc-2fab-44e6-9225-6304ef6bf9ad.glb"},
+    {"name": "SM_Hibiscus.glb", "job": "1634b278-7c23-4ea1-9ca6-ee0442d58c94", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212720_1634b278-7c23-4ea1-9ca6-ee0442d58c94.glb"},
+    {"name": "SM_TikiTorch.glb", "job": "b455b2a2-827b-401d-83b4-041c2699d1e5", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212723_b455b2a2-827b-401d-83b4-041c2699d1e5.glb"},
+    {"name": "SM_Driftwood.glb", "job": "6e66d836-8454-4a45-a2c9-64bd31a33b86", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212726_6e66d836-8454-4a45-a2c9-64bd31a33b86.glb"},
+    {"name": "SM_TreasureChest.glb", "job": "8f04eed7-8ec2-4756-8881-91a9e54a72fc", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212729_8f04eed7-8ec2-4756-8881-91a9e54a72fc.glb"},
+    {"name": "SM_Clam_Pearl.glb", "job": "5a678e65-3a2f-4b80-91d2-3372cb456a6b", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_194942_5a678e65-3a2f-4b80-91d2-3372cb456a6b.glb", "note": "attach to Wren's hand_r socket"}
+  ],
+  "characters": {
+    "Wren": {
+      "note": "striped seashell dress, white tights, Sweet & Gentle face; rig height 1.6 m",
+      "base_model": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_211342_6915c163-bbf1-4370-9f27-56d2cb40bbc6.glb",
+      "clips": {
+        "Idle": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_213158_71f3f977-c294-4552-8504-e21f52b398c3.glb",
+        "Run": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_213201_e32ad987-6f86-4c41-a7d7-7000cd329fdb.glb",
+        "Sprint": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_213204_fad91436-3211-4688-9be0-1ab3c5fbc166.glb",
+        "Jump": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_213206_fbec0531-3a2c-400e-b7c7-be1164e41e56.glb",
+        "Backflip": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_213210_d05a5c1f-67da-47ac-89e6-89f02857328c.glb",
+        "WaterCast": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_213212_bc096d2c-46a5-49c1-9aab-6f0a1d912474.glb",
+        "LoveHeart": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_213215_135d2001-b6ae-40b5-b751-af5d23ad87ef.glb"
+      }
+    },
+    "Boy": {
+      "note": "wastelander adventurer with fauxhawk and goggles; rig height 1.65 m; powers TBD",
+      "base_model": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_200622_5e798375-9dc5-4ba3-a520-24400ce0708f.glb",
+      "clips": {
+        "Idle": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_201936_657b7a09-d476-4480-8ca8-0532e8c3a53f.glb",
+        "Run": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_201939_4e6368d7-c403-4792-a120-99cb6811450f.glb",
+        "Jump": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_201941_c3768492-d0d1-4ee8-b66c-6781e8a0e7a6.glb",
+        "Backflip": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_201944_9dadd122-e4c1-497c-bb9c-f72990ed7134.glb"
+      }
+    }
+  }
+}

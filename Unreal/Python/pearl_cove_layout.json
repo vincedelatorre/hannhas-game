@@ -1,0 +1,533 @@
+{
+  "_readme": "Pearl Cove starting-zone layout. Positions are metres in the blockout frame: +X east, +Y inland (jungle), -Y toward the sea, Z up. ue_build_pearl_cove.py converts to Unreal centimetres (X*100, -Y*100, Z*100). 'z' = null means 'snap to landscape'. yaw is degrees, 0 = facing the sea.",
+  "landscape": {
+    "heightmap": "PearlCove_Heightmap_1009.png",
+    "size_m": 260,
+    "resolution": 1009,
+    "scale_cm": [
+      25.794,
+      25.794,
+      10.0
+    ]
+  },
+  "water": {
+    "ocean_level_m": 0.0,
+    "lagoon_pool": {
+      "center": [
+        0,
+        11
+      ],
+      "radius_xy": [
+        7.2,
+        4.6
+      ],
+      "surface_z": 0.35
+    },
+    "tide_pools": [
+      [
+        24,
+        -4
+      ],
+      [
+        28,
+        -6
+      ]
+    ]
+  },
+  "player_start": {
+    "pos": [
+      0,
+      -3,
+      null
+    ],
+    "yaw": 180,
+    "note": "Wren spawns on the beach facing the clubhouse"
+  },
+  "actors": [
+    {
+      "id": "SM_PearlCove_Clubhouse",
+      "pos": [
+        0,
+        24,
+        2.0
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "fit_height_m": 16.0,
+      "role": "hero / home base"
+    },
+    {
+      "id": "SM_PalmSwing",
+      "pos": [
+        -30,
+        2,
+        null
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "fit_height_m": 4.8,
+      "role": "sit interaction"
+    },
+    {
+      "id": "SM_TreasureChest_Tutorial",
+      "pos": [
+        53,
+        6,
+        null
+      ],
+      "yaw": -40,
+      "scale": 1.0,
+      "fit_height_m": 0.7,
+      "role": "tutorial quest reward"
+    },
+    {
+      "id": "SM_Driftwood",
+      "pos": [
+        -12,
+        -2,
+        null
+      ],
+      "yaw": 20,
+      "scale": 1.0,
+      "fit_height_m": 0.6,
+      "role": "sit spot / cover"
+    },
+    {
+      "id": "SM_Driftwood",
+      "pos": [
+        18,
+        -3,
+        null
+      ],
+      "yaw": -65,
+      "scale": 0.8,
+      "fit_height_m": 0.6,
+      "role": "decor"
+    },
+    {
+      "id": "SM_Boulder_Mossy",
+      "pos": [
+        -24,
+        -6,
+        null
+      ],
+      "yaw": 0,
+      "scale": 1.4,
+      "fit_height_m": 1.6,
+      "role": "decor"
+    },
+    {
+      "id": "SM_Boulder_Mossy",
+      "pos": [
+        44,
+        -12,
+        null
+      ],
+      "yaw": 70,
+      "scale": 2.0,
+      "fit_height_m": 1.6,
+      "role": "frames jetty"
+    },
+    {
+      "id": "SM_Boulder_Mossy",
+      "pos": [
+        50,
+        4,
+        null
+      ],
+      "yaw": 10,
+      "scale": 1.8,
+      "fit_height_m": 1.6,
+      "role": "hides tutorial chest"
+    },
+    {
+      "id": "SM_Boulder_Mossy",
+      "pos": [
+        55,
+        9,
+        null
+      ],
+      "yaw": 140,
+      "scale": 1.5,
+      "fit_height_m": 1.6,
+      "role": "hides tutorial chest"
+    }
+  ],
+  "scatter": [
+    {
+      "id": "SM_PalmTree",
+      "fit_height_m": 10.0,
+      "points": [
+        [
+          -44,
+          -14
+        ],
+        [
+          -36,
+          -10
+        ],
+        [
+          -20,
+          -1
+        ],
+        [
+          -14,
+          1
+        ],
+        [
+          16,
+          1
+        ],
+        [
+          22,
+          -2
+        ],
+        [
+          30,
+          -6
+        ],
+        [
+          40,
+          -14
+        ],
+        [
+          47,
+          -19
+        ],
+        [
+          -17,
+          30
+        ],
+        [
+          -20,
+          24
+        ],
+        [
+          17,
+          30
+        ],
+        [
+          19,
+          22
+        ],
+        [
+          -8,
+          34
+        ],
+        [
+          8,
+          35
+        ]
+      ],
+      "yaw_random": true,
+      "scale_range": [
+        0.85,
+        1.25
+      ],
+      "note": "hand-placed hero palms; PCG fills the jungle band behind"
+    },
+    {
+      "id": "SM_PalmTree",
+      "fit_height_m": 10.0,
+      "points": [
+        [
+          -32.3,
+          2
+        ],
+        [
+          -27.7,
+          2
+        ]
+      ],
+      "yaw_random": false,
+      "scale_range": [
+        0.95,
+        0.95
+      ],
+      "note": "the two palms that hold the swing"
+    },
+    {
+      "id": "SM_Hibiscus",
+      "fit_height_m": 1.4,
+      "points": [
+        [
+          -9,
+          15
+        ],
+        [
+          9,
+          15
+        ],
+        [
+          -13,
+          13
+        ],
+        [
+          12,
+          12.5
+        ],
+        [
+          -4,
+          17
+        ],
+        [
+          5,
+          17.5
+        ],
+        [
+          -5,
+          5.5
+        ],
+        [
+          5,
+          5.5
+        ]
+      ],
+      "yaw_random": true,
+      "scale_range": [
+        0.8,
+        1.2
+      ]
+    },
+    {
+      "id": "SM_TikiTorch",
+      "fit_height_m": 1.9,
+      "points": [
+        [
+          9.8,
+          9
+        ],
+        [
+          6.2,
+          8.5
+        ],
+        [
+          8.8,
+          3
+        ],
+        [
+          5.2,
+          2.6
+        ],
+        [
+          4.5,
+          -2
+        ],
+        [
+          1.6,
+          -1.6
+        ]
+      ],
+      "yaw_random": false,
+      "scale_range": [
+        1,
+        1
+      ],
+      "note": "attach a Niagara flame + point light (MegaLights) to each"
+    },
+    {
+      "id": "SM_Shells_Cluster",
+      "fit_height_m": 0.25,
+      "points": [
+        [
+          -38,
+          -8
+        ],
+        [
+          -26,
+          -3
+        ],
+        [
+          -10,
+          -3.5
+        ],
+        [
+          6,
+          -3.5
+        ],
+        [
+          14,
+          -3
+        ],
+        [
+          26,
+          -5
+        ],
+        [
+          34,
+          -8
+        ],
+        [
+          -2,
+          -4.5
+        ]
+      ],
+      "yaw_random": true,
+      "scale_range": [
+        0.8,
+        1.3
+      ],
+      "note": "collectible pickups for the Shell Hunt quest"
+    },
+    {
+      "id": "SM_Boulder_Mossy",
+      "fit_height_m": 1.6,
+      "points": [
+        [
+          20,
+          -5
+        ],
+        [
+          23,
+          -7
+        ],
+        [
+          27,
+          -3
+        ],
+        [
+          30,
+          -7
+        ],
+        [
+          31,
+          -4
+        ],
+        [
+          -7.6,
+          11
+        ],
+        [
+          7.6,
+          11
+        ],
+        [
+          -6,
+          14
+        ],
+        [
+          6,
+          14.5
+        ]
+      ],
+      "yaw_random": true,
+      "scale_range": [
+        0.5,
+        1.0
+      ],
+      "note": "tide-pool rocks and lagoon-pool rim"
+    }
+  ],
+  "landmarks": {
+    "sea_arch": {
+      "pos": [
+        -50,
+        -52
+      ],
+      "note": "hero rock arch standing in the shallows off the west headland (its base is underwater on purpose), sightline from spawn"
+    },
+    "jetty": {
+      "start": [
+        36,
+        -14
+      ],
+      "end": [
+        42,
+        -36
+      ],
+      "note": "future boat travel to the next zone"
+    },
+    "tide_pools": {
+      "pos": [
+        26,
+        -5
+      ],
+      "note": "crab NPCs, first water-power puzzle"
+    },
+    "palm_swing": {
+      "pos": [
+        -30,
+        2
+      ],
+      "note": "sit interaction, sunset camera"
+    },
+    "lookout_tower": {
+      "pos": [
+        12,
+        23
+      ],
+      "note": "top of the clubhouse tower, map reveal"
+    },
+    "observatory": {
+      "pos": [
+        0,
+        25
+      ],
+      "note": "top floor, night-sky star-map minigame"
+    }
+  },
+  "paths": {
+    "main": [
+      [
+        3.5,
+        17.4
+      ],
+      [
+        5.5,
+        14
+      ],
+      [
+        8.5,
+        9
+      ],
+      [
+        7,
+        3
+      ],
+      [
+        3,
+        -2
+      ],
+      [
+        0,
+        -6
+      ]
+    ],
+    "to_swing": [
+      [
+        -1,
+        -4
+      ],
+      [
+        -10,
+        -3
+      ],
+      [
+        -20,
+        0
+      ],
+      [
+        -27,
+        1.5
+      ]
+    ],
+    "to_jetty": [
+      [
+        3,
+        -4
+      ],
+      [
+        14,
+        -6
+      ],
+      [
+        26,
+        -8
+      ],
+      [
+        36,
+        -14
+      ]
+    ]
+  }
+}

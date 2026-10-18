@@ -1,0 +1,10 @@
+# downloaded / generated binaries (pull them with Tools/fetch_assets.py)
+Assets/
+Export/
+*.blend1
+__pycache__/
+# Unreal project folders if the team keeps them alongside
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
