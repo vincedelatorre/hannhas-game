@@ -90,7 +90,7 @@
       "name": "Wren_HiRes_Unrigged.glb",
       "job": "21277794-699d-4638-a4c0-27b3b296ef9e",
       "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_225112_21277794-699d-4638-a4c0-27b3b296ef9e.glb",
-      "note": "Tripo H3.1 multiview, 3 views, quad, 60k faces, PBR; rig job 89dc771b-a325-45c2-a45a-1a0b213b2587 (1.6 m)"
+      "note": "Tripo H3.1 multiview, 3 views, quad, 60k faces, PBR; auto-rig failed twice on this mesh - rig in Blender or regenerate with Meshy multi-image + rigging"
     },
     {
       "name": "SM_PalmTree_HiRes.glb",
