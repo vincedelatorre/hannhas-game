@@ -1,16 +1,58 @@
 {
   "_readme": "Every 3D file generated for Pearl Cove on 2026-10-18 (Higgsfield). fetch_assets.py downloads them into ../Assets with these names. Characters land in Assets/<Character>/<Clip>.glb, ready for Blender/merge_character_animations.py.",
   "props": [
-    {"name": "SM_PearlCove_Clubhouse.glb", "job": "fc9b8f90-e46b-4d71-ba66-e1087816b6a2", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212409_fc9b8f90-e46b-4d71-ba66-e1087816b6a2.glb", "note": "hero placeholder, ~200k tris, PBR"},
-    {"name": "SM_PalmTree.glb", "job": "c9ea5372-2b93-43b0-b0de-19fe024f7b16", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212709_c9ea5372-2b93-43b0-b0de-19fe024f7b16.glb"},
-    {"name": "SM_PalmSwing.glb", "job": "a31a0e5c-e377-49a5-a3d2-dac9ebe7f770", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212712_a31a0e5c-e377-49a5-a3d2-dac9ebe7f770.glb"},
-    {"name": "SM_Shells_Cluster.glb", "job": "5b656183-65e6-45a8-9bb6-67761006d1c9", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212714_5b656183-65e6-45a8-9bb6-67761006d1c9.glb"},
-    {"name": "SM_Boulder_Mossy.glb", "job": "35ff1edc-2fab-44e6-9225-6304ef6bf9ad", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212718_35ff1edc-2fab-44e6-9225-6304ef6bf9ad.glb"},
-    {"name": "SM_Hibiscus.glb", "job": "1634b278-7c23-4ea1-9ca6-ee0442d58c94", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212720_1634b278-7c23-4ea1-9ca6-ee0442d58c94.glb"},
-    {"name": "SM_TikiTorch.glb", "job": "b455b2a2-827b-401d-83b4-041c2699d1e5", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212723_b455b2a2-827b-401d-83b4-041c2699d1e5.glb"},
-    {"name": "SM_Driftwood.glb", "job": "6e66d836-8454-4a45-a2c9-64bd31a33b86", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212726_6e66d836-8454-4a45-a2c9-64bd31a33b86.glb"},
-    {"name": "SM_TreasureChest.glb", "job": "8f04eed7-8ec2-4756-8881-91a9e54a72fc", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212729_8f04eed7-8ec2-4756-8881-91a9e54a72fc.glb"},
-    {"name": "SM_Clam_Pearl.glb", "job": "5a678e65-3a2f-4b80-91d2-3372cb456a6b", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_194942_5a678e65-3a2f-4b80-91d2-3372cb456a6b.glb", "note": "attach to Wren's hand_r socket"}
+    {
+      "name": "SM_PearlCove_Clubhouse.glb",
+      "job": "fc9b8f90-e46b-4d71-ba66-e1087816b6a2",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212409_fc9b8f90-e46b-4d71-ba66-e1087816b6a2.glb",
+      "note": "hero placeholder, ~200k tris, PBR"
+    },
+    {
+      "name": "SM_PalmTree.glb",
+      "job": "c9ea5372-2b93-43b0-b0de-19fe024f7b16",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212709_c9ea5372-2b93-43b0-b0de-19fe024f7b16.glb"
+    },
+    {
+      "name": "SM_PalmSwing.glb",
+      "job": "a31a0e5c-e377-49a5-a3d2-dac9ebe7f770",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212712_a31a0e5c-e377-49a5-a3d2-dac9ebe7f770.glb"
+    },
+    {
+      "name": "SM_Shells_Cluster.glb",
+      "job": "5b656183-65e6-45a8-9bb6-67761006d1c9",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212714_5b656183-65e6-45a8-9bb6-67761006d1c9.glb"
+    },
+    {
+      "name": "SM_Boulder_Mossy.glb",
+      "job": "35ff1edc-2fab-44e6-9225-6304ef6bf9ad",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212718_35ff1edc-2fab-44e6-9225-6304ef6bf9ad.glb"
+    },
+    {
+      "name": "SM_Hibiscus.glb",
+      "job": "1634b278-7c23-4ea1-9ca6-ee0442d58c94",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212720_1634b278-7c23-4ea1-9ca6-ee0442d58c94.glb"
+    },
+    {
+      "name": "SM_TikiTorch.glb",
+      "job": "b455b2a2-827b-401d-83b4-041c2699d1e5",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212723_b455b2a2-827b-401d-83b4-041c2699d1e5.glb"
+    },
+    {
+      "name": "SM_Driftwood.glb",
+      "job": "6e66d836-8454-4a45-a2c9-64bd31a33b86",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212726_6e66d836-8454-4a45-a2c9-64bd31a33b86.glb"
+    },
+    {
+      "name": "SM_TreasureChest.glb",
+      "job": "8f04eed7-8ec2-4756-8881-91a9e54a72fc",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_212729_8f04eed7-8ec2-4756-8881-91a9e54a72fc.glb"
+    },
+    {
+      "name": "SM_Clam_Pearl.glb",
+      "job": "5a678e65-3a2f-4b80-91d2-3372cb456a6b",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_194942_5a678e65-3a2f-4b80-91d2-3372cb456a6b.glb",
+      "note": "attach to Wren's hand_r socket"
+    }
   ],
   "characters": {
     "Wren": {
@@ -36,5 +78,25 @@
         "Backflip": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_201944_9dadd122-e4c1-497c-bb9c-f72990ed7134.glb"
       }
     }
-  }
+  },
+  "hires": [
+    {
+      "name": "SM_PearlCove_Clubhouse_HiRes.glb",
+      "job": "e01a2946-a360-4577-a806-904687e9bf57",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_225107_e01a2946-a360-4577-a806-904687e9bf57.glb",
+      "note": "Tripo H3.1 multiview, 4 views, detailed geometry+texture, PBR, up to 800k faces (Nanite)"
+    },
+    {
+      "name": "Wren_HiRes_Unrigged.glb",
+      "job": "21277794-699d-4638-a4c0-27b3b296ef9e",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_225112_21277794-699d-4638-a4c0-27b3b296ef9e.glb",
+      "note": "Tripo H3.1 multiview, 3 views, quad, 60k faces, PBR; rig job 89dc771b-a325-45c2-a45a-1a0b213b2587 (1.6 m)"
+    },
+    {
+      "name": "SM_PalmTree_HiRes.glb",
+      "job": "9c08dd4b-ba39-40fd-9dca-50916dea6b25",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_225116_9c08dd4b-ba39-40fd-9dca-50916dea6b25.glb",
+      "note": "Tripo H3.1 multiview, 2 views, up to 300k faces, PBR"
+    }
+  ]
 }

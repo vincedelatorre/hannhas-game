@@ -37,6 +37,9 @@ def main():
         get(ch["base_model"], os.path.join(OUT, name, "_BaseModel.glb"))
         for clip, url in ch["clips"].items():
             get(url, os.path.join(OUT, name, f"{clip}.glb"))
+    print("High-detail models")
+    for p in m.get("hires", []):
+        get(p["url"], os.path.join(OUT, "HiRes", p["name"]))
     print("Done. Next: Blender/cleanup_props.py and Blender/merge_character_animations.py")
 
 
