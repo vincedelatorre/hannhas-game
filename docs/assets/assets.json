@@ -149,6 +149,26 @@
         1.893
       ],
       "bytes": 99312
+    },
+    "SM_Dolphin": {
+      "tris_before": 16664,
+      "tris": 7999,
+      "size": [
+        0.816,
+        0.631,
+        1.899
+      ],
+      "bytes": 253012
+    },
+    "SM_Macaw": {
+      "tris_before": 16456,
+      "tris": 10161,
+      "size": [
+        1.897,
+        0.571,
+        1.317
+      ],
+      "bytes": 539620
     }
   },
   "characters": {
