@@ -1,0 +1,17 @@
+{
+  "name": "pearl-cove-web-assets",
+  "private": true,
+  "type": "module",
+  "description": "Builds the browser versions of the Hannah's Game models (docs/assets).",
+  "scripts": {
+    "download": "node download_sources.mjs ../../build/src",
+    "build": "node build_web_assets.mjs ../../build/src ../../docs/assets"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "4.5.1",
+    "@gltf-transform/extensions": "4.5.1",
+    "@gltf-transform/functions": "4.5.1",
+    "meshoptimizer": "1.3.0",
+    "sharp": "0.35.5"
+  }
+}

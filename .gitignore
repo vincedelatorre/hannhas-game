@@ -8,3 +8,6 @@ Binaries/
 Intermediate/
 Saved/
 DerivedDataCache/
+# web asset build workspace (Tools/web)
+build/
+Tools/web/node_modules/

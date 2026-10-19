@@ -1,0 +1,57 @@
+name: Build web assets
+
+# Rebuilds docs/assets (the browser versions of every model, animation and texture)
+# whenever the asset list or the build scripts change, then commits the result so
+# GitHub Pages serves it next to the game.
+on:
+  push:
+    branches: [main]
+    paths:
+      - Tools/asset_manifest.json
+      - Tools/web/**
+      - .github/workflows/web-assets.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: web-assets
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install build tools
+        working-directory: Tools/web
+        run: npm install --no-audit --no-fund
+
+      - name: Download full-quality sources
+        working-directory: Tools/web
+        run: npm run download
+
+      - name: Build browser assets
+        working-directory: Tools/web
+        run: |
+          rm -rf ../../docs/assets/models ../../docs/assets/textures
+          npm run build
+
+      - name: Commit docs/assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/assets
+          if git diff --cached --quiet; then
+            echo "No asset changes."
+          else
+            git commit -m "Rebuild web assets [skip ci]"
+            git push
+          fi

@@ -182,26 +182,30 @@
   "_hires_note": "High-detail replacements, same file names, saved to Assets/HiRes. ue_build_pearl_cove.py uses them automatically when present. The earlier unrigged Tripo Wren (21277794) is superseded by characters_hires.Wren.",
   "characters_hires": {
     "Wren": {
-      "note": "Meshy multi-image from the 3 hi-res turnaround views, quad 100k, PBR, auto-rigged A-pose, 1.6 m",
+      "note": "Meshy multi-image from the 3 hi-res turnaround views, quad 100k, PBR, auto-rigged A-pose, 1.6 m; clips: Run=Run_02(14), Walk=Casual_Walk(30), Skip=Skip_Forward(118), Sprint=Lean_Forward_Sprint(644), Jump=466, Backflip=452, WaterCast=125, LoveHeart=27",
       "base_model": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234402_ba9988ce-554d-4046-a004-53ec295c33e1.glb",
       "clips": {
         "Idle": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234402_ba9988ce-554d-4046-a004-53ec295c33e1.glb",
-        "Run": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235045_f38a21af-31a1-48e0-80e1-afdf4e36f163.glb",
+        "Run": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_003024_2597e976-de3f-4880-b6c0-82b10b033dcd.glb",
         "Sprint": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235246_0d7893e9-151d-4ca5-adb0-f347ae3a77d3.glb",
         "Jump": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235248_70300f26-a7d1-40fa-94cd-f52ba85e3a9b.glb",
         "Backflip": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235251_c1c47278-6b96-4a35-96df-8fca882a6019.glb",
         "WaterCast": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235253_fe3d8ed5-b4c4-4bb8-854c-f2ed31ee8785.glb",
-        "LoveHeart": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235256_290b90ae-e628-4d32-aaeb-5fe2ea63eed3.glb"
+        "LoveHeart": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235256_290b90ae-e628-4d32-aaeb-5fe2ea63eed3.glb",
+        "Walk": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_003027_4a0cc7ee-f839-4a6d-88dc-8281fe46d32c.glb",
+        "Skip": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_003030_326b5c8b-1cfd-4e43-8ac9-86f214890250.glb"
       }
     },
     "Boy": {
-      "note": "Meshy multi-image from 3 hi-res turnaround views, quad 100k, PBR, auto-rigged A-pose, 1.65 m; powers TBD",
+      "note": "Meshy multi-image from 3 hi-res turnaround views, quad 100k, PBR, auto-rigged A-pose, 1.65 m; powers TBD; clips: Run=Run_02(14), Walk=Casual_Walk(30), Wave=Big_Wave_Hello(28), Jump=466, Backflip=452",
       "base_model": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234544_17394b47-45be-4fba-81d0-2b84b176dafc.glb",
       "clips": {
         "Idle": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234544_17394b47-45be-4fba-81d0-2b84b176dafc.glb",
-        "Run": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235325_0ea036e2-db78-481a-b02f-8aa25f46a8bf.glb",
+        "Run": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_003032_5ae69e7f-e64a-41a2-a1e4-96878e8f9a8f.glb",
         "Jump": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235327_0d0252ae-32c1-48e9-9c3c-58270a0da060.glb",
-        "Backflip": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235330_2be1fe06-9c45-41b9-97da-8924f2dd54e0.glb"
+        "Backflip": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_235330_2be1fe06-9c45-41b9-97da-8924f2dd54e0.glb",
+        "Walk": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_003035_b71f4756-8f15-4b27-9fb2-d8112b7dd19e.glb",
+        "Wave": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_003043_53119f8c-0427-47f8-afbc-42dd5864ae44.glb"
       }
     }
   }

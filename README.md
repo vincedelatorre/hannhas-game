@@ -18,6 +18,8 @@ The full plan is in the "Pearl Cove — Starting Zone Build Bible" doc (see `Des
 | Path | What it is |
 | --- | --- |
 | `docs/index.html` | The playable browser prototype (served by GitHub Pages) |
+| `Design/WORLD_PROMPTS.md` | Step-by-step prompt playbook for building the full three.js world |
+| `Tools/web/` | Builds browser-ready models, animations and textures into `docs/assets` (runs automatically on GitHub) |
 | `Tools/asset_manifest.json` | Every generated 3D file and texture with download links: the original set, plus the high-detail set (`hires`, `characters_hires`, `materials`) |
 | `Tools/fetch_assets.py` | Downloads them all into `Assets/` (run on your machine) |
 | `Blender/cleanup_props.py` | Real-world size, bottom-centre origin, LOD1/LOD2 for every prop |
