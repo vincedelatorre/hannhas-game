@@ -918,9 +918,12 @@
       "materials": "generated textures (T_*)",
       "description": "parametric assembly: shell, 2 hinged doors (left hinge, 105 deg, 0.6 s), glass shelves, crisper, door shelf, interior light; 6 shelf + 2 door + 2 freezer slots",
       "status": {
-        "production": "built",
+        "production": "retired",
         "validation": "pending"
-      }
+      },
+      "history": [
+        "2026-10-19: replaced by the Option A kitchen rebuild"
+      ]
     },
     {
       "id": "kitchen_counterN",
@@ -934,9 +937,12 @@
       "materials": "generated textures (T_*)",
       "description": "drawers | cupboard | sink | cupboard | drawers; marble top with sink cut-out; hinged doors, sliding drawer, slots",
       "status": {
-        "production": "built",
+        "production": "retired",
         "validation": "pending"
-      }
+      },
+      "history": [
+        "2026-10-19: replaced by the Option A kitchen rebuild"
+      ]
     },
     {
       "id": "kitchen_counterE",
@@ -950,9 +956,12 @@
       "materials": "generated textures (T_*)",
       "description": "cupboard | oven | drawers; oven door hinged at the bottom, knob toggle, tray slot, glow",
       "status": {
-        "production": "built",
+        "production": "retired",
         "validation": "pending"
-      }
+      },
+      "history": [
+        "2026-10-19: replaced by the Option A kitchen rebuild"
+      ]
     },
     {
       "id": "kitchen_sink",
@@ -966,9 +975,12 @@
       "materials": "generated textures (T_*)",
       "description": "steel basin, brass spout, lever handle (90 deg), water stream shader, splash particles, basin slot that fills containers",
       "status": {
-        "production": "built",
+        "production": "retired",
         "validation": "pending"
-      }
+      },
+      "history": [
+        "2026-10-19: replaced by the Option A kitchen rebuild"
+      ]
     },
     {
       "id": "kitchen_upper",
@@ -982,9 +994,12 @@
       "materials": "generated textures (T_*)",
       "description": "4 glass-front cupboards, hinged, 2 slots each",
       "status": {
-        "production": "built",
+        "production": "retired",
         "validation": "pending"
-      }
+      },
+      "history": [
+        "2026-10-19: replaced by the Option A kitchen rebuild"
+      ]
     },
     {
       "id": "kitchen_door_01",
@@ -998,9 +1013,12 @@
       "materials": "generated textures (T_*)",
       "description": "hinged door with a collider that is only active while shut",
       "status": {
-        "production": "built",
+        "production": "retired",
         "validation": "pending"
-      }
+      },
+      "history": [
+        "2026-10-19: replaced by the Option A kitchen rebuild"
+      ]
     },
     {
       "id": "house_shell_floor1",
@@ -1029,6 +1047,586 @@
       },
       "materials": "generated textures (T_*)",
       "description": "simple parametric spoon used for stirring",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_oak_floor",
+      "name": "T_Oak_Floor",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "81deb014-79eb-423a-9b6a-8a61c5b7ad7a",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_163839_81deb014-79eb-423a-9b6a-8a61c5b7ad7a.png"
+      },
+      "prompt": "wide-plank natural white oak floorboards",
+      "use": "kitchen floor",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_sage_cabinet",
+      "name": "T_Sage_Cabinet",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "12f2664b-508b-47a8-95ce-ca0b61b4ab43",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_163840_12f2664b-508b-47a8-95ce-ca0b61b4ab43.png"
+      },
+      "prompt": "muted sage-green painted wood grain",
+      "use": "kitchen cabinetry",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_limestone_tile",
+      "name": "T_Limestone_Tile",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "ff2566b8-8344-4eb3-9b86-bfddc999f27f",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_163840_ff2566b8-8344-4eb3-9b86-bfddc999f27f.png"
+      },
+      "prompt": "warm limestone tile backsplash",
+      "use": "backsplash",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_soapstone",
+      "name": "T_Soapstone",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "eb63a93f-d31a-4522-b048-dd329c816069",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_163838_eb63a93f-d31a-4522-b048-dd329c816069.png"
+      },
+      "prompt": "dark honed soapstone",
+      "use": "countertops",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_limewash",
+      "name": "T_Limewash",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "1a36d1fa-33ad-4e60-8c6e-2d87205df6ac",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_163840_1a36d1fa-33ad-4e60-8c6e-2d87205df6ac.png"
+      },
+      "prompt": "warm limewashed plaster",
+      "use": "walls",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_aged_copper",
+      "name": "T_Aged_Copper",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "70f5fb98-1e0f-4db1-94a1-4ad23c09891e",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_163838_70f5fb98-1e0f-4db1-94a1-4ad23c09891e.png"
+      },
+      "prompt": "hammered aged copper",
+      "use": "range hood",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_white_oak",
+      "name": "T_White_Oak",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "3233364f-54c1-47af-873f-7a1b7f0ef1b6",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_163839_3233364f-54c1-47af-873f-7a1b7f0ef1b6.png"
+      },
+      "prompt": "white-oak wood grain",
+      "use": "beams, shelving, table",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_cereal_boxes",
+      "name": "T_Cereal_Boxes",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "b2abdd13-cc18-46fe-8de3-947a897e4fc9",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_163839_b2abdd13-cc18-46fe-8de3-947a897e4fc9.png"
+      },
+      "prompt": "atlas of 8 invented cereal box fronts, no brands",
+      "use": "pantry cereal boxes",
+      "tileable": false,
+      "max_size": 2048,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_cookbook",
+      "name": "T_Cookbook",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "30e1e459-8fd3-4bab-8ced-498e16ad56cb",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_163838_30e1e459-8fd3-4bab-8ced-498e16ad56cb.png"
+      },
+      "prompt": "illustrated cookbook cover, no text",
+      "use": "cookbook on the island",
+      "tileable": false,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "sm_kitchen_espressomachine",
+      "name": "SM_Kitchen_EspressoMachine",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "b96a903b-7f99-44bf-8e1d-4059cf1a4612",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_164637_b96a903b-7f99-44bf-8e1d-4059cf1a4612.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "0bdf04a0-a236-4d71-b054-fb98a5823d5c",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_163847_0bdf04a0-a236-4d71-b054-fb98a5823d5c.png"
+      },
+      "prompt": "stainless espresso machine, no logos",
+      "size_m": {
+        "height": 0.42
+      },
+      "budget": {
+        "tris": 8000,
+        "tex": 512
+      },
+      "interaction": "static; slots: group head, cup, brew",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "sm_kitchen_grinder",
+      "name": "SM_Kitchen_Grinder",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "2fc662aa-bc3e-41ce-8f10-137e10825e65",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_164641_2fc662aa-bc3e-41ce-8f10-137e10825e65.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "17c6052b-3fe1-4f2a-8882-739a24673835",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_163847_17c6052b-3fe1-4f2a-8882-739a24673835.png"
+      },
+      "prompt": "burr coffee grinder with bean hopper",
+      "size_m": {
+        "height": 0.4
+      },
+      "budget": {
+        "tris": 5000,
+        "tex": 512
+      },
+      "interaction": "static; hopper and fork slots, grind",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "sm_kitchen_skillet",
+      "name": "SM_Kitchen_Skillet",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "ebe787f6-a5c2-428e-ab61-e2c7ec693f3f",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_164646_ebe787f6-a5c2-428e-ab61-e2c7ec693f3f.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "2b869c88-f3ea-47a5-9e53-648de669a276",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_163847_2b869c88-f3ea-47a5-9e53-648de669a276.png"
+      },
+      "prompt": "cast-iron skillet",
+      "size_m": {
+        "height": 0.07
+      },
+      "budget": {
+        "tris": 4000,
+        "tex": 512
+      },
+      "interaction": "pickup, goes on burners (steam, sizzle)",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "sm_kitchen_dutchoven",
+      "name": "SM_Kitchen_DutchOven",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "8de818a4-101c-4404-af0a-bd689993bb99",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_164650_8de818a4-101c-4404-af0a-bd689993bb99.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "69d906c5-1985-47f5-94b1-a64fda324827",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_163848_69d906c5-1985-47f5-94b1-a64fda324827.png"
+      },
+      "prompt": "red enamel dutch oven",
+      "size_m": {
+        "height": 0.18
+      },
+      "budget": {
+        "tris": 5000,
+        "tex": 512
+      },
+      "interaction": "pickup, goes on burners or in the ovens",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "sm_kitchen_herbs",
+      "name": "SM_Kitchen_Herbs",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "8e8b705e-ad8e-4d9a-b3b9-b466bfa5d06a",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_164654_8e8b705e-ad8e-4d9a-b3b9-b466bfa5d06a.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "cae1905f-269d-4611-aaa2-a2e180330544",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_163846_cae1905f-269d-4611-aaa2-a2e180330544.png"
+      },
+      "prompt": "potted kitchen herbs",
+      "size_m": {
+        "height": 0.26
+      },
+      "budget": {
+        "tris": 6000,
+        "tex": 512
+      },
+      "interaction": "decor by the sink",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "sm_kitchen_standmixer",
+      "name": "SM_Kitchen_StandMixer",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "d0f31457-d1d9-4ed8-9dd7-43f3b5d57d39",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_164658_d0f31457-d1d9-4ed8-9dd7-43f3b5d57d39.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "fb8ec5ca-53bd-4fec-b0f0-efc84d900f72",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_163846_fb8ec5ca-53bd-4fec-b0f0-efc84d900f72.png"
+      },
+      "prompt": "red stand mixer, no logos",
+      "size_m": {
+        "height": 0.36
+      },
+      "budget": {
+        "tris": 6000,
+        "tex": 512
+      },
+      "interaction": "decor on the pantry counter",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_48in_range",
+      "name": "48in range",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/appliances.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "2 burners | griddle | 2 burners with flames, 7 red knobs, small + big oven with bottom-hinged doors and sliding racks; burner and griddle slots for cookware",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_copper_hood",
+      "name": "Copper hood",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/appliances.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "riveted aged-copper hood with chimney; light toggle + 3-speed fan dial with sound; steam drifts up faster with the fan on",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_fridge_and_freezer_columns",
+      "name": "Fridge + freezer columns",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/appliances.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "built-in sage-panel columns, hinged on the outer sides, interior lights, glass shelves, door bins, freezer mist",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_cabinet_runs",
+      "name": "Cabinet runs",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/appliances.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "sage shaker doors, drawers, soapstone tops, trash pull-out, slots in every cupboard and top drawer",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_farmhouse_sink",
+      "name": "Farmhouse sink",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/appliances.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "fireclay apron sink, brass bridge faucet with hot and cold handles, stopper, rising and draining water, fills cups, washes dishes",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_dishwasher",
+      "name": "Dishwasher",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/appliances.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "panel-ready door, sliding racks, plate slots, start button (door must be closed), 9 s cycle, status light, ding",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_microwave_drawer",
+      "name": "Microwave drawer",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/appliances.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "sliding drawer, start button, a mug of water becomes hot cocoa",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_glass_uppers",
+      "name": "Glass uppers",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/appliances.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "glass-front cupboards with dishes, under-cabinet LED strips",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_island_and_stools",
+      "name": "Island + stools",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/kitchen.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "4.2 m soapstone island with overhang, four woven counter stools you can sit on, cookbook, two cage pendants",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_round_table_and_chairs",
+      "name": "Round table + chairs",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/appliances.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "natural-oak round table on splayed legs, four black ladder-back chairs (seats)",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_coffee_station",
+      "name": "Coffee station",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/kitchen.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "beans into the grinder, grind into the handle, handle into the machine, cup under the spout, brew",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_walk-in_pantry",
+      "name": "Walk-in pantry",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/kitchen.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "sage door, light switch, floor-to-ceiling oak shelves with LED strips, jars, cereal boxes, drawers, toaster, stand mixer",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_arched_windows",
+      "name": "Arched windows",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/kit.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "black-steel arched windows with two opening casement sashes and a beach view",
       "status": {
         "production": "built",
         "validation": "pending"

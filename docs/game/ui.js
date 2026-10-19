@@ -205,6 +205,11 @@ export class Audio {
       case 'oven': this.sfx(on ? 180 : 120, 0.25, 'sawtooth', 0.03); noise(0.2, 1200, 2, 0.08); break;
       case 'knob': case 'click': this.sfx(1800, 0.03, 'square', 0.04); break;
       case 'tap': this.sfx(on ? 600 : 420, 0.05, 'triangle', 0.04); break;
+      case 'ignite': for (let i = 0; i < 4; i++) setTimeout(() => this.sfx(2600, 0.02, 'square', 0.03), i * 90); setTimeout(() => noise(0.4, 400, 0.7, 0.12, 'lowpass'), 380); break;
+      case 'switch': this.sfx(2200, 0.025, 'square', 0.05); this.sfx(900, 0.03, 'triangle', 0.04); break;
+      case 'grind': noise(1.6, 1400, 1.2, 0.16); break;
+      case 'brew': noise(2.5, 260, 1, 0.14, 'lowpass'); this.sfx(140, 1.2, 'sawtooth', 0.015); break;
+      case 'window': noise(0.3, 1100, 2, 0.08); this.sfx(on ? 320 : 240, 0.1, 'triangle', 0.03); break;
       case 'pickup': this.play('pickup_shell', { vol: 0.2, rate: 1.4 }) || this.sfx(880, 0.08, 'sine', 0.05); break;
       case 'place': this.sfx(1320, 0.06, 'sine', 0.06); this.sfx(1980, 0.05, 'sine', 0.03); break;
       case 'pour': noise(0.8, 500, 1, 0.12, 'lowpass'); break;
@@ -213,6 +218,26 @@ export class Audio {
       case 'eat': for (let i = 0; i < 3; i++) setTimeout(() => noise(0.08, 3000, 4, 0.12), i * 140); break;
       case 'drink': for (let i = 0; i < 3; i++) setTimeout(() => this.sfx(300 + i * 60, 0.12, 'sine', 0.06), i * 220); break;
     }
+  }
+  /** named appliance loops: hood fan, dishwasher, microwave hum, sizzling pan. on: bool or 0..1 */
+  houseLoop(name, on) {
+    const AC = this.AC; if (!AC) return;
+    const P = { fan: [700, 0.5, 'bandpass', 0.16], dishwasher: [380, 0.8, 'lowpass', 0.14], microwave: [120, 4, 'bandpass', 0.2], sizzle: [5200, 0.8, 'highpass', 0.08], fridge: [90, 3, 'lowpass', 0.06] }[name];
+    if (!P) return;
+    this.hl = this.hl || {};
+    let L = this.hl[name];
+    if (!L) {
+      const len = AC.sampleRate * 2, buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      const src = AC.createBufferSource(); src.buffer = buf; src.loop = true;
+      const f = AC.createBiquadFilter(); f.type = P[2]; f.frequency.value = P[0]; f.Q.value = P[1];
+      const g = AC.createGain(); g.gain.value = 0; src.connect(f).connect(g).connect(this.sfxBus); src.start();
+      L = this.hl[name] = { g, f, v: -1 };
+    }
+    const v = this.muted ? 0 : (on === true ? 1 : +on || 0);
+    if (Math.abs(v - L.v) < 0.01) return;
+    L.v = v; L.g.gain.setTargetAtTime(v * P[3], AC.currentTime, 0.15);
+    if (name === 'fan') L.f.frequency.setTargetAtTime(500 + v * 900, AC.currentTime, 0.2);
   }
   /** running tap: a soft filtered-noise loop */
   houseTap(on) {

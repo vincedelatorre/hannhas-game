@@ -102,7 +102,31 @@ export class Toggle extends Interactable {
     if (this.part) this.part.rotation[this.partAxis] = this.partAngle * this.t;
   }
   save() { return this.persist ? (this.on ? 'on' : 'off') : undefined; }
-  load(s) { if (s === 'on') this.set(true, null); }
+  load(s) { if (s === 'on') this.set(true, null); else if (s === 'off') this.set(false, null); }
+}
+
+// ------------------------------------------------------------------ dials (knobs with several settings)
+export class Dial extends Interactable {
+  /** levels: names, e.g. ['off', 'low', 'medium', 'high']; each use moves to the next */
+  constructor(opts) {
+    super(opts);
+    this.levels = opts.levels || ['off', 'on']; this.level = 0; this.part = opts.part || null; this.partAxis = opts.partAxis || 'z';
+    this.step = THREE.MathUtils.degToRad(opts.stepAngle ?? -70); this.onSet = opts.onSet || (() => {}); this.requires = opts.requires || null;
+    this.sound = opts.sound || 'knob'; this.persist = opts.persist ?? false; this.t = 0; this.verbs = opts.verbs || null;
+  }
+  get value() { return this.levels[this.level]; }
+  get on() { return this.level > 0; }
+  set(level, sys) { level = THREE.MathUtils.clamp(level, 0, this.levels.length - 1); if (level === this.level) return; this.level = level; this.onSet(this.value, level, sys); sys?.sfx(this.sound, level > 0); }
+  verb(sys) {
+    const next = (this.level + 1) % this.levels.length;
+    const why = next > 0 && this.requires?.(next);
+    if (why) return { label: why, run: () => sys.toast(why), disabled: true };
+    const label = this.verbs ? this.verbs(next, this) : (next === 0 ? `Turn off ${this.name}` : `${this.name}: ${this.levels[next]}`);
+    return { label, clip: 'PickUp', run: () => this.set(next, sys) };
+  }
+  update(dt) { this.t += (this.level - this.t) * Math.min(1, dt * 10); if (this.part) this.part.rotation[this.partAxis] = this.step * this.t; }
+  save() { return this.persist ? this.level : undefined; }
+  load(s) { if (typeof s === 'number') this.set(s, null); }
 }
 
 // ------------------------------------------------------------------ seats (chairs, stools, sofa)

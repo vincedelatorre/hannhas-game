@@ -1,53 +1,33 @@
 // The Enchanted Island House: the inside of the clubhouse.
 //
-// Floor 1 (this milestone): the foyer and the fully working kitchen.
+// Floor 1: the foyer, the kitchen and the walk-in pantry.
 //   - the front door outside (on the clubhouse) and inside both work: E to go in or out
-//   - kitchen door, fridge (two doors, light, shelves, door shelf), cupboards, drawer,
-//     sink with a real tap and water, oven with a knob and timer, upper cupboards
-//   - generated 3D food, mug, bowl, flour, cookie jar, teapot, fruit bowl, table,
-//     chairs, plant, lamp, copper pots, pantry shelf
-//   - activity: make cupcakes (flour + milk in the bowl, stir with the spoon, bake)
-//   - the mug fills under the running tap; drink it
+//   - the kitchen (Option A, sage & copper; see kitchen.js and appliances.js): 48" range
+//     with burners, griddle and two ovens, copper hood (light + 3-speed fan), built-in
+//     fridge and freezer, farmhouse sink (hot/cold, stopper), dishwasher, microwave
+//     drawer, coffee station, island with stools, round oak table with chairs
+//   - the walk-in pantry: oak shelves with LED strips, jars, cereal, toaster, light switch
+//   - activities: cupcakes, hot cocoa, coffee for the grown-ups, washing dishes, toast
 //   - everything you move or open is saved
 //
 // The interior is built once, out of sight high above the island (HOUSE_ORIGIN), and
 // shown when you step through the door. Rooms use metres; local x = east, local z = south.
 import * as THREE from 'three/webgpu';
-import { texture, uv, vec3, float, time, sin, mix, color } from 'three/tsl';
+import { texture, uv } from 'three/tsl';
 import { Builder, makeMaterials, C } from './kit.js';
-import { buildFridge, buildCounterRun, buildUpperCabinets, buildDoor } from './parts.js';
+import { buildDoor } from './parts.js';
 import { InteractionSystem, Interactable, Item, Slot, Seat, CLIP_RANGES } from './interact.js';
-import { extractMesh } from '../assets.js';
-import { toNodeMaterial } from '../dressing.js';
+import { prop, simple, cyl } from './props.js';
+import { buildShell, buildKitchen, updateKitchen } from './kitchen.js';
 import { V, H } from '../world.js';
 
 export const HOUSE_ORIGIN = new THREE.Vector3(0, 400, -400);
 export const HOUSE_MODELS = ['SM_Kitchen_Cupcake', 'SM_Kitchen_MilkBottle', 'SM_Kitchen_JuiceJug', 'SM_Kitchen_Apple', 'SM_Kitchen_Cheese', 'SM_Kitchen_Strawberries',
   'SM_Kitchen_Mug', 'SM_Kitchen_MixingBowl', 'SM_Kitchen_CookieJar', 'SM_Kitchen_Teapot', 'SM_Kitchen_FruitBowl', 'SM_Kitchen_FlourSack',
-  'SM_House_Table', 'SM_House_Chair', 'SM_House_Monstera', 'SM_House_PendantLamp', 'SM_Kitchen_CopperPots', 'SM_House_BarStool', 'SM_Kitchen_Pantry'];
-export const HOUSE_TEXTURES = ['T_Kitchen_Floor', 'T_Wall_Plaster', 'T_Cabinet_Turquoise', 'T_Countertop_Marble', 'T_Honey_Wood', 'T_Backsplash', 'T_Window_View', 'T_Art_Fruit', 'T_Art_Turtle', 'T_Rug_Tropical'];
-
-// ------------------------------------------------------------------ props from generated models
-/** a generated model as a mesh with its origin at the bottom centre, scaled to `height` */
-function prop(A, name, height, fallback) {
-  const src = extractMesh(A.models[name]);
-  let mesh;
-  if (src) {
-    const g = src.geometry.clone(); g.computeBoundingBox();
-    const bb = g.boundingBox; g.translate(-(bb.min.x + bb.max.x) / 2, -bb.min.y, -(bb.min.z + bb.max.z) / 2);
-    const mat = toNodeMaterial(src.material); mat.side = THREE.FrontSide;
-    mesh = new THREE.Mesh(g, mat);
-    mesh.baseScale = height / Math.max(1e-3, bb.max.y - bb.min.y);
-  } else {
-    mesh = fallback();
-    mesh.baseScale = 1; mesh.userData.fallback = true;
-  }
-  mesh.scale.setScalar(mesh.baseScale); mesh.castShadow = true; mesh.receiveShadow = true;
-  mesh.name = name;
-  return mesh;
-}
-const simple = (geo, col, rough = 0.5) => () => new THREE.Mesh(geo, new THREE.MeshStandardNodeMaterial({ color: col, roughness: rough }));
-const cyl = (r, h, col) => { const g = new THREE.CylinderGeometry(r, r, h, 20); g.translate(0, h / 2, 0); return simple(g, col); };
+  'SM_House_Monstera', 'SM_Kitchen_CopperPots',
+  'SM_Kitchen_EspressoMachine', 'SM_Kitchen_Grinder', 'SM_Kitchen_Skillet', 'SM_Kitchen_DutchOven', 'SM_Kitchen_Herbs', 'SM_Kitchen_StandMixer'];
+export const HOUSE_TEXTURES = ['T_Wall_Plaster', 'T_Cabinet_Turquoise', 'T_Honey_Wood', 'T_Window_View', 'T_Art_Fruit', 'T_Art_Turtle',
+  'T_Oak_Floor', 'T_Sage_Cabinet', 'T_Limestone_Tile', 'T_Soapstone', 'T_Limewash', 'T_Aged_Copper', 'T_White_Oak', 'T_Cereal_Boxes', 'T_Cookbook'];
 
 export class House {
   constructor(game, scene, A, physics) {
@@ -58,8 +38,11 @@ export class House {
     this.b = new Builder(this.root, physics); this.b.mats = this.M;
     this.sys = game.interact || (game.interact = new InteractionSystem(game, scene));
     this.indoors = false;
-    this.buildShell();
-    this.buildKitchen();
+    this.sys.saveKey = 'hg.save.house.v2';      // the kitchen was rebuilt: old saves no longer fit
+    this.windows = [];
+    buildShell(this);
+    const bowl = buildKitchen(this);
+    this.buildCupcakes(bowl);
     this.buildFoyer();
     this.buildLights();
     this.buildExteriorDoor();
@@ -70,141 +53,8 @@ export class House {
   local(x, y, z) { return new THREE.Vector3(x, y, z); }
   world(x, y, z) { return new THREE.Vector3(x, y, z).add(HOUSE_ORIGIN); }
 
-  // --------------------------------------------------------------- walls, floors, windows
-  buildShell() {
-    const b = this.b, M = this.M;
-    // foyer x -3..3, z 0..6 ; kitchen x 3..11, z -1..6
-    b.floor(-3, 0, 3, 6, M.wood);
-    b.floor(3, -1, 11, 6, M.floor);
-    b.ceiling(-3, 0, 3, 6, 3.2, M.plaster);
-    b.ceiling(3, -1, 11, 6, 3.2, M.plaster);
-    const W = (x0, z0, x1, z1, openings, mat = M.plaster) => b.wall(x0, z0, x1, z1, { mat, openings });
-    // foyer
-    W(-3, 6, 3, 6, [{ at: 3, w: 1.2, h: 2.35 }, { at: 1.0, w: 0.9, h: 1.25, y0: 1.0 }, { at: 5.0, w: 0.9, h: 1.25, y0: 1.0 }]);   // south, front door
-    W(-3, 0, -3, 6, [{ at: 3, w: 1.1, h: 2.25 }]);        // west (living room: next milestone)
-    W(-3, 0, 3, 0, []);                                  // north (stairs)
-    // honey-wood wainscoting around the foyer
-    const wains = [[-1.825, 5.86, 2.35, 0.03], [1.825, 5.86, 2.35, 0.03], [0, 0.14, 6, 0.03], [-2.86, 1.2, 0.03, 2.4], [-2.86, 4.8, 0.03, 2.4], [2.86, 1.42, 0.03, 2.84], [2.86, 4.97, 0.03, 2.06]];
-    for (const [x, z, w, d] of wains) b.box(M.wood, [x, 0.5, z], [w, 1.0, d], { collide: false, cast: false });
-    W(3, 0, 3, 6, [{ at: 3.4, w: 1.05, h: 2.25 }]);              // shared with kitchen
-    // kitchen
-    W(3, -1, 11, -1, [{ at: 4.31, w: 1.2, h: 1.0, y0: 1.25 }]);   // north, window over the sink
-    W(11, -1, 11, 6, [{ at: 5.0, w: 1.4, h: 1.3, y0: 0.95 }]);   // east
-    W(3, 6, 11, 6, [{ at: 5.5, w: 1.6, h: 1.3, y0: 0.9 }]);      // south
-    W(3, -1, 3, 0, []);                                          // little return wall
-    // views through the windows: painted beach backdrops just outside each window
-    const view = this.A.textures.T_Window_View;
-    const vmat = new THREE.MeshBasicNodeMaterial({ color: 0xffffff, fog: false });
-    if (view) { view.wrapS = view.wrapT = THREE.ClampToEdgeWrapping; vmat.colorNode = texture(view, uv()).rgb.mul(1.05); } else vmat.color.set(0x7fc8e6);
-    const backdrop = (x, y, z, ry, w = 3.4, h = 2.2) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), vmat); m.position.set(x, y, z); m.rotation.y = ry; this.root.add(m); };
-    backdrop(7.31, 1.75, -2.6, 0); backdrop(12.6, 1.6, 4.0, -Math.PI / 2); backdrop(8.5, 1.55, 7.6, Math.PI); backdrop(-2, 1.6, 7.6, Math.PI, 2.2, 1.8); backdrop(2, 1.6, 7.6, Math.PI, 2.2, 1.8);
-    // window glass
-    const glass = (x, y, z, ry, w, h) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), this.M.glass); m.position.set(x, y, z); m.rotation.y = ry; this.root.add(m); };
-    glass(7.31, 1.75, -1.0, 0, 1.2, 1.0); glass(11, 1.6, 4.0, -Math.PI / 2, 1.4, 1.3); glass(8.5, 1.55, 6, 0, 1.6, 1.3); glass(-2, 1.625, 6, 0, 0.9, 1.25); glass(2, 1.625, 6, 0, 0.9, 1.25);
-  }
-
-  // --------------------------------------------------------------- kitchen
-  buildKitchen() {
-    const b = this.b, M = this.M, sys = this.sys, A = this.A, R = this.root;
-    // north counter: drawers | cupboard | SINK | cupboard | drawers  (sink under the window)
-    const north = buildCounterRun(b, M, sys, { id: 'kitchen_counterN', at: this.local(5.76, 0, -1 + 0.12 + 0.31), modules: ['drawers', 'door', 'sink', 'door', 'drawers'] });
-    this.north = north; this.sink = north.info[2].sink;
-    // east counter (faces west): cupboard | OVEN | drawers
-    const east = buildCounterRun(b, M, sys, { id: 'kitchen_counterE', at: this.local(11 - 0.12 - 0.31, 0, 1.3), rotY: -Math.PI / 2, modules: ['door', 'oven', 'drawers'] });
-    this.east = east; this.oven = east.info[1].oven;
-    // backsplash strips behind the counters
-    b.box(M.backsplash, [7.31, 1.1, -1 + 0.125], [3.1, 0.36, 0.01], { collide: false, cast: false });
-    b.box(M.backsplash, [11 - 0.125, 1.1, 1.3 + 0.93], [0.01, 0.36, 1.86], { collide: false, cast: false });
-    // upper cupboards either side of the window
-    this.upperL = buildUpperCabinets(b, M, sys, { id: 'kitchen_upperL', at: this.local(5.4, 1.45, -1 + 0.12 + 0.18), count: 2 });
-    this.upperR = buildUpperCabinets(b, M, sys, { id: 'kitchen_upperR', at: this.local(7.98, 1.45, -1 + 0.12 + 0.18), count: 2 });
-    // fridge in the north-east corner, facing west
-    this.fridge = buildFridge(b, M, sys, { at: this.local(11 - 0.12 - 0.36, 0, -1 + 0.12 + 0.43 + 0.04), rotY: -Math.PI / 2 });
-    // a child's drawing stuck on the freezer door
-    if (A.textures.T_Art_Turtle) {
-      const art = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.29), new THREE.MeshStandardNodeMaterial({ roughness: 0.9 }));
-      art.material.colorNode = texture(A.textures.T_Art_Turtle, uv()).rgb; art.position.set(0.45, 1.66, 0.076);
-      this.fridge.freezer.object.add(art);
-      const magnet = new THREE.Mesh(new THREE.SphereGeometry(0.014, 10, 8), M.coral); magnet.position.set(0.45, 1.8, 0.08); this.fridge.freezer.object.add(magnet);
-    }
-    // kitchen door between foyer and kitchen
-    this.kitchenDoor = buildDoor(b, M, sys, { id: 'kitchen_door_01', name: 'kitchen door', at: this.local(3, 0, 3.4), rotY: Math.PI / 2, w: 1.0, h: 2.2, swing: 95 });
-
-    // ---- table, chairs, plant, lamp, rug, pantry, pots, stool (generated models)
-    const place = (name, h, x, z, ry = 0, y = 0, fb) => { const m = prop(A, name, h, fb || simple(new THREE.BoxGeometry(0.5, h, 0.5), C.honey)); m.position.set(x, y, z); m.rotation.y = ry; R.add(m); return m; };
-    const table = place('SM_House_Table', 0.76, 7.4, 3.3, 0, 0, cyl(0.6, 0.76, C.honey));
-    { const c = new THREE.Mesh(); c.position.set(7.4, 0.38, 3.3); R.add(c); b.solid(c, 1.0, 0.76, 1.0); }
-    this.chairs = [];
-    for (const [x, z, ry] of [[6.45, 3.3, Math.PI / 2], [8.35, 3.3, -Math.PI / 2], [7.4, 4.3, Math.PI]]) {
-      const ch = place('SM_House_Chair', 0.98, x, z, ry + Math.PI, 0,   // the generated chair faces -z
-        simple(new THREE.BoxGeometry(0.45, 0.98, 0.45), C.honey));
-      this.chairs.push(ch);
-      sys.add(new Seat({ id: `kitchen_chair_${this.chairs.length}`, name: 'chair', object: ch, anchor: [0, 0.5, 0], seatY: 0.4, facing: ry, back: -0.72, radius: 1.6 }));
-      const c = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.9, 0.42)); c.position.set(x, 0.45, z); c.visible = false; R.add(c); b.solid(c, 0.42, 0.9, 0.42);
-    }
-    const plant = place('SM_House_Monstera', 1.35, 10.35, 5.35, 0.6, 0, cyl(0.3, 1.2, 0x2f7d32));
-    { const c = new THREE.Mesh(); c.position.set(10.35, 0.6, 5.35); R.add(c); b.solid(c, 0.55, 1.2, 0.55); }
-    const lamp = place('SM_House_PendantLamp', 0.55, 7.4, 2.4, 0, 2.15, () => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 12), this.M.lamp); m.geometry.translate(0, 0.25, 0); return m; });
-    const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.5, 6), M.teak); cord.position.set(7.4, 2.95, 3.3); R.add(cord);
-    lamp.position.z = 3.3;
-    this.pantry = place('SM_Kitchen_Pantry', 1.7, 4.2, 5.55, Math.PI, 0, simple(new THREE.BoxGeometry(1.0, 1.7, 0.4), C.honey));
-    { const c = new THREE.Mesh(); c.position.set(4.2, 0.85, 5.6); R.add(c); b.solid(c, 1.1, 1.7, 0.5); }
-    place('SM_Kitchen_CopperPots', 0.32, 10.5, -0.4, -Math.PI / 2, 1.95, cyl(0.15, 0.25, 0xb87333));
-    const stool = place('SM_House_BarStool', 0.75, 9.9, 2.2, -Math.PI / 2, 0, cyl(0.2, 0.75, C.turquoise));
-    { const c = new THREE.Mesh(); c.position.set(9.9, 0.37, 2.2); R.add(c); b.solid(c, 0.38, 0.75, 0.38); }
-    // round rug under the table
-    if (A.textures.T_Rug_Tropical) {
-      const rug = new THREE.Mesh(new THREE.CircleGeometry(1.5, 48), new THREE.MeshStandardNodeMaterial({ roughness: 0.95 }));
-      rug.material.colorNode = texture(A.textures.T_Rug_Tropical, uv()).rgb.mul(0.9); rug.rotation.x = -Math.PI / 2; rug.position.set(7.4, 0.006, 3.3); rug.receiveShadow = true; R.add(rug);
-    }
-    // painting in the foyer
-    if (A.textures.T_Art_Fruit) {
-      const art = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.9), new THREE.MeshStandardNodeMaterial({ roughness: 0.7 }));
-      art.material.colorNode = texture(A.textures.T_Art_Fruit, uv()).rgb; art.position.set(-1.6, 1.75, 0.13); R.add(art);
-      b.box(M.wood, [-1.6, 1.75, 0.125], [1.32, 1.02, 0.03], { collide: false });
-    }
-
-    // ---- table slots
-    const T = new THREE.Group(); T.position.set(7.4, 0.76, 3.3); R.add(T);
-    this.tableSlots = [[0, 0], [0.32, 0.12], [-0.32, 0.1], [0.05, -0.33], [-0.12, 0.34]].map(([x, z], i) => sys.addSlot(new Slot({ id: `kitchen_table_${i}`, name: 'on the table', parent: T, pos: [x, 0, z] })));
-
-    // ---- items (generated food and kitchenware)
-    const S = id => sys.slots.get(id);
-    const items = this.items = {};
-    const mk = (id, model, name, h, tags, home, fb, extra = {}) => {
-      const obj = prop(A, model, h, fb);
-      const it = new Item({ id, name, object: obj, tags, home: S(home), ...extra });
-      it.baseScale = obj.baseScale; it.yaw = extra.yaw || 0;
-      sys.add(it); sys.place(it, it.home);
-      items[id] = it; return it;
-    };
-    const F = this.fridge;
-    mk('milk', 'SM_Kitchen_MilkBottle', 'milk', 0.24, ['drink', 'food', 'ingredient', 'milk'], 'kitchen_fridge_01_door_d1', cyl(0.045, 0.24, 0xffffff));
-    mk('juice', 'SM_Kitchen_JuiceJug', 'orange juice', 0.23, ['drink', 'food'], 'kitchen_fridge_01_door_d2', cyl(0.05, 0.23, 0xff9a1f));
-    mk('cheese', 'SM_Kitchen_Cheese', 'cheese', 0.07, ['food'], 'kitchen_fridge_01_shelf_c1', simple(new THREE.BoxGeometry(0.12, 0.07, 0.08).translate(0, 0.035, 0), 0xf6c945));
-    mk('strawberries', 'SM_Kitchen_Strawberries', 'strawberries', 0.11, ['food'], 'kitchen_fridge_01_shelf_b2', cyl(0.07, 0.1, 0xd9302f));
-    mk('apple', 'SM_Kitchen_Apple', 'apple', 0.08, ['food', 'edible'], 'kitchen_fridge_01_shelf_c2', () => { const g = new THREE.SphereGeometry(0.04, 16, 12); g.translate(0, 0.04, 0); return simple(g, 0xd42a2a)(); },
-      { use: (s, it) => ({ label: 'Eat the apple', clip: 'PickUp', run: () => this.eat(it) }) });
-    const mug = mk('mug', 'SM_Kitchen_Mug', 'mug', 0.11, ['fillable', 'washable'], 'kitchen_upperL_0_shelf', cyl(0.045, 0.11, C.turquoise),
-      { state: { fill: 0 }, use: (s, it) => it.state.fill > 0.15 ? { label: 'Drink the water', clip: 'PickUp', run: () => { it.state.fill = 0; it.onState(); s.toast('Ahh, refreshing!'); s.sfx('drink'); s.changed(); } } : null });
-    this.addMugWater(mug);
-    const bowl = mk('bowl', 'SM_Kitchen_MixingBowl', 'mixing bowl', 0.13, ['washable', 'bowl'], 'kitchen_counterN_top_0', cyl(0.13, 0.12, C.coral));
-    mk('flour', 'SM_Kitchen_FlourSack', 'flour', 0.2, ['ingredient', 'flour'], 'kitchen_counterN_cup_1', simple(new THREE.BoxGeometry(0.14, 0.2, 0.1).translate(0, 0.1, 0), C.cream));
-    mk('cookies', 'SM_Kitchen_CookieJar', 'cookie jar', 0.22, ['food'], 'kitchen_counterN_top_4', cyl(0.08, 0.22, 0xd9c9a3));
-    mk('teapot', 'SM_Kitchen_Teapot', 'teapot', 0.19, ['washable'], 'kitchen_upperR_1_shelf', cyl(0.08, 0.18, C.turquoise));
-    mk('fruit', 'SM_Kitchen_FruitBowl', 'fruit bowl', 0.2, ['food'], 'kitchen_table_0', cyl(0.15, 0.15, C.honey));
-    // wooden spoon (simple parametric: a handle and a bowl)
-    const spoonObj = (() => {
-      const g = new THREE.Group();
-      const h = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.01, 0.26, 8), M.wood); h.position.y = 0.17; g.add(h);
-      const s = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 8), M.wood); s.scale.set(1, 0.4, 1.4); s.position.y = 0.035; g.add(s);
-      g.traverse(o => { if (o.isMesh) o.castShadow = true; });
-      return g;
-    })();
-    const spoon = new Item({ id: 'spoon', name: 'wooden spoon', object: spoonObj, tags: ['spoon', 'washable'], home: S('kitchen_counterN_drawer_0_in'), grip: [0, -0.12, 0.04] });
-    spoon.baseScale = 1; spoonObj.rotation.z = 0; sys.add(spoon); sys.place(spoon, spoon.home); items.spoon = spoon;
-
-    // ---- cupcake making
+  buildCupcakes(bowl) {
+    const sys = this.sys, A = this.A, R = this.root;
     this.recipe = new CupcakeRecipe(this, bowl);
     sys.add(this.recipe);
     this.cupcakes = [];
@@ -219,18 +69,6 @@ export class House {
       sys.add(c); R.add(c.object);
       this.cupcakes.push(c);
     }
-  }
-
-  addMugWater(mug) {
-    const disk = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.036, 0.004, 20), new THREE.MeshPhysicalNodeMaterial({ color: 0x8fd8e8, roughness: 0.05, transparent: true, opacity: 0.8 }));
-    disk.visible = false; mug.object.add(disk);
-    mug.onState = () => {
-      const k = mug.state.fill; disk.visible = k > 0.02;
-      // the disk lives in the mug's model space: height scales with the model
-      const inv = 1 / (mug.baseScale || 1);
-      disk.scale.setScalar(inv); disk.position.y = (0.012 + 0.085 * k) * inv;
-    };
-    mug.onState();
   }
 
   /** eat food: crumbs, a happy sound, and the item goes away (fruit returns to its home later) */
@@ -251,7 +89,7 @@ export class House {
     for (let i = 0; i < 10; i++) { const top = (i + 1) * 0.2; b.box(M.wood, [-2.75 + i * 0.3, top / 2, 0.57], [0.3, top, 0.9], { round: 0.02 }); }
     b.box(M.teak, [-1.4, 1.05, 1.06], [3.0, 0.06, 0.06], { collide: false });           // handrail
     const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.0, 8), M.coral); rope.rotation.x = Math.PI / 2; rope.position.set(-3.0 + 0.15, 0.85, 0.6); this.root.add(rope);
-    { const c = new THREE.Mesh(); c.position.set(-1.4, 1.2, 1.15); this.root.add(c); b.solid(c, 3.2, 2.4, 0.12); }   // keeps you off the unfinished stairs
+    { const c = new THREE.Mesh(); c.visible = false; c.position.set(-1.4, 1.2, 1.15); this.root.add(c); b.solid(c, 3.2, 2.4, 0.12); }   // keeps you off the unfinished stairs
     const sign = new Interactable({ id: 'foyer_stairs', name: 'stairs', object: this.root, anchor: [-1.5, 1.0, 1.2], save: false });
     sign.verb = s => ({ label: 'Upstairs is still being built', disabled: true, run: () => s.toast('The bedrooms, playroom and rooftop telescope are coming next!') });
     sys.add(sign);
@@ -275,11 +113,12 @@ export class House {
   buildLights() {
     const R = this.root;
     this.lights = [];
-    const pend = new THREE.PointLight(0xffc77a, 0, 7, 1.6); pend.position.set(7.4, 2.25, 3.3); R.add(pend); this.lights.push([pend, 9]);
-    const k2 = new THREE.PointLight(0xffe0b0, 0, 6, 1.6); k2.position.set(7.3, 2.7, 0.2); R.add(k2); this.lights.push([k2, 6]);
+    // soft recessed ceiling light over the kitchen (always a little on), foyer lamp
+    const k1 = new THREE.PointLight(0xffe6c4, 0, 8, 1.5); k1.position.set(5.3, 3.5, 1.5); R.add(k1); this.lights.push([k1, 5]);
+    const k2 = new THREE.PointLight(0xffe6c4, 0, 8, 1.5); k2.position.set(10.2, 3.5, 2.5); R.add(k2); this.lights.push([k2, 5]);
     const foy = new THREE.PointLight(0xffd29a, 0, 7, 1.6); foy.position.set(0, 2.7, 3); R.add(foy); this.lights.push([foy, 7]);
-    // warm bounce light from the honey wood
-    this.fill = new THREE.HemisphereLight(0xffe7c4, 0x6b4a2a, 0); this.fill.position.copy(HOUSE_ORIGIN); this.scene.add(this.fill);
+    // warm bounce light
+    this.fill = new THREE.HemisphereLight(0xfff0dc, 0x6b5a40, 0); this.fill.position.copy(HOUSE_ORIGIN); this.scene.add(this.fill);
   }
 
   /** the clubhouse's real front door on the beach: E to go inside */
@@ -349,18 +188,9 @@ export class House {
     const night = 1 - THREE.MathUtils.smoothstep(g.sky.elevation, -2, 18);
     for (const [l, base] of this.lights) l.intensity = this.indoors ? base * (0.45 + night * 0.9) : 0;
     this.fill.intensity = this.indoors ? 0.55 + night * 0.15 : 0;
-    // tap water: splashes, sink pool and filling whatever sits in the basin
-    const sk = this.sink;
-    if (sk.tap.on && this.indoors) {
-      sk.root.updateWorldMatrix(true, false);
-      const m = new THREE.Vector3(sk.mouth.x, sk.basinY + 0.03, sk.mouth.z).applyMatrix4(sk.root.matrixWorld);
-      if (Math.random() < 0.6) g.fxWater?.emit(m, new THREE.Vector3((Math.random() - 0.5) * 0.5, 0.4 + Math.random() * 0.4, (Math.random() - 0.5) * 0.5), { life: 0.3, size: 0.025, gravity: 6 });
-      const it = sk.slot.item;
-      if (it?.tags.has('fillable')) { it.state.fill = Math.min(1, (it.state.fill || 0) + dt * 0.22); it.onState?.(); if (it.state.fill >= 1 && !it._fullSaid) { it._fullSaid = true; g.toast('The mug is full!'); this.sys.changed(); } }
-      else if (it && it._fullSaid) it._fullSaid = false;
-      sk.pool.visible = true; sk.pool.scale.y = 1; sk.pool.position.y = sk.basinY + 0.012;
-    } else sk.pool.visible = false;
-    g.audio?.houseTap?.(sk.tap.on && this.indoors);
+    for (const p of this.pendants) p.light.intensity = this.indoors && this.pendantSwitch.on ? 7 * (0.6 + night * 0.6) : 0;
+    for (const l of this.underLights) l.intensity = this.indoors && this.underSwitch.on ? 1.6 : 0;
+    updateKitchen(this, dt);
     this.recipe.update(dt);
   }
 }
@@ -378,7 +208,7 @@ class CupcakeRecipe extends Interactable {
     // a slot inside the bowl for ingredients (only while the bowl sits on the counter or table)
     const sys = house.sys;
     this.slot = sys.addSlot(new Slot({ id: 'bowl_in', name: 'into the bowl', parent: bowl.object, pos: [0, 0.06 / bowl.baseScale, 0], radius: 1.6,
-      enabled: () => !bowl.held && !this.s.stirred && !!bowl.slot && !bowl.slot.id.includes('oven'),
+      enabled: () => !bowl.held && !this.s.stirred && !!bowl.slot && !bowl.slot.id.includes('rack'),
       accepts: it => (it.tags.has('flour') && !this.s.flour) || (it.tags.has('milk') && !this.s.milk),
       onPut: (it, s) => this.add(it, s) }));
     // the oven turns stirred batter into cupcakes
@@ -393,7 +223,7 @@ class CupcakeRecipe extends Interactable {
   add(it, sys) {
     const k = it.tags.has('flour') ? 'flour' : 'milk';
     this.s[k] = true; this.syncBatter();
-    sys.toast(this.s.flour && this.s.milk ? 'Flour and milk are in! Now stir it with a wooden spoon.' : k === 'flour' ? 'Flour in! Add some milk from the fridge.' : 'Milk in! Add some flour from the cupboard.');
+    sys.toast(this.s.flour && this.s.milk ? 'Flour and milk are in! Now stir it with a wooden spoon.' : k === 'flour' ? 'Flour in! Add some milk from the fridge.' : 'Milk in! Add some flour from the pantry.');
     sys.sfx('pour');
     // the ingredient hops back out onto the nearest free counter spot
     setTimeout(() => {
@@ -409,7 +239,7 @@ class CupcakeRecipe extends Interactable {
     if (bowl.held || !bowl.slot || this.stirT > 0) return null;
     if (s.flour && s.milk && !s.stirred) {
       if (sys.held?.tags.has('spoon')) return { label: 'Stir the batter', clip: 'PickUp', run: () => this.stir(sys) };
-      return { label: 'Stir it: get the wooden spoon from the drawer', disabled: true, run: () => sys.toast('The wooden spoon is in the top drawer by the bowl.') };
+      return { label: 'Stir it: get the wooden spoon from the drawer', disabled: true, run: () => sys.toast('The wooden spoon is in the top drawer at the end of the island.') };
     }
     return null;
   }
@@ -425,18 +255,10 @@ class CupcakeRecipe extends Interactable {
       this.batter.rotation.y += dt * 8;
       if (this.stirT <= 0) {
         this.s.stirred = true; this.syncBatter();
-        sys.toast('Smooth batter! Put the bowl in the oven, close it and turn the knob.');
+        sys.toast('Smooth batter! Put the bowl in the big oven (the right one), close it and turn its red knob.');
         sys.changed();
       }
     }
-    // oven: bake for a few seconds, glowing
-    const ov = this.house.oven, st = ov.state;
-    if (ov.knob.on && st.baking > 0) {
-      st.baking += dt;
-      ov.glow.intensity = 1.5 + Math.sin(performance.now() * 0.01) * 0.2;
-      ov.coil.material.color.setRGB(0.9, 0.25 + 0.1 * Math.sin(performance.now() * 0.008), 0.05);
-      if (st.baking >= st.total) { st.baking = 0; ov.knob.set(false, sys); st.onDone?.(); }
-    } else { ov.glow.intensity = 0; ov.coil.material.color.set(0x3a2a22); }
   }
   bake() {
     const sys = this.house.sys, ov = this.house.oven, g = this.house.game;
@@ -445,7 +267,7 @@ class CupcakeRecipe extends Interactable {
     if (!item || item !== this.bowl || !this.s.stirred) { sys.toast('Ding! (Nothing to bake.)'); return; }
     // the bowl goes back to the counter, washed; three cupcakes appear on the oven tray
     this.s = { flour: false, milk: false, stirred: false, baked: true }; this.syncBatter();
-    sys.place(this.bowl, this.bowl.home.item ? [...sys.slots.values()].find(s => !s.item && s.id.includes('counterN_top')) || this.bowl.home : this.bowl.home);
+    sys.place(this.bowl, this.bowl.home.item ? [...sys.slots.values()].find(s => !s.item && s.id.includes('island_top')) || this.bowl.home : this.bowl.home);
     const tray = ov.slot; let first = true;
     for (const c of this.house.cupcakes) {
       if (c.live) continue;
