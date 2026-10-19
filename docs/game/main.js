@@ -19,6 +19,7 @@ import { H, G, V } from './world.js';
 import { Underwater, causticStrength } from './underwater.js';
 import { Blooms, clock as bloomClock } from './flowers.js';
 import { Dolphins, Parrots } from './wildlife.js';
+import { SlideRide } from './slide.js';
 window.__H = H;
 
 const $ = id => document.getElementById(id);
@@ -105,6 +106,7 @@ async function boot() {
   game.under = new Underwater(scene, zone, A, Q, game.fxGlow);
   for (const m of game.under.coral) { m.updateMatrixWorld(true); physics.addCollider({ type: 'hullInstances', mesh: m, shrink: 0.85 }); }   // solid reef
   game.blooms = new Blooms(scene);
+  game.ride = new SlideRide(scene);
   game.dolphins = new Dolphins(scene, A, game.fxWater, { level: zone.seaLevel });
   game.parrots = new Parrots(scene, A, zone);
   game.creatures = new Creatures(scene, zone);
@@ -292,9 +294,11 @@ function tick(dt) {
   I.poll();
   if (game.photo) { photoStep(dt); game.under.update(0, game.camera, P, game.friend); return; }
   gameTime += dt; const t = gameTime; game.time = t; bloomClock.value = t;
+  game._rideCool = (game._rideCool || 0) - dt;
 
   if (game.started) {
-    if (game.sliding >= 0) slideStep(dt);
+    if (game.ride.riding) rideStep(dt);
+    else if (game.sliding >= 0) slideStep(dt);
     else if (game.onSwing) swingStep(dt, t);
     else {
       const r = P.update(dt, game.cam.yaw);
@@ -304,13 +308,13 @@ function tick(dt) {
       const sw = game.swingSeat;
       if (sw && r.speed < 0.4 && P.body.grounded && Math.hypot(P.pos.x - sw.x, P.pos.z - sw.z) < 0.9) { game.onSwing = { t: 0 }; game.toast('Wheee! Jump to hop off.'); }
       // slide ring
-      if (!game.quests.S.slid && P.pos.distanceTo(game.quests.ringPos) < 1.4) { game.sliding = 0; game.toast('Up to the deck. Here we go!'); game.audio.sfx(440, 0.4, 'triangle', 0.07); }
+      if (P.pos.distanceTo(game.quests.ringPos) < 1.4 && !(game._rideCool > 0)) startRide();
     }
     if (I.water) game.powers.water(dt);
     // Wren glances at her friend or the nearest glowing shell
     const near = game.quests.shells.filter(s => !s.got).map(s => s.g.position).sort((a, b) => a.distanceToSquared(P.pos) - b.distanceToSquared(P.pos))[0];
     game.wren.lookTarget = near && near.distanceTo(P.pos) < 6 ? near : (game.friend && game.friend.pos.distanceTo(P.pos) < 6 ? game.friend.pos : null);
-    game.friend?.update(dt);
+    if (!game.ride.riding) game.friend?.update(dt);
     game.powers.update(dt);
     game.quests.update(dt, t);
     game.hud.energy(P.energy);
@@ -349,7 +353,7 @@ function tick(dt) {
   const night = 1 - THREE.MathUtils.smoothstep(game.sky.elevation, -2, 18);
   D.torchLights.forEach((l, i) => { const f = near[i]; if (!f) return; l.position.copy(f.base); l.intensity = (6 + night * 30) * (1 + Math.sin(t * 11 + f.ph) * 0.12); });
 
-  updateCamera(dt, t);
+  if (!game.ride.riding) updateCamera(dt, t);
   game.under.update(dt, game.camera, P, game.friend);
   if (game.friend) game.speech.update(dt, game.camera, game.friend.pos.clone().add(new THREE.Vector3(0, 2.05, 0)), game.renderer.domElement);
   const diveBtn = $('b-dive'), upBtn = $('b-surface'); const canDive = game.started && (P.c.swimming || P.underwater), canUp = game.started && (P.diving || P.underwater); if (diveBtn.hidden === canDive) diveBtn.hidden = !canDive; if (upBtn.hidden === canUp) upBtn.hidden = !canUp;
@@ -370,6 +374,64 @@ function swingStep(dt, t) {
     game.input.jumpPressed = false; game.onSwing = null; game.wren.sitting = false; game.wren.root.rotation.set(0, 0, 0);
     P.body.teleport(sw.x, sw.y, sw.z + 1.2); P.vy = 5;
   }
+}
+
+// ------------------------------------------------------------------ the big slide (first person)
+const RIDE_LINES = { windy: 'Wheee, windy!', glass: 'Look, you can see the whole island!', bigdrop: 'BIG DROP!', bumps: 'Bumpy bumps!', wiggle: 'Wiggle wiggle!', corkscrew: 'Corkscrew!', final: 'One more drop!' };
+
+function fade(color, hold = 0.25) {
+  const f = $('flash'); f.style.background = color; f.style.transition = 'none'; f.style.opacity = '1';
+  setTimeout(() => { f.style.transition = 'opacity 0.5s'; f.style.opacity = '0'; }, hold * 1000);
+}
+
+function startRide() {
+  fade('#05010f', 0.3);
+  game.sliding = 0; game.prevView = game.view;
+  document.body.classList.add('riding');
+  game.ride.start(game.wren);
+  game._fogD = game.scene.fog.density; game.scene.fog.density = 0.00025;   // clear air up high: see the island through the glass
+  game.wren.root.visible = true;
+  game.audio.rideStart();
+  game.toast('Here we go!');
+}
+
+function rideStep(dt) {
+  const sec = game.ride.update(dt, game.camera);
+  game.audio.rideSpeed(game.ride.state?.v || 0);
+  if (sec === 'done') return endRide();
+  if (sec && RIDE_LINES[sec]) { game.toast(RIDE_LINES[sec]); if (sec === 'bigdrop' || sec === 'final') game.audio.sfx(220, 0.6, 'sawtooth', 0.04); else game.audio.chime(660 + Math.random() * 200); }
+  // spray off her feet
+  const st = game.ride.state;
+  if (st && Math.random() < 0.9) {
+    for (const f of ['LeftFoot', 'RightFoot']) {
+      const p = game.wren.worldPos(f);
+      game.fxWater.emit(p, new THREE.Vector3((Math.random() - 0.5) * 1.5, 0.8 + Math.random(), (Math.random() - 0.5) * 1.5).addScaledVector(game.ride.curve.getTangentAt(Math.min(1, st.s / game.ride.len)), st.v * 0.6), { life: 0.35, size: 0.05 + Math.random() * 0.05, gravity: 6 });
+    }
+  }
+}
+
+function endRide() {
+  const P = game.player;
+  game.ride.stop(game.wren, game.camera);
+  if (game._fogD) game.scene.fog.density = game._fogD;
+  game.audio.rideStop();
+  document.body.classList.remove('riding');
+  fade('#ffffff', 0.15);
+  game.sliding = -1; game._rideCool = 3;
+  // shoot out of the slide mouth into the lagoon
+  const ex = new THREE.Vector3(zone.slide.exit[0], zone.lagoon.level, -zone.slide.exit[1]);
+  P.body.teleport(ex.x, ex.y - 0.2, ex.z); P.vy = 1.5;
+  const end = game.dressing.slideCurve.getTangentAt(1); P.face = Math.atan2(end.x, end.z);
+  game.wren.root.rotation.set(0, P.face, 0);
+  game.cam.yaw = P.face; game.cam.pitch = 0.3;     // in front of her, looking back at the slide
+  game.cam.target.copy(ex).add(new THREE.Vector3(0, 1.35, 0));
+  game.camera.position.copy(ex).add(new THREE.Vector3(Math.sin(game.cam.yaw) * 6, 3, Math.cos(game.cam.yaw) * 6));
+  game.camera.fov = 52; game.camera.updateProjectionMatrix();
+  for (let i = 0; i < 60; i++) game.fxWater.emit(ex.clone(), new THREE.Vector3((Math.random() - 0.5) * 6, 3 + Math.random() * 4, (Math.random() - 0.5) * 6), { life: 1.2, size: 0.14, gravity: 12 });
+  game.fxFoam.emit(ex.clone().setY(zone.lagoon.level + 0.03), new THREE.Vector3(), { life: 1.4, size: 2.2, grow: 1.5, alpha: 0.7 });
+  game.audio.splash(true);
+  if (!game.quests.S.slid) { game.quests.S.slid = true; game.toast('Splash! What a ride!'); game.audio.chime(); game.quests.changed(); game.friend?.cheer(); }
+  else game.toast('Splash! Again?');
 }
 
 function slideStep(dt) {

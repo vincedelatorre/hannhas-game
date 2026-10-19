@@ -40,6 +40,8 @@ export class Character {
     });
     this.bones = {};
     this.model.traverse(o => { if (o.isBone) this.bones[o.name] = o; });
+    // rest (bind) pose of every bone, e.g. straight legs for the slide
+    this.rest = Object.fromEntries(Object.entries(this.bones).map(([n, b]) => [n, b.quaternion.clone()]));
     this.mixer = new THREE.AnimationMixer(this.model);
     this.actions = {};
     const all = { Idle: gltf.animations[0], ...clips };
@@ -109,6 +111,7 @@ export class Character {
     }
     this.mixer.update(dt);
     this.lookAt(dt);
+    this.afterPose?.();
   }
 
   /** turn the head toward something interesting, on top of the animation */

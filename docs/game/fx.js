@@ -45,6 +45,7 @@ export class Particles {
     mat.scaleNode = instancedBufferAttribute(this.size);
     mat.colorNode = vec4(tex.rgb.mul(c.rgb), tex.a.mul(c.a));
     mat.opacityNode = tex.a.mul(c.a);
+    mat.alphaTest = 0.03;     // drop the empty corners (otherwise the AO pass sees square cards)
     this.sprite = new THREE.Sprite(mat);
     this.sprite.count = max; this.sprite.frustumCulled = false;
     this.sprite.renderOrder = 5;

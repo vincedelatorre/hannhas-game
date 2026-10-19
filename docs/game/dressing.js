@@ -2,7 +2,7 @@
 // flickering light, the gameplay slide tower and the jetty. Each placement comes from the
 // zone file; each model falls back to a simple stand-in if it failed to load.
 import * as THREE from 'three/webgpu';
-import { positionLocal, vec2, vec3, float, sin, time, instanceIndex, uniform, mx_noise_float, smoothstep, pow, texture, uv, mix, positionWorld, color } from 'three/tsl';
+import { positionLocal, vec2, vec3, float, sin, time, instanceIndex, uniform, mx_noise_float, smoothstep, pow, texture, uv, mix, positionWorld, color, fract, mx_hsvtorgb } from 'three/tsl';
 import { H, V, rng, slope } from './world.js';
 import { extractMesh } from './assets.js';
 
@@ -203,7 +203,10 @@ function buildSlide(scene, zone, A, out) {
   const e = pts.at(-1), ex = new THREE.Vector3(S.exit[0], zone.lagoon.level + 0.35, -S.exit[1]);
   for (let i = 1; i <= 14; i++) pts.push(e.clone().lerp(ex, i / 14).setY(THREE.MathUtils.lerp(e.y, ex.y, Math.pow(i / 14, 0.8))));
   const curve = new THREE.CatmullRomCurve3(pts);
-  const tubeMat = new THREE.MeshPhysicalNodeMaterial({ color: 0x7fe6c9, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.08, side: THREE.DoubleSide });
+  const tubeMat = new THREE.MeshPhysicalNodeMaterial({ roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.08, side: THREE.DoubleSide });
+  // bold candy stripes spiralling down the outside, a hint of the rainbow ride inside
+  const band = fract(uv().x.mul(26).add(uv().y.mul(1.0)));
+  tubeMat.colorNode = mx_hsvtorgb(vec3(fract(uv().x.mul(3.2)), 0.85, mix(float(0.55), float(0.95), smoothstep(0.45, 0.55, band))));
   // open half-pipe: keep the lower half of the tube
   const geo = new THREE.TubeGeometry(curve, 420, 0.62, 18, false);
   const idx = []; const ring = 19;

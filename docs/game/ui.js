@@ -185,6 +185,27 @@ export class Audio {
     const g = AC.createGain(); g.gain.value = 0.3; src.connect(lp).connect(g).connect(this.ambBus); src.start();
     this.loops.amb_surf = g;
   }
+  /** rushing water and wind inside the slide: filtered noise that follows the speed */
+  rideStart() {
+    const AC = this.AC; if (!AC) return;
+    if (!this.ride) {
+      const len = AC.sampleRate * 2, buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      const src = AC.createBufferSource(); src.buffer = buf; src.loop = true;
+      const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.7; bp.frequency.value = 600;
+      const g = AC.createGain(); g.gain.value = 0; src.connect(bp).connect(g).connect(this.sfxBus); src.start();
+      this.ride = { g, bp };
+    }
+    this.play('splash_small', { vol: 0.5 });
+  }
+  rideSpeed(v) {
+    if (!this.ride || !this.AC) return;
+    const t = this.AC.currentTime;
+    this.ride.g.gain.setTargetAtTime(this.muted ? 0 : Math.min(0.5, 0.06 + v * 0.014), t, 0.08);
+    this.ride.bp.frequency.setTargetAtTime(300 + v * 55, t, 0.1);
+  }
+  rideStop() { if (this.ride && this.AC) this.ride.g.gain.setTargetAtTime(0, this.AC.currentTime, 0.15); }
+
   sfx(f, dur = 0.15, type = 'sine', vol = 0.1) {
     const AC = this.AC; if (!AC || this.muted) return;
     const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f;

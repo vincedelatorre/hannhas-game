@@ -214,7 +214,7 @@ export class Quests {
       const S = this.S, open = [S.shells < 8 && 'hint_shells', !S.slid && 'hint_slide', S.pools < 2 && 'hint_pools', !S.gull && 'hint_gull', !S.turtle && 'hint_turtle'].filter(Boolean);
       if (open.length) this.say(open[Math.floor(Math.random() * open.length)]); else g.speech.quiet = 0;
     }
-    this.ring.visible = !this.S.slid; this.ring.rotation.z += dt; this.ring.scale.setScalar(1 + Math.sin(t * 3) * 0.06);
+    this.ring.visible = true;   // the slide can be ridden again and again this.ring.rotation.z += dt; this.ring.scale.setScalar(1 + Math.sin(t * 3) * 0.06);
     this.beam.material.opacity = this.ready && !this.S.chest ? 0.16 + Math.sin(t * 2) * 0.04 : 0;
     const dc = Math.hypot(P.x - this.chestPos.x, P.z - this.chestPos.z);
     if (!this.S.chest && dc < 2.4) {
