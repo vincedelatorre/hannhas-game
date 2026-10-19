@@ -205,6 +205,22 @@ for (const t of TEXTURES) {
   console.log(`${t}: ${kb(out)}`);
 }
 
+// sound: loudness-normalised mono/stereo mp3 via ffmpeg (ambience and music stay stereo)
+import { execFileSync } from 'node:child_process';
+const audioDir = path.join(SRC, 'audio');
+if (fs.existsSync(audioDir)) {
+  fs.mkdirSync(path.join(OUT, 'audio'), { recursive: true });
+  report.audio = {};
+  for (const f of fs.readdirSync(audioDir)) {
+    const name = path.parse(f).name, out = path.join(OUT, 'audio', `${name}.mp3`);
+    const stereo = /^(amb_|music_)/.test(name);
+    try {
+      execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', path.join(audioDir, f), '-af', 'loudnorm=I=-18:TP=-2', '-ac', stereo ? '2' : '1', '-ar', '44100', '-b:a', stereo ? '128k' : '96k', out]);
+      report.audio[name] = fs.statSync(out).size; console.log(`${name}: ${kb(out)}`);
+    } catch (e) { console.warn('audio failed', name, e.message); }
+  }
+}
+
 fs.writeFileSync(path.join(OUT, 'assets.json'), JSON.stringify(report, null, 2));
-const total = [...fs.readdirSync(path.join(OUT, 'models')).map(f => path.join(OUT, 'models', f)), ...fs.readdirSync(path.join(OUT, 'textures')).map(f => path.join(OUT, 'textures', f))].reduce((n, f) => n + fs.statSync(f).size, 0);
+const total = [...fs.readdirSync(path.join(OUT, 'models')).map(f => path.join(OUT, 'models', f)), ...fs.readdirSync(path.join(OUT, 'textures')).map(f => path.join(OUT, 'textures', f)), ...(fs.existsSync(path.join(OUT, 'audio')) ? fs.readdirSync(path.join(OUT, 'audio')).map(f => path.join(OUT, 'audio', f)) : [])].reduce((n, f) => n + fs.statSync(f).size, 0);
 console.log(`total ${(total / 1e6).toFixed(1)} MB`);

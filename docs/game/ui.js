@@ -111,29 +111,74 @@ export class Hud {
   }
 }
 
+// Sound: recorded-style samples (generated, see Tools/asset_manifest.json -> audio) with
+// layered ambience, randomised footsteps and one-shots. Falls back to soft synth tones
+// for anything that failed to load.
+const SOUNDS = ['amb_surf', 'amb_island', 'music_island', 'step_sand', 'step_water', 'splash_small', 'power_water', 'power_love', 'pickup_shell', 'splash_big', 'jump', 'chest_open'];
+
 export class Audio {
-  constructor() { this.AC = null; this.muted = false; }
-  start() {
+  constructor(base = 'assets/audio/') { this.base = base; this.AC = null; this.muted = false; this.buf = {}; this.loops = {}; }
+
+  async start() {
     try {
       const AC = this.AC = new (window.AudioContext || window.webkitAudioContext)();
-      this.master = AC.createGain(); this.master.gain.value = 0.6; this.master.connect(AC.destination);
-      // surf: filtered brown noise with a slow swell
-      const len = AC.sampleRate * 3, buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0); let last = 0;
-      for (let i = 0; i < len; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; }
-      const src = AC.createBufferSource(); src.buffer = buf; src.loop = true;
-      const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 520;
-      this.surf = AC.createGain(); this.surf.gain.value = 0.3;
-      const lfo = AC.createOscillator(), lg = AC.createGain(); lfo.frequency.value = 0.088; lg.gain.value = 0.16; lfo.connect(lg).connect(this.surf.gain); lfo.start();
-      src.connect(lp).connect(this.surf).connect(this.master); src.start();
+      this.master = AC.createGain(); this.master.gain.value = 0.8; this.master.connect(AC.destination);
+      this.sfxBus = AC.createGain(); this.sfxBus.gain.value = 0.9; this.sfxBus.connect(this.master);
+      this.ambBus = AC.createGain(); this.ambBus.gain.value = 0.7; this.ambBus.connect(this.master);
+      this.musicBus = AC.createGain(); this.musicBus.gain.value = 0.22; this.musicBus.connect(this.master);
+      await Promise.all(SOUNDS.map(async n => {
+        try { const r = await fetch(`${this.base}${n}.mp3`); if (!r.ok) return; this.buf[n] = await AC.decodeAudioData(await r.arrayBuffer()); } catch (e) { /* missing sound */ }
+      }));
+      this.loop('amb_surf', this.ambBus, 0.6); this.loop('amb_island', this.ambBus, 0.35); this.loop('music_island', this.musicBus, 1);
+      if (!this.buf.amb_surf) this.synthSurf();
     } catch (e) { this.AC = null; }
+  }
+
+  loop(name, bus, vol) {
+    const b = this.buf[name]; if (!b) return;
+    const src = this.AC.createBufferSource(); src.buffer = b; src.loop = true;
+    const g = this.AC.createGain(); g.gain.value = vol; src.connect(g).connect(bus);
+    src.start(0, Math.random() * b.duration); this.loops[name] = g;
+  }
+
+  /** play a sample; slice picks a random part of longer files (footsteps) */
+  play(name, { vol = 1, rate = 1, slice = 0 } = {}) {
+    const AC = this.AC, b = this.buf[name]; if (!AC || this.muted || !b) return false;
+    const src = AC.createBufferSource(); src.buffer = b; src.playbackRate.value = rate * (0.94 + Math.random() * 0.12);
+    const g = AC.createGain(); g.gain.value = vol; src.connect(g).connect(this.sfxBus);
+    if (slice) { const off = Math.random() * Math.max(0, b.duration - slice); src.start(0, off, slice); g.gain.setTargetAtTime(0, AC.currentTime + slice * 0.7, 0.03); }
+    else src.start();
+    return true;
+  }
+
+  step(inWater) { this.play(inWater ? 'step_water' : 'step_sand', { vol: inWater ? 0.35 : 0.22, slice: 0.32 }); }
+  jump() { this.play('jump', { vol: 0.4 }) || this.sfx(520, 0.12, 'triangle', 0.05); }
+  water() { if (!this._wt || this.AC.currentTime > this._wt) { this._wt = (this.AC?.currentTime || 0) + 0.45; this.play('power_water', { vol: 0.35, slice: 0.6 }) || this.sfx(900 + Math.random() * 300, 0.04, 'sine', 0.025); } }
+  splash(big = false) { this.play(big ? 'splash_big' : 'splash_small', { vol: big ? 0.7 : 0.25 }); }
+  love() { this.play('power_love', { vol: 0.55 }) || this.chime(660); }
+  pickup() { this.play('pickup_shell', { vol: 0.55 }) || this.chime(988); }
+  treasure() { this.play('chest_open', { vol: 0.8 }) || this.chime(523); }
+
+  synthSurf() {
+    const AC = this.AC;
+    const len = AC.sampleRate * 3, buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0); let last = 0;
+    for (let i = 0; i < len; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; }
+    const src = AC.createBufferSource(); src.buffer = buf; src.loop = true;
+    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 520;
+    const g = AC.createGain(); g.gain.value = 0.3; src.connect(lp).connect(g).connect(this.ambBus); src.start();
+    this.loops.amb_surf = g;
   }
   sfx(f, dur = 0.15, type = 'sine', vol = 0.1) {
     const AC = this.AC; if (!AC || this.muted) return;
     const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f;
     g.gain.setValueAtTime(vol, AC.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + dur);
-    o.connect(g).connect(this.master); o.start(); o.stop(AC.currentTime + dur + 0.02);
+    o.connect(g).connect(this.sfxBus); o.start(); o.stop(AC.currentTime + dur + 0.02);
   }
-  chime(base = 784) { [0, 0.09, 0.18].forEach((t, i) => setTimeout(() => this.sfx(base * [1, 1.25, 1.5][i], 0.35, 'sine', 0.08), t * 1000)); }
-  toggle() { this.muted = !this.muted; if (this.master) this.master.gain.value = this.muted ? 0 : 0.6; return this.muted; }
-  setShore(dist) { if (this.surf) this.surf.gain.value = Math.max(0.08, 0.38 - dist * 0.006); }
+  chime(base = 784) { [0, 0.09, 0.18].forEach((t, i) => setTimeout(() => this.sfx(base * [1, 1.25, 1.5][i], 0.35, 'sine', 0.07), t * 1000)); }
+  toggle() { this.muted = !this.muted; if (this.master) this.master.gain.value = this.muted ? 0 : 0.8; return this.muted; }
+  /** louder surf near the waterline, more birds inland */
+  setShore(dist) {
+    if (this.loops.amb_surf) this.loops.amb_surf.gain.value = Math.max(0.12, 0.75 - dist * 0.012);
+    if (this.loops.amb_island) this.loops.amb_island.gain.value = Math.min(0.55, 0.15 + dist * 0.01);
+  }
 }

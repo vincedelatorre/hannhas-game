@@ -40,7 +40,7 @@ export class Character {
       const c = (n === 'Jump' || n === 'Backflip') ? flattenHips(clip) : clip;
       c.name = n;
       const a = this.mixer.clipAction(c);
-      if (LOCO.includes(n) || n === 'Skip') { a.play(); a.setEffectiveWeight(n === 'Idle' ? 1 : 0); }
+      if (LOCO.includes(n) || ['Skip', 'SwimIdle', 'Swim', 'Sit'].includes(n)) { a.play(); a.setEffectiveWeight(n === 'Idle' ? 1 : 0); }
       this.actions[n] = a;
     }
     this.loco = { Idle: 1, Walk: 0, Run: 0, Sprint: 0 };
@@ -63,6 +63,10 @@ export class Character {
 
   update(dt, speed, grounded = true) {
     this.speed = speed;
+    // which family of clips: walking on ground, swimming, or sitting (slide, swing)
+    const want = this.sitting && this.actions.Sit ? 'sit' : this.swimming && this.actions.Swim ? 'swim' : 'ground';
+    this.mode ||= { ground: 1, swim: 0, sit: 0 };
+    for (const k of ['ground', 'swim', 'sit']) this.mode[k] += ((k === want ? 1 : 0) - this.mode[k]) * Math.min(1, dt * 6);
     // blend tree: weights from speed between neighbouring clips
     const w = { Idle: 0, Walk: 0, Run: 0, Sprint: 0 };
     if (speed < 0.15) w.Idle = 1;
@@ -73,13 +77,18 @@ export class Character {
     if (!this.actions.Sprint) { w.Run += w.Sprint; w.Sprint = 0; }
     const useSkip = this.skipping && this.actions.Skip && w.Walk > 0;
     const os = this.oneShot ? Math.max(0, Math.min(1, this.oneShot.action.getEffectiveWeight())) : 0;
+    const g = this.mode.ground * (1 - os);
     for (const n of LOCO) {
       this.loco[n] += (w[n] - this.loco[n]) * Math.min(1, dt * 10);
       const a = this.actions[n]; if (!a) continue;
-      a.setEffectiveWeight(this.loco[n] * (1 - os) * (n === 'Walk' && useSkip ? 0 : 1));
+      a.setEffectiveWeight(this.loco[n] * g * (n === 'Walk' && useSkip ? 0 : 1));
       if (NOMINAL[n] > 0) a.timeScale = THREE.MathUtils.clamp(speed / NOMINAL[n], 0.6, 1.6);
     }
-    if (this.actions.Skip) { this.actions.Skip.setEffectiveWeight(useSkip ? this.loco.Walk * (1 - os) : 0); this.actions.Skip.timeScale = THREE.MathUtils.clamp(speed / 2.2, 0.7, 1.4); }
+    if (this.actions.Skip) { this.actions.Skip.setEffectiveWeight(useSkip ? this.loco.Walk * g : 0); this.actions.Skip.timeScale = THREE.MathUtils.clamp(speed / 2.2, 0.7, 1.4); }
+    const swimMove = THREE.MathUtils.clamp(speed / 1.2, 0, 1);
+    this.actions.SwimIdle?.setEffectiveWeight(this.mode.swim * (1 - swimMove) * (1 - os));
+    if (this.actions.Swim) { this.actions.Swim.setEffectiveWeight(this.mode.swim * swimMove * (1 - os)); this.actions.Swim.timeScale = THREE.MathUtils.clamp(speed / 1.8, 0.7, 1.5); }
+    this.actions.Sit?.setEffectiveWeight(this.mode.sit * (1 - os));
     // finish one-shots at their end time
     if (this.oneShot) {
       const o = this.oneShot, a = o.action;
@@ -133,8 +142,11 @@ export class Player {
     const feet = this.pos;
     const depth = this.waterDepth(feet);
     this.sprinting = I.sprint && this.energy > 0.03 && mag > 0.2;
+    const swimming = depth > 1.05;
+    this.c.swimming = swimming;
     let max = this.sprinting ? 13 : (mag < 0.55 ? 1.6 : 4.4);
-    if (depth > 0.45) max *= this.sprinting ? 0.75 : 0.6;
+    if (swimming) max = this.sprinting ? 4.2 : 2.2;
+    else if (depth > 0.45) max *= this.sprinting ? 0.75 : 0.6;
     this.energy = THREE.MathUtils.clamp(this.energy + (this.sprinting ? -0.3 : 0.15) * dt, 0, 1);
 
     // accelerate toward the wish velocity (snappy but not instant)
@@ -219,7 +231,11 @@ export class Companion {
     const target = d > 0.01 ? to.normalize().multiplyScalar(want) : new THREE.Vector3();
     const dv = target.sub(new THREE.Vector3(this.vel.x, 0, this.vel.z));
     const k = Math.min(1, dt * 7); this.vel.x += dv.x * k; this.vel.z += dv.z * k;
-    if (this.body.grounded && this.vy <= 0) this.vy = -2; else this.vy -= 22 * dt;
+    const depth = this.leader.waterDepth(me);
+    this.c.swimming = depth > 1.05;
+    if (this.c.swimming) { this.vel.x *= 0.5; this.vel.z *= 0.5; }
+    if (this.body.grounded && this.vy <= 0) this.vy = -2; else this.vy -= (depth > 0.9 ? 6 : 22) * dt;
+    if (depth > 1.15) this.vy = Math.max(this.vy, (this.leader.waterLevelAt(me) - 1.15 - me.y) * 4);
     // hop when blocked and Wren is above
     if (this.body.grounded && want > 1 && lp.y - me.y > 0.6 && d < 4) this.vy = 8;
     this.body.move(new THREE.Vector3(this.vel.x * dt, this.vy * dt, this.vel.z * dt));

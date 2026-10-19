@@ -51,6 +51,27 @@ export class SkyAndSun {
     this.fill = new THREE.HemisphereLight(0xcfe9ff, 0xd9c29a, 0.35);
     scene.add(this.fill);
 
+    // night sky: stars and a moon that fade in after sunset
+    this.night = uniform(0);
+    const N = 2600, pos = new Float32Array(N * 3), R = () => Math.random();
+    for (let i = 0; i < N; i++) {
+      const u = R() * 2 - 1, a = R() * Math.PI * 2, r = Math.sqrt(1 - u * u);
+      pos.set([r * Math.cos(a) * 3800, Math.abs(u) * 3800, r * Math.sin(a) * 3800], i * 3);
+    }
+    const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const sm = new THREE.PointsNodeMaterial({ size: 2.2, sizeAttenuation: false, transparent: true, depthWrite: false, fog: false });
+    sm.colorNode = vec3(1, 0.97, 0.9); sm.opacityNode = this.night;
+    this.stars = new THREE.Points(sg, sm); this.stars.frustumCulled = false; this.stars.renderOrder = -1;
+    scene.add(this.stars);
+    const mc = document.createElement('canvas'); mc.width = mc.height = 128; const g = mc.getContext('2d');
+    const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(255,252,235,1)'); gr.addColorStop(0.42, 'rgba(255,250,228,1)'); gr.addColorStop(0.5, 'rgba(255,245,215,0.35)'); gr.addColorStop(1, 'rgba(255,240,210,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+    const mt = new THREE.CanvasTexture(mc); mt.colorSpace = THREE.SRGBColorSpace;
+    const mm = new THREE.SpriteNodeMaterial({ map: mt, transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending });
+    mm.opacityNode = this.night;
+    this.moon = new THREE.Sprite(mm); this.moon.scale.setScalar(260); scene.add(this.moon);
+    this.moonLight = new THREE.DirectionalLight(0xaecbff, 0); scene.add(this.moonLight);
+
     this.dir = new THREE.Vector3();
     this.setSun(elevation, azimuth);
   }
@@ -66,6 +87,15 @@ export class SkyAndSun {
     this.sun.color.setRGB(1.0, 0.72 + 0.24 * k, 0.5 + 0.4 * k);
     this.sun.intensity = 0.3 + 5.2 * k;
     this.fill.intensity = 0.1 + 0.25 * k;
+    const night = 1 - THREE.MathUtils.smoothstep(elevation, -6, 4);
+    this.night.value = night;
+    if (this.moon) {
+      const md = this.dir.clone().multiplyScalar(-1); md.y = Math.max(0.35, md.y);  md.normalize();
+      this.moon.position.copy(md.multiplyScalar(3500));
+      this.moonLight.position.copy(this.moon.position).normalize().multiplyScalar(100);
+      this.moonLight.intensity = night * 0.6;
+      this.fill.intensity += night * 0.12;
+    }
     this.envDirty = true;
   }
 

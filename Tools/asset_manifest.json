@@ -214,5 +214,68 @@
         "Sit": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_013425_ae0b30ce-9706-4e9d-b5db-2327dc5b009e.glb"
       }
     }
-  }
+  },
+  "audio": [
+    {
+      "name": "amb_surf",
+      "job": "23656dec-eb68-43b0-95a4-c0ac8ec66cc9",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_021429_23656dec-eb68-43b0-95a4-c0ac8ec66cc9.mp3"
+    },
+    {
+      "name": "amb_island",
+      "job": "f9852ccd-692f-404a-b874-9592031ef892",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_021429_f9852ccd-692f-404a-b874-9592031ef892.mp3"
+    },
+    {
+      "name": "step_sand",
+      "job": "3b65ab4c-4507-4a35-a94f-956200c87171",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_021429_3b65ab4c-4507-4a35-a94f-956200c87171.mp3"
+    },
+    {
+      "name": "step_water",
+      "job": "743391a9-6f3e-4a91-b69b-3db40c7bfbb9",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_021429_743391a9-6f3e-4a91-b69b-3db40c7bfbb9.mp3"
+    },
+    {
+      "name": "splash_small",
+      "job": "b8f40778-43e1-450e-8301-3972c7632d14",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_021429_b8f40778-43e1-450e-8301-3972c7632d14.mp3"
+    },
+    {
+      "name": "power_water",
+      "job": "d2ee5bd8-ce49-4786-846f-1b49b5151863",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_021429_d2ee5bd8-ce49-4786-846f-1b49b5151863.mp3"
+    },
+    {
+      "name": "power_love",
+      "job": "819516db-5e96-4411-a1ee-736fca33c063",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_021429_819516db-5e96-4411-a1ee-736fca33c063.mp3"
+    },
+    {
+      "name": "pickup_shell",
+      "job": "039e87a9-b70b-45ab-9c03-320dcc32ba1a",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_021429_039e87a9-b70b-45ab-9c03-320dcc32ba1a.mp3"
+    },
+    {
+      "name": "splash_big",
+      "job": "a98d633e-b672-4a1b-8ea7-d0be824e92f1",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_021429_a98d633e-b672-4a1b-8ea7-d0be824e92f1.mp3"
+    },
+    {
+      "name": "jump",
+      "job": "9e986103-3b8b-4d24-a0f3-513c1a4d1476",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_021429_9e986103-3b8b-4d24-a0f3-513c1a4d1476.mp3"
+    },
+    {
+      "name": "music_island",
+      "job": "a92816d2-d269-47ae-9237-18cbb91a7401",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_021429_a92816d2-d269-47ae-9237-18cbb91a7401.m4a"
+    },
+    {
+      "name": "chest_open",
+      "job": "82b374ff-3685-48e8-8e32-f77fcc14b6b2",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_021429_82b374ff-3685-48e8-8e32-f77fcc14b6b2.mp3"
+    }
+  ],
+  "_audio_note": "Generated on Higgsfield (Mirelo text-to-audio for effects and ambience, Sonilo for music). Tools/web encodes them to docs/assets/audio/*.mp3."
 }

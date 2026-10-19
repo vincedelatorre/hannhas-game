@@ -70,6 +70,12 @@ body.touch #stick { display: block; } body.touch #help { display: none; }
 #play:disabled { opacity: 0.55; cursor: progress; transform: none; }
 #start .opts { display: flex; gap: 10px; justify-content: center; align-items: center; font-size: 0.78rem; color: #5f6f6c; flex-wrap: wrap; }
 #start select { font: inherit; border-radius: 8px; border: 1px solid #d8ccb4; background: #fffaf0; padding: 4px 8px; color: var(--ink); }
+#gear { position: fixed; z-index: 6; width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--card); box-shadow: 0 6px 16px rgba(19, 70, 78, 0.22); font-size: 1.1rem; cursor: pointer; right: calc(220px + env(safe-area-inset-right, 0px)); top: calc(14px + env(safe-area-inset-top, 0px)); }
+#settings { position: fixed; z-index: 8; right: calc(12px + env(safe-area-inset-right, 0px)); top: calc(180px + env(safe-area-inset-top, 0px)); width: min(280px, calc(100vw - 24px)); display: grid; gap: 10px; font-size: 0.82rem; }
+#settings label { display: grid; gap: 4px; }
+#settings input[type=range] { width: 100%; accent-color: var(--lagoon); }
+#settings h4 { margin: 0; font-family: var(--display); color: var(--lagoon-deep); font-size: 1rem; }
+@media (max-width: 560px) { #gear { right: calc(12px + env(safe-area-inset-right, 0px)); top: calc(190px + env(safe-area-inset-top, 0px)); } #settings { top: auto; bottom: calc(150px + env(safe-area-inset-bottom, 0px)); } }
 #stats { position: fixed; z-index: 7; left: 50%; transform: translateX(-50%); top: calc(8px + env(safe-area-inset-top, 0px)); font: 600 0.72rem/1 ui-monospace, Menlo, monospace; color: #fff; background: rgba(20, 50, 56, 0.55); padding: 5px 9px; border-radius: 8px; pointer-events: none; }
 #win { position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; pointer-events: none; }
 #win .card { pointer-events: auto; background: var(--card); border-radius: 28px; padding: 26px 30px; text-align: center; max-width: 380px; display: grid; gap: 10px; box-shadow: 0 20px 60px rgba(19, 70, 78, 0.3); margin-inline: 16px; }
@@ -107,6 +113,14 @@ body.touch #stick { display: block; } body.touch #help { display: none; }
 <div class="hud chip" id="map"><canvas id="minimap" width="300" height="300" aria-label="Map of Pearl Cove"></canvas></div>
 <button id="mute" type="button" aria-label="Toggle sound">Sound</button>
 <div id="stats" aria-hidden="true"></div>
+<button id="gear" type="button" aria-label="Settings" aria-expanded="false">⚙</button>
+<div class="chip" id="settings" hidden>
+  <h4>World settings</h4>
+  <label>Time of day <input id="s-time" type="range" min="5" max="20" step="0.25" value="16.5"></label>
+  <label>Sun direction <input id="s-az" type="range" min="-90" max="150" step="1" value="32"></label>
+  <label>Sea <input id="s-sea" type="range" min="0" max="2" step="0.05" value="1"></label>
+  <label>Wind <input id="s-wind" type="range" min="0" max="2" step="0.05" value="1"></label>
+</div>
 
 <div class="hud chip" id="energy"><span>Pearl energy</span><div class="bar"><div class="fill" id="energy-fill"></div></div></div>
 <div class="hud chip" id="help"><b>Move</b> WASD · <b>Walk</b> hold C · <b>Look</b> drag · <b>Jump</b> Space (twice for a backflip)<br><b>Super speed</b> Shift · <b>Water</b> F or click · <b>Love</b> E · <b>View</b> V · <b>Stats</b> F3</div>

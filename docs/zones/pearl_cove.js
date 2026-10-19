@@ -19,7 +19,7 @@ export default {
   slide: { tower: [-17, 24], radius: 3.2, top: 11.5, turns: 2, exit: [-4.2, 12.2], ring: [-13.5, 17.5] },
 
   props: [
-    { model: 'SM_PalmSwing', pos: [-30, 2], height: 2.9, yaw: -90, collider: 'box' },
+    { model: 'SM_PalmSwing', pos: [-30, 2], height: 2.9, yaw: -90 },
     { model: 'SM_TreasureChest', id: 'chest', pos: [53, 6], height: 0.78, faceToward: [44, -2], collider: 'box' },
     { model: 'SM_Driftwood', pos: [-12, -2], length: 3.2, yaw: 20, collider: 'box' },
     { model: 'SM_Driftwood', pos: [18, -3], length: 2.6, yaw: -65, collider: 'box' },

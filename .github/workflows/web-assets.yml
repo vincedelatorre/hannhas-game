@@ -41,7 +41,7 @@ jobs:
       - name: Build browser assets
         working-directory: Tools/web
         run: |
-          rm -rf ../../docs/assets/models ../../docs/assets/textures
+          rm -rf ../../docs/assets/models ../../docs/assets/textures ../../docs/assets/audio
           npm run build
 
       - name: Commit docs/assets

@@ -16,6 +16,7 @@ for (const p of manifest.hires || []) jobs.push([path.join(out, 'hires', p.name)
 for (const [who, c] of Object.entries(manifest.characters_hires || {}))
   for (const [clip, url] of Object.entries(c.clips)) jobs.push([path.join(out, 'chars', who, `${clip}.glb`), url]);
 for (const t of manifest.materials || []) jobs.push([path.join(out, 'tex', t.name), t.url]);
+for (const a of manifest.audio || []) jobs.push([path.join(out, 'audio', a.name + path.extname(new URL(a.url).pathname)), a.url]);
 
 async function get([dest, url], tries = 3) {
   if (fs.existsSync(dest) && fs.statSync(dest).size > 0) return;

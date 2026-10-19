@@ -27,7 +27,7 @@ export class Powers {
       g.fxWater.emit(o, v, { life: 1.6, size: 0.12 + Math.random() * 0.08, color: [0.8, 0.95, 1], gravity: 14, onHit: (p, wet) => this.splash(p, wet) });
     }
     if (Math.random() < 0.5) g.fxGlow.emit(o, fwd.clone().multiplyScalar(2).add(new THREE.Vector3(0, 0.6, 0)), { life: 0.35, size: 0.35, color: [0.6, 0.95, 1], alpha: 0.5 });
-    g.audio?.sfx(900 + Math.random() * 300, 0.04, 'sine', 0.025);
+    g.audio?.water();
     g.quests.onWater(o, fwd);
   }
 
@@ -35,6 +35,7 @@ export class Powers {
     const g = this.g;
     for (let i = 0; i < 3; i++) g.fxWater.emit(p.clone().add(new THREE.Vector3(0, 0.05, 0)), new THREE.Vector3((Math.random() - 0.5) * 2.2, 1.4 + Math.random() * 1.6, (Math.random() - 0.5) * 2.2), { life: 0.45, size: 0.07, color: [0.9, 0.98, 1], gravity: 12 });
     if (onWater) g.decals?.splashRing(p, 0.35 + Math.random() * 0.2);
+    if (Math.random() < 0.08) g.audio?.splash(false);
     else g.fxFoam.emit(p.clone().add(new THREE.Vector3(0, 0.04, 0)), new THREE.Vector3(), { life: 0.6, size: 0.3, grow: 0.8, color: [0.75, 0.68, 0.55], alpha: 0.3 });
   }
 
@@ -50,7 +51,7 @@ export class Powers {
     }
     for (let i = 0; i < 16; i++) g.fxGlow.emit(origin, new THREE.Vector3((Math.random() - 0.5) * 4, Math.random() * 2, (Math.random() - 0.5) * 4), { life: 1.1, size: 0.25, color: [1, 0.6, 0.78], alpha: 0.7, drag: 2 });
     g.fxGlow.emit(origin, new THREE.Vector3(), { life: 0.7, size: 3.5, grow: 1.4, color: [1, 0.55, 0.75], alpha: 0.35 });
-    g.audio?.chime(660);
+    g.audio?.love();
     g.quests.onLove(origin);
     g.friend?.cheer?.();
   }
@@ -182,7 +183,7 @@ export class Quests {
       if (Math.hypot(P.x - s.x, -P.z - s.y) < 1.3 && Math.abs(P.y - s.g.position.y) < 1.8) {
         s.got = true; s.g.visible = false; this.S.shells++;
         for (let i = 0; i < 18; i++) g.fxGlow.emit(s.g.position, new THREE.Vector3((Math.random() - 0.5) * 3, 2 + Math.random() * 2, (Math.random() - 0.5) * 3), { life: 0.9, size: 0.2, color: [1, 0.8, 0.9], gravity: 3 });
-        g.audio?.chime(988);
+        g.audio?.pickup();
         g.toast(this.S.shells === 8 ? 'All 8 shells! The museum is full.' : `Shell ${this.S.shells} of 8`);
         this.changed();
       }
