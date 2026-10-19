@@ -2,8 +2,9 @@
 //
 // House-local metres; x = east, z = south. Kitchen interior x 3..12.5, z -3..6, ceiling 3.8.
 //   north wall  : symmetric cooking wall: 48" range, copper hood, glass uppers, two arched windows
-//   east wall   : built-in freezer + fridge columns, coffee station, pantry door, dining window
-//   south wall  : farmhouse sink under an arched window, dishwasher, two tall dining windows
+//   west wall   : arched zellige niche: ceramic sink, coffee machine + grinder, soda fridge, dishwasher, oak shelves
+//   east wall   : built-in freezer + fridge columns, serving counter, pantry door, dining window
+//   south wall  : arched window and two tall dining windows
 //   middle      : long soapstone island (microwave drawer, trash pull-out) with four stools
 //   south-east  : round oak table with four black ladder-back chairs
 //   pantry      : x 12.5..15.5, z 0.4..4.0: oak shelves with LED strips, jars, cereal, a counter
@@ -149,7 +150,7 @@ export function buildKitchen(H) {
   H.underLights = [];
   for (const g of [H.glassL, H.glassR]) { const l = new THREE.PointLight(0xffd9a8, 0, 2.6, 1.6); l.position.set(g.root.position.x + 0.82, 1.42, -2.7); R.add(l); H.underLights.push(l); }
   H.underSwitch = wallSwitch(H, { id: 'kitchen_under_lights', name: 'under-cabinet lights', at: L(6.95, 1.15, -2.866), ry: 0, initial: true,
-    onSet: on => { for (const g of [H.glassL, H.glassR]) g.strip.visible = on; } });
+    onSet: on => { for (const g of [H.glassL, H.glassR]) g.strip.visible = on; for (const st of H.nicheStrips || []) st.visible = on; } });
 
   // ---- east: built-in freezer + fridge columns, coffee station
   H.freezer = buildColumn(b, M, sys, { id: 'kitchen_freezer', name: 'freezer', at: L(12.02, 0, -2.43), rotY: -Math.PI / 2, freezer: true, hingeRight: false, game });
@@ -163,18 +164,21 @@ export function buildKitchen(H) {
     H.freezer.door.pivot.add(art);
     const magnet = new THREE.Mesh(new THREE.SphereGeometry(0.014, 10, 8), M.coral); magnet.position.set(0.45, 1.64, 0.058); H.freezer.door.pivot.add(magnet);
   }
-  // coffee station: a short run, open oak shelves above
-  H.coffeeRun = cabinetRun(b, M, sys, { id: 'coffee_run', at: L(12.38 - 0.32, 0, -0.85), rotY: -Math.PI / 2, modules: [{ kind: 'drawers', w: 0.6 }, { kind: 'doors2', w: 0.85 }, { kind: 'drawers', w: 0.6 }], game });
-  const CR = H.coffeeRun.root;
-  b.box(M.limestone, [1.025, 1.2, -0.314], [2.05, 0.56, 0.012], { parent: CR, collide: false, cast: false });
+  // a short serving counter between the fridge and the pantry door, open oak shelves above
+  H.runE = cabinetRun(b, M, sys, { id: 'kitchen_runE', at: L(12.38 - 0.32, 0, -0.85), rotY: -Math.PI / 2, modules: [{ kind: 'drawers', w: 0.6 }, { kind: 'doors2', w: 0.85 }, { kind: 'drawers', w: 0.6 }], game });
+  const ER = H.runE.root;
+  b.box(M.limestone, [1.025, 1.2, -0.314], [2.05, 0.56, 0.012], { parent: ER, collide: false, cast: false });
   for (const y of [1.55, 1.95]) {
-    b.box(M.whiteOak, [1.025, y, -0.18], [2.0, 0.04, 0.28], { parent: CR, collide: false, round: 0.006 });
-    for (const x of [0.25, 1.8]) b.box(M.blackSteel, [x, y - 0.05, -0.27], [0.02, 0.08, 0.08], { parent: CR, collide: false, cast: false });
+    b.box(M.whiteOak, [1.025, y, -0.18], [2.0, 0.04, 0.28], { parent: ER, collide: false, round: 0.006 });
+    for (const x of [0.25, 1.8]) b.box(M.blackSteel, [x, y - 0.05, -0.27], [0.02, 0.08, 0.08], { parent: ER, collide: false, cast: false });
   }
-  // cups and a jar on the shelves (decor)
-  for (let i = 0; i < 4; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.028, 0.07, 14), M.white); c.position.set(1.0 + i * 0.12, 1.605, -0.2); CR.add(c); }
-  for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.1, 16), i === 1 ? M.sageDark : M.white); c.position.set(0.5 + i * 0.5, 2.02, -0.2); CR.add(c); }
-  H.coffee = new CoffeeStation(H, CR);
+  for (let i = 0; i < 4; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.028, 0.07, 14), M.white); c.position.set(1.0 + i * 0.12, 1.605, -0.2); ER.add(c); }
+  for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.1, 16), i === 1 ? M.sageDark : M.white); c.position.set(0.5 + i * 0.5, 2.02, -0.2); ER.add(c); }
+  {   // a bowl of lemons on the counter
+    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.09, 0.08, 24, 1, true), M.white); bowl.material = M.white; bowl.position.set(1.5, 0.96, -0.05); ER.add(bowl);
+    const lem = new THREE.MeshStandardNodeMaterial({ color: 0xF2D23C, roughness: 0.5 });
+    for (let i = 0; i < 6; i++) { const l = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 8), lem); l.scale.set(1, 0.85, 1.25); const a = i * 1.05; l.position.set(1.5 + Math.cos(a) * 0.07 * (i < 5), 0.98 + (i === 5) * 0.05, -0.05 + Math.sin(a) * 0.07 * (i < 5)); ER.add(l); }
+  }
 
   // ---- island: soapstone top, drawers / trash / cupboards / microwave drawer on the range side
   H.island = cabinetRun(b, M, sys, { id: 'island', at: L(9.85, 0, -0.125), rotY: Math.PI, d: 0.95, noTop: true, game,
@@ -217,12 +221,8 @@ export function buildKitchen(H) {
   H.pendantSwitch = wallSwitch(H, { id: 'kitchen_lights', name: 'kitchen lights', at: L(3.122, 1.2, 2.65), ry: Math.PI / 2, initial: true,
     onSet: on => { for (const p of H.pendants) p.bulb.visible = on; } });
 
-  // ---- south: farmhouse sink under the arched window, dishwasher
-  H.runS = cabinetRun(b, M, sys, { id: 'kitchen_runS', at: L(7.6, 0, 6 - 0.12 - 0.32), rotY: Math.PI, game,
-    modules: [{ kind: 'door', w: 0.6 }, { kind: 'drawers', w: 0.6 }, { kind: 'door', w: 0.6, hingeRight: true }, { kind: 'farmsink', w: 0.9 }, { kind: 'dishwasher', w: 0.6 }, { kind: 'drawers', w: 0.6 }] });
-  H.sink = H.runS.info[3].sink;
-  H.dishwasher = H.runS.info[4].dw;
-  b.box(M.limestone, [5.65, 1.0, 5.874], [3.9, 0.16, 0.012], { collide: false, cast: false });
+  // ---- west: the arched sink niche (also the coffee station)
+  buildSinkNiche(H);
 
   // ---- dining nook: round oak table, four black ladder-back chairs
   const TX = 10.3, TZ = 4.2;
@@ -241,7 +241,6 @@ export function buildKitchen(H) {
   placeProp('SM_House_Monstera', 1.5, 12.0, 0, 5.5, 2.2, cyl(0.3, 1.3, 0x2f7d32));
   { const c = new THREE.Mesh(); c.visible = false; c.position.set(12.0, 0.6, 5.5); R.add(c); b.solid(c, 0.5, 1.2, 0.5); }
   placeProp('SM_Kitchen_CopperPots', 0.3, 9.75, 0.92, -2.62, 0, cyl(0.15, 0.25, 0xb87333));
-  placeProp('SM_Kitchen_Herbs', 0.26, 4.05, 0.92, 5.66, 0.4, cyl(0.08, 0.2, 0x3c8a3a));
 
   // ---- the walk-in pantry
   buildPantry(H);
@@ -305,54 +304,159 @@ export function buildKitchen(H) {
   spoon.baseScale = 1; sys.add(spoon); sys.place(spoon, spoon.home); items.spoon = spoon;
   // coffee things
   H.coffee.makeItems(mk);
+  H.nicheMakeItems();
   // pantry things
   H.pantry.makeItems(mk);
   return bowl;
 }
 
+// ------------------------------------------------------------------ arched sink niche (west wall)
+function buildSinkNiche(H) {
+  const { b, M, sys, A, game } = H, R = H.root;
+  const W = 3.3, d = 0.64, zs = W / 2;     // run centred on z = 0, from z +1.65 (south, left) to -1.65 (north, right)
+  // cream shaker cabinets, white stone top, brass pulls; left to right: drawers, soda fridge, sink, dishwasher, drawers
+  H.runW = cabinetRun(b, M, sys, { id: 'kitchen_runW', at: V3(3.12 + d / 2, 0, zs), rotY: Math.PI / 2, game, finish: { sage: M.cream, soapstone: M.quartz, bronze: M.brass },
+    modules: [{ kind: 'drawers', w: 0.6 }, { kind: 'bevfridge', w: 0.6 }, { kind: 'farmsink', w: 0.9 }, { kind: 'dishwasher', w: 0.6 }, { kind: 'drawers', w: 0.6 }] });
+  const NR = H.runW.root;            // local: x along the run (north), z out into the room, back wall at z = -d/2
+  H.sink = H.runW.info[2].sink;
+  H.dishwasher = H.runW.info[3].dw;
+  H.bevFridge = H.runW.info[1].bev;
+  const spring = 2.05, r = W / 2, pier = 0.3, back = -d / 2, depth = d + 0.02;
+  // plaster surround: two piers and the arch above, as deep as the counter
+  for (const x of [-pier / 2, W + pier / 2]) b.box(M.limewash, [x, KITCHEN.ceil / 2, back + depth / 2], [pier, KITCHEN.ceil, depth], { parent: NR });
+  const sh = new THREE.Shape(); const R0 = r + pier, top = KITCHEN.ceil - spring;
+  sh.moveTo(-R0, 0); sh.lineTo(-R0, top); sh.lineTo(R0, top); sh.lineTo(R0, 0); sh.lineTo(r, 0); sh.absarc(0, 0, r, 0, Math.PI, false); sh.lineTo(-R0, 0);
+  const arch = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth, bevelEnabled: false, curveSegments: 48 }), M.limewash);
+  arch.position.set(r, spring, back); arch.castShadow = arch.receiveShadow = true; NR.add(arch);
+  // glossy white zellige inside the niche, from the counter up into the arch
+  const tileH = spring - 0.92;
+  const t1 = new THREE.Mesh(new THREE.PlaneGeometry(W, tileH), M.zellige); t1.position.set(r, 0.92 + tileH / 2, back + 0.004); NR.add(t1);
+  const t2 = new THREE.Mesh(new THREE.CircleGeometry(r, 48, 0, Math.PI), M.zellige); t2.position.set(r, spring, back + 0.004); NR.add(t2);
+  t1.receiveShadow = t2.receiveShadow = true;
+  // two floating white-oak shelves with warm LED strips underneath
+  H.nicheStrips = [];
+  const shelfY = [1.5, 1.95];
+  for (const y of shelfY) {
+    b.box(M.whiteOak, [r, y, back + 0.15], [W - 0.01, 0.045, 0.3], { parent: NR, collide: false, round: 0.006 });
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(W - 0.1, 0.008, 0.012), M.ledStrip); strip.position.set(r, y - 0.026, back + 0.27); NR.add(strip); H.nicheStrips.push(strip);
+  }
+  const nl = new THREE.PointLight(0xffd9a8, 0, 3.0, 1.6); nl.position.set(3.7, 1.42, 0); R.add(nl); H.underLights.push(nl);
+  const s1 = shelfY[0] + 0.0225, s2 = shelfY[1] + 0.0225, sz = back + 0.15;
+  // ---- coffee station on the left (south) end: machine and grinder face out
+  H.coffee = new CoffeeStation(H, NR, { mach: 0.8, grind: 0.24, shelf: [0.26, s1, sz], cupHome: [0.56, s1, sz] });
+  // ---- shelf dressing: spices, canisters, cookbooks, a cake stand, plates, art, herbs
+  const spiceCols = [0xB5361B, 0xD98E04, 0x6B8E23, 0x8B4513, 0xC0392B, 0xE1B12C, 0x5D4037, 0x2E7D32, 0xF4D03F, 0x795548];
+  for (let i = 0; i < 10; i++) {
+    const g = new THREE.Group(); g.position.set(1.22 + i * 0.062, s1, sz + (i % 2 ? 0.03 : -0.02)); NR.add(g);
+    const gl = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.085, 12, 1, true), M.clearGlass); gl.position.y = 0.0425; g.add(gl);
+    const f = new THREE.Mesh(new THREE.CylinderGeometry(0.021, 0.021, 0.06, 10), new THREE.MeshStandardNodeMaterial({ color: spiceCols[i], roughness: 0.9 })); f.position.y = 0.032; g.add(f);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.018, 12), i % 3 ? M.blackSteel : M.brass); cap.position.y = 0.094; g.add(cap);
+  }
+  // a stack of plates and a pair of glasses
+  for (let i = 0; i < 5; i++) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.09, 0.012, 24), M.white); p.position.set(2.05, s1 + 0.008 + i * 0.013, sz); NR.add(p); }
+  for (const x of [2.4, 2.52]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.03, 0.11, 14, 1, true), M.clearGlass); c.position.set(x, s1 + 0.055, sz); NR.add(c); }
+  // framed art leaning at the back of the lower shelf
+  if (A.textures.T_Art_Fruit) {
+    const fr = new THREE.Group(); fr.position.set(1.0, s1, back + 0.04); fr.rotation.x = -0.12; NR.add(fr);
+    b.box(M.brass, [0, 0.13, 0], [0.22, 0.26, 0.015], { parent: fr, collide: false });
+    const art = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.22), new THREE.MeshStandardNodeMaterial({ roughness: 0.7 })); art.material.colorNode = texture(A.textures.T_Art_Fruit, uv()).rgb; art.position.set(0, 0.13, 0.009); fr.add(art);
+  }
+  // upper shelf: cookbooks, a glass-domed cake stand, herbs, brass candlesticks, little bowls
+  const bookCols = [0xE8A0B4, 0xF4EAD5, 0xC0392B, 0x7FB3A6, 0xF2C14E, 0x34495E];
+  let bx = 0.12;
+  for (const [i, c] of bookCols.entries()) { const t = 0.03 + (i % 3) * 0.008, hgt = 0.2 + (i % 2) * 0.03; const bk = new THREE.Mesh(new THREE.BoxGeometry(t, hgt, 0.17), new THREE.MeshStandardNodeMaterial({ color: c, roughness: 0.7 })); bk.position.set(bx + t / 2, s2 + hgt / 2, sz); NR.add(bk); bx += t + 0.004; }
+  { const bk = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.03, 0.17), new THREE.MeshStandardNodeMaterial({ color: 0xD9C9A3, roughness: 0.7 })); bk.position.set(0.5, s2 + 0.015, sz); NR.add(bk); }
+  {
+    const st = new THREE.Group(); st.position.set(0.95, s2, sz); NR.add(st);
+    const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 0.08, 16), M.white); foot.position.y = 0.04; st.add(foot);
+    const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.12, 0.015, 28), M.white); plate.position.y = 0.088; st.add(plate);
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(0.12, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), M.clearGlass); dome.scale.y = 1.15; dome.position.y = 0.095; st.add(dome);
+    const knob = new THREE.Mesh(new THREE.SphereGeometry(0.015, 10, 8), M.clearGlass); knob.position.y = 0.24; st.add(knob);
+    const cake = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.07, 24), new THREE.MeshStandardNodeMaterial({ color: 0xF6D7E0, roughness: 0.8 })); cake.position.y = 0.13; st.add(cake);
+  }
+  for (const [x, hh] of [[1.9, 0.2], [2.0, 0.15]]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.03, hh, 12), M.brass); c.position.set(x, s2 + hh / 2, sz); NR.add(c); }
+  for (const x of [2.35, 2.55]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.04, 0.05, 16), M.white); c.position.set(x, s2 + 0.025, sz); NR.add(c); }
+  for (const [x, h] of [[1.45, 0.24], [3.0, 0.22]]) { const m = prop(A, 'SM_Kitchen_Herbs', h, cyl(0.08, 0.2, 0x3c8a3a)); m.position.set(x, s2, sz); NR.add(m); }
+  // on the counter: a crock of wooden utensils by the sink, a brass soap pump
+  {
+    const crock = new THREE.Group(); crock.position.set(3.0, 0.92, -0.12); NR.add(crock);
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.15, 18), M.white); pot.position.y = 0.075; crock.add(pot);
+    for (let i = 0; i < 4; i++) { const u = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.009, 0.3, 8), M.whiteOak); u.position.set(Math.cos(i * 1.6) * 0.02, 0.2, Math.sin(i * 1.6) * 0.02); u.rotation.z = (i - 1.5) * 0.1; crock.add(u); }
+    const pump = new THREE.Group(); pump.position.set(2.2, 0.92, -0.2); NR.add(pump);
+    const btl = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.13, 14), M.white); btl.position.y = 0.065; pump.add(btl);
+    const hd = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.06, 8), M.brass); hd.position.y = 0.16; pump.add(hd);
+  }
+  // shelf slots: spare spots that take anything, plus three canisters you can pick up
+  H.nicheSlots = [[2.75, s1], [2.95, s1], [3.15, s1], [2.85, s2], [1.2, s2]].map(([x, y], i) => sys.addSlot(new Slot({ id: `niche_shelf_${i}`, name: 'on the shelf', parent: NR, pos: [x, y, sz], radius: 2.1 })));
+  H.nicheMakeItems = () => {
+    for (const [i, [name, col]] of [['sugar', 0xFFFFFF], ['oats', 0xD9B98A], ['cocoa', 0x4A2511]].entries()) {
+      const it = new Item({ id: `niche_jar_${i}`, name: `jar of ${name}`, object: jarObject(M, col, 0.19, 0.055), tags: ['food', 'jar'], home: H.nicheSlots[i] });
+      it.baseScale = 1; sys.add(it); sys.place(it, it.home); H.items[`niche_jar_${i}`] = it;
+    }
+    // sodas in the soda fridge
+    const cols = [[0xD62828, 'cherry soda'], [0x2A9D8F, 'lime soda'], [0xF4A261, 'orange soda'], [0x6A4C93, 'grape soda']];
+    cols.forEach(([c, name], i) => {
+      const g = new THREE.Group();
+      const can = new THREE.Mesh(new THREE.CylinderGeometry(0.033, 0.033, 0.12, 16), new THREE.MeshStandardNodeMaterial({ color: c, roughness: 0.3, metalness: 0.5 })); can.position.y = 0.06; g.add(can);
+      const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.033, 0.008, 16), M.stainless); lid.position.y = 0.124; g.add(lid);
+      g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+      const it = new Item({ id: `soda_${i}`, name, object: g, tags: ['drink', 'food'], home: H.bevFridge.slots[i],
+        use: (s, it) => ({ label: `Drink the ${it.name}`, clip: 'PickUp', run: () => { s.sfx('drink'); s.toast('Fizzy! Ahh.'); s.held = null; it.held = false; s.place(it, it.home); s.changed(); } }) });
+      it.baseScale = 1; sys.add(it); sys.place(it, it.home); H.items[`soda_${i}`] = it;
+    });
+  };
+}
+
 // ------------------------------------------------------------------ coffee station
 class CoffeeStation {
-  constructor(H, CR) {
+  /**
+   * CR: parent group (a counter run root; local +z faces the room, top at y 0.92)
+   * at: { mach: x, grind: x, shelf: [x, y, z], cupHome: [x, z] } in CR's local space
+   */
+  constructor(H, CR, at) {
     this.H = H; const { b, M, sys, A } = H;
-    this.root = CR;
+    this.root = CR; this.at = at;
     const top = 0.92;
-    // the generated espresso machine and grinder (static), with slots in front of them
-    const mach = prop(A, 'SM_Kitchen_EspressoMachine', 0.42, simple(new THREE.BoxGeometry(0.42, 0.42, 0.36).translate(0, 0.21, 0), 0xb8bcc0));
-    mach.position.set(1.05, top, -0.06); CR.add(mach);
-    const grinder = prop(A, 'SM_Kitchen_Grinder', 0.4, simple(new THREE.BoxGeometry(0.16, 0.4, 0.2).translate(0, 0.2, 0), 0x2b2b2b));
-    grinder.position.set(0.38, top, -0.08); CR.add(grinder);
+    // the generated espresso machine and grinder: the models' fronts face their +x, so turn
+    // them a quarter turn to face out into the room; slots sit at their real fronts
+    const front = m => { m.geometry.computeBoundingBox?.(); const bb = m.geometry.boundingBox; return bb && !m.userData.fallback ? bb.max.x * m.baseScale : 0.18; };
+    const mach = prop(A, 'SM_Kitchen_EspressoMachine', 0.42, simple(new THREE.BoxGeometry(0.36, 0.42, 0.36).translate(0, 0.21, 0), 0xb8bcc0));
+    const mz = -0.06; mach.position.set(at.mach, top, mz); mach.rotation.y = -Math.PI / 2; CR.add(mach);
+    const grinder = prop(A, 'SM_Kitchen_Grinder', 0.4, simple(new THREE.BoxGeometry(0.2, 0.4, 0.16).translate(0, 0.2, 0), 0x2b2b2b));
+    const gz = -0.08; grinder.position.set(at.grind, top, gz); grinder.rotation.y = -Math.PI / 2; CR.add(grinder);
+    const mf = mz + front(mach), gf = gz + front(grinder);
     // brew stream (thin brown thread) from the group head to the cup
     const sm = new THREE.MeshStandardNodeMaterial({ color: 0x4a2a14, roughness: 0.3, transparent: true, opacity: 0.9 });
-    this.stream = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.14, 6), sm); this.stream.position.set(1.05, top + 0.12, 0.14); this.stream.visible = false; CR.add(this.stream);
+    this.stream = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.14, 6), sm); this.stream.position.set(at.mach, top + 0.13, mf - 0.05); this.stream.visible = false; CR.add(this.stream);
     this.s = { beans: false, grinding: 0, brewing: 0 };
-    const pf = () => this.H.items.portafilter;
-    this.hopper = sys.addSlot(new Slot({ id: 'coffee_hopper', name: 'into the grinder', parent: CR, pos: [0.38, top + 0.4, -0.08], radius: 1.6,
+    this.hopper = sys.addSlot(new Slot({ id: 'coffee_hopper', name: 'into the grinder', parent: CR, pos: [at.grind, top + 0.41, gz], radius: 1.6,
       accepts: it => it.tags.has('beans') && !this.s.beans,
       onPut: (it, s) => { this.s.beans = true; s.toast('Beans in! Put the coffee handle under the grinder and grind.'); s.sfx('pour');
         setTimeout(() => { if (it.slot !== this.hopper) return; this.hopper.item = null; s.flyTo(it, () => it.home.world(), () => { s.place(it, it.home); s.changed(); }); }, 700); } }));
-    this.fork = sys.addSlot(new Slot({ id: 'coffee_fork', name: 'under the grinder', parent: CR, pos: [0.38, top + 0.06, 0.1], radius: 1.6, accepts: it => it.tags.has('portafilter') }));
-    this.group = sys.addSlot(new Slot({ id: 'coffee_group', name: 'into the espresso machine', parent: CR, pos: [1.05, top + 0.2, 0.15], radius: 1.6, accepts: it => it.tags.has('portafilter') }));
-    this.cupSlot = sys.addSlot(new Slot({ id: 'coffee_cup', name: 'under the spout', parent: CR, pos: [1.05, top + 0.02, 0.16], radius: 1.6, accepts: it => it.tags.has('cup') }));
-    this.shelf = sys.addSlot(new Slot({ id: 'coffee_shelf', name: 'on the coffee shelf', parent: CR, pos: [0.4, 1.57, -0.18], radius: 2.0 }));
-    this.counter = sys.addSlot(new Slot({ id: 'coffee_counter', name: 'on the counter', parent: CR, pos: [1.7, top, 0.05] }));
+    this.fork = sys.addSlot(new Slot({ id: 'coffee_fork', name: 'under the grinder', parent: CR, pos: [at.grind, top + 0.12, gf + 0.02], radius: 1.6, accepts: it => it.tags.has('portafilter') }));
+    this.group = sys.addSlot(new Slot({ id: 'coffee_group', name: 'into the espresso machine', parent: CR, pos: [at.mach, top + 0.21, mf - 0.03], radius: 1.6, accepts: it => it.tags.has('portafilter') }));
+    this.cupSlot = sys.addSlot(new Slot({ id: 'coffee_cup', name: 'under the spout', parent: CR, pos: [at.mach, top + 0.02, mf - 0.05], radius: 1.6, accepts: it => it.tags.has('cup') }));
+    this.shelf = sys.addSlot(new Slot({ id: 'coffee_shelf', name: 'on the shelf', parent: CR, pos: at.shelf, radius: 2.0 }));
+    this.counter = this.fork;    // the coffee handle lives in the grinder fork
+    this.anchors = { grind: [at.grind, top + 0.25, gf], brew: [at.mach, top + 0.32, mf] };
     // grinder button and brew lever
-    const grind = new Interactable({ id: 'coffee_grind', name: 'grinder', object: CR, anchor: [0.38, top + 0.25, 0.05], radius: 1.6, save: false });
+    const grind = new Interactable({ id: 'coffee_grind', name: 'grinder', object: CR, anchor: this.anchors.grind, radius: 1.6, save: false });
     grind.verb = s => {
       if (this.s.grinding > 0) return null;
-      if (!this.fork.item) return this.s.beans ? { label: 'Put the coffee handle under the grinder', disabled: true, run: () => s.toast('The coffee handle is on the counter next to the machine.') } : null;
+      if (!this.fork.item) return this.s.beans ? { label: 'Put the coffee handle under the grinder', disabled: true, run: () => s.toast('The coffee handle is resting under the grinder.') } : null;
       if (this.fork.item.state.ground) return null;
       if (!this.s.beans) return { label: 'Pour coffee beans into the grinder first', disabled: true, run: () => s.toast('The coffee bean jar is on the shelf above.') };
       return { label: 'Grind the coffee beans', clip: 'PickUp', run: () => { this.s.grinding = 1.6; s.sfx('grind'); } };
     };
     sys.add(grind);
-    const brew = new Interactable({ id: 'coffee_brew', name: 'espresso machine', object: CR, anchor: [1.05, top + 0.32, 0.1], radius: 1.6, save: false });
+    const brew = new Interactable({ id: 'coffee_brew', name: 'espresso machine', object: CR, anchor: this.anchors.brew, radius: 1.6, save: false });
     brew.verb = s => {
       if (this.s.brewing > 0) return null;
       const p = this.group.item;
       if (!p) return null;
       if (!p.state.ground) return { label: 'Grind some coffee into the handle first', disabled: true, run: () => s.toast('Take the handle to the grinder.') };
       const cup = this.cupSlot.item;
-      if (!cup) return { label: 'Put a cup under the spout', disabled: true, run: () => s.toast('The little coffee cup is on the counter.') };
+      if (!cup) return { label: 'Put a cup under the spout', disabled: true, run: () => s.toast('The little coffee cup is on the shelf above.') };
       if ((cup.state.fill || 0) > 0.1) return { label: 'The cup is already full', disabled: true, run: () => {} };
       return { label: 'Brew a coffee', clip: 'PickUp', run: () => { this.s.brewing = 3.2; s.sfx('brew'); } };
     };
@@ -388,12 +492,12 @@ class CoffeeStation {
     ec.baseScale = 1; addLiquid(ec, { r: 0.03, y0: 0.008, depth: 0.045 });
     sys.add(ec); sys.place(ec, ec.home); this.H.items.espresso_cup = ec;
   }
-  cupSlotHome() { return this.H.sys.addSlot(new Slot({ id: 'coffee_counter2', name: 'on the counter', parent: this.root, pos: [1.55, 0.92, 0.12] })); }
+  cupSlotHome() { return this.H.sys.addSlot(new Slot({ id: 'coffee_cup_home', name: 'on the shelf', parent: this.root, pos: this.at.cupHome, radius: 2.0 })); }
   update(dt) {
     const sys = this.H.sys, g = this.H.game;
     if (this.s.grinding > 0) {
       this.s.grinding -= dt;
-      if (Math.random() < 0.5 && g.fxGlow) { this.root.updateWorldMatrix(true, false); const p = V3(0.38, 1.0, 0.1).applyMatrix4(this.root.matrixWorld); g.fxGlow.emit(p, V3(0, -0.4, 0), { life: 0.3, size: 0.02, gravity: 3, color: [0.35, 0.2, 0.1] }); }
+      if (Math.random() < 0.5 && g.fxGlow) { this.root.updateWorldMatrix(true, false); const p = this.fork.world(); p.y += 0.06; g.fxGlow.emit(p, V3(0, -0.4, 0), { life: 0.3, size: 0.02, gravity: 3, color: [0.35, 0.2, 0.1] }); }
       if (this.s.grinding <= 0) {
         this.s.grinding = 0; this.s.beans = false;
         const p = this.fork.item; if (p) { p.state.ground = true; p.onState(); }
@@ -405,7 +509,7 @@ class CoffeeStation {
       this.stream.visible = true;
       const cup = this.cupSlot.item;
       if (cup) { cup.state.fill = Math.min(1, (cup.state.fill || 0) + dt / 3); cup.state.coffee = true; cup.onState(); }
-      if (Math.random() < 0.3 && g.fxFoam) { this.root.updateWorldMatrix(true, false); const p = V3(1.05, 1.0, 0.16).applyMatrix4(this.root.matrixWorld); g.fxFoam.emit(p, V3(0, 0.35, 0), { life: 1.2, size: 0.06, grow: 1.5, alpha: 0.18 }); }
+      if (Math.random() < 0.3 && g.fxFoam) { this.root.updateWorldMatrix(true, false); const p = this.cupSlot.world(); p.y += 0.08; g.fxFoam.emit(p, V3(0, 0.35, 0), { life: 1.2, size: 0.06, grow: 1.5, alpha: 0.18 }); }
       if (this.s.brewing <= 0) {
         this.s.brewing = 0; this.stream.visible = false;
         const p = this.group.item; if (p) { p.state.ground = false; p.onState(); }

@@ -1594,7 +1594,7 @@
         "file": "docs/game/house/kitchen.js"
       },
       "materials": "generated textures (T_*)",
-      "description": "beans into the grinder, grind into the handle, handle into the machine, cup under the spout, brew",
+      "description": "beans into the grinder, grind into the handle, handle into the machine, cup under the spout, brew; moved into the arched sink niche, machine and grinder turned to face out",
       "status": {
         "production": "built",
         "validation": "pending"
@@ -1627,6 +1627,58 @@
       },
       "materials": "generated textures (T_*)",
       "description": "black-steel arched windows with two opening casement sashes and a beach view",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_zellige_tile",
+      "name": "T_Zellige_Tile",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "109dd9f9-c490-41ca-b3b3-9e3a70aadb35",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_175051_109dd9f9-c490-41ca-b3b3-9e3a70aadb35.png"
+      },
+      "prompt": "glossy handmade white zellige square tiles",
+      "use": "arched sink niche",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_sink_niche",
+      "name": "Arched sink niche",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/kitchen.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "west-wall plaster arch with zellige tile, cream cabinets, white stone top, ceramic sink, coffee machine and grinder facing out, soda fridge, dishwasher, two oak shelves with spices, books, cake stand, herbs",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_soda_fridge",
+      "name": "Soda fridge",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/appliances.js"
+      },
+      "materials": "stainless, glass",
+      "description": "under-counter glass-door beverage fridge with light, wire shelves and soda cans you can take and drink",
       "status": {
         "production": "built",
         "validation": "pending"

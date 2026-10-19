@@ -63,6 +63,11 @@ export function makeMaterials(T) {
   M.white = std({ roughness: 0.4, color: 0xF4F1EA });
   M.ledStrip = std({ roughness: 0.5, color: 0xFFE9C2 }); M.ledStrip.emissiveNode = color(0xFFD9A0).mul(3.0);
   M.clearGlass = new THREE.MeshPhysicalNodeMaterial({ roughness: 0.04, transparent: true, opacity: 0.22, color: 0xEAF6F6, depthWrite: false });
+  // ---- arched sink niche (white zellige, cream cabinets, white stone, brass)
+  M.zellige = new THREE.MeshPhysicalNodeMaterial({ roughness: 0.16, clearcoat: 0.7, clearcoatRoughness: 0.2 });
+  M.zellige.colorNode = T.T_Zellige_Tile ? worldTiled(T.T_Zellige_Tile, 1.1) : color(0xEDE9E1);
+  M.cream = std({ roughness: 0.5 }, T.T_Sage_Cabinet ? mix(worldTiled(T.T_Sage_Cabinet, 0.9), color(0xF1EBDD), float(0.82)) : color(0xEFE8DA));
+  M.quartz = std({ roughness: 0.22 }, T.T_Countertop_Marble ? mix(worldTiled(T.T_Countertop_Marble, 0.5), color(0xF6F3EE), float(0.35)) : color(0xF4F1EB));
   return M;
 }
 

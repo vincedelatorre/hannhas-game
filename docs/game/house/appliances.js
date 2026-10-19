@@ -36,7 +36,9 @@ function shaker(b, M, parent, [cx, cy, cz], w, h, mat = M.sage, rail = 0.065) {
  * modules: [{ kind: 'door'|'doors2'|'drawers'|'farmsink'|'dishwasher'|'microwave'|'trash'|'panel', w }]
  * Front faces local +z, back at -d/2. Returns { root, info[], slots[], W, top }.
  */
-export function cabinetRun(b, M, sys, { id, at, rotY = 0, modules, d = 0.64, h = 0.92, noTop = false, topOverhang = 0.03, game }) {
+export function cabinetRun(b, M, sys, { id, at, rotY = 0, modules, d = 0.64, h = 0.92, noTop = false, topOverhang = 0.03, game, finish }) {
+  // finish: { sage: cabinet material, soapstone: top material, bronze: pull material }
+  if (finish) M = Object.assign(Object.create(M), finish);
   const root = new THREE.Group(); root.position.copy(at); root.rotation.y = rotY; b.root.add(root);
   const W = modules.reduce((n, m) => n + m.w, 0), ct = 0.04, fz = d / 2;
   b.box(M.blackWood, [W / 2, 0.05, 0.0], [W, 0.1, d - 0.08], { parent: root, collide: false, cast: false });   // toe kick
@@ -102,6 +104,8 @@ export function cabinetRun(b, M, sys, { id, at, rotY = 0, modules, d = 0.64, h =
     } else if (mod.kind === 'microwave') {
       carcass();
       m.mw = microwaveDrawer(b, M, sys, { id: `${id}_mw`, root, xc, fz, w, d, h, game });
+    } else if (mod.kind === 'bevfridge') {
+      m.bev = bevFridge(b, M, sys, { id: `${id}_bev`, root, xc, x0, fz, w, d, h, game });
     } else if (mod.kind === 'panel') {
       carcass(); shaker(b, M, root, [xc, 0.12 + (h - 0.2) / 2, fz + 0.011], w - 0.008, h - 0.21);
     }
@@ -168,6 +172,39 @@ function farmSink(b, M, sys, { id, root, xc, fz, w, d, h, game }) {
   const plug = sys.add(new Toggle({ id: `${id}.stopper`, name: 'drain stopper', object: root, anchor: [xc, by + 0.05, 0.02], persist: false, verbOn: 'Put in the', verbOff: 'Pull out the', sound: 'click', radius: 1.3 }));
   return { hot: hotT, cold: coldT, plug, stream, pool, slot, mouth, basinY: by + wall / 2, root, S, stopper, maxLevel: depth - 0.05,
     get running() { return hotT.on || coldT.on; }, get isHot() { return hotT.on; } };
+}
+
+// ------------------------------------------------------------------ under-counter beverage fridge
+function bevFridge(b, M, sys, { id, root, xc, x0, fz, w, d, h, game }) {
+  const ih = h - 0.16, y0 = 0.1, t = 0.025, inner = d - 0.06;
+  const liner = new THREE.MeshStandardNodeMaterial({ color: 0x23272b, roughness: 0.5 });
+  b.box(liner, [xc, y0 + ih / 2, -d / 2 + 0.03], [w - 0.02, ih, 0.02], { parent: root, collide: false, cast: false });
+  for (const s of [-1, 1]) b.box(liner, [xc + s * (w / 2 - 0.02), y0 + ih / 2, 0], [0.02, ih, inner], { parent: root, collide: false, cast: false });
+  b.box(liner, [xc, y0 + 0.01, 0], [w - 0.02, 0.02, inner], { parent: root, collide: false, cast: false });
+  b.box(liner, [xc, y0 + ih - 0.01, 0], [w - 0.02, 0.02, inner], { parent: root, collide: false, cast: false });
+  // cool white LED along the top and two wire shelves
+  const lamp = new THREE.Mesh(new THREE.BoxGeometry(w - 0.1, 0.008, 0.02), M.lamp); lamp.position.set(xc, y0 + ih - 0.03, 0.1); root.add(lamp); lamp.visible = false;
+  const light = new THREE.PointLight(0xdff2ff, 0, 1.2, 2); light.position.set(xc, y0 + ih - 0.1, 0.05); root.add(light);
+  const shelfY = [y0 + 0.27, y0 + 0.52];
+  for (const y of shelfY) for (let i = 0; i <= 6; i++) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.005, 0.005, inner - 0.04), M.stainless); r.position.set(xc - w / 2 + 0.05 + i * (w - 0.1) / 6, y, 0); root.add(r); }
+  // rows of soda cans in bright colours (decor at the back)
+  const cols = [0xD62828, 0x2A9D8F, 0xF4A261, 0x6A4C93, 0x1D70B8, 0xE9C46A];
+  [y0 + 0.022, shelfY[0] + 0.003, shelfY[1] + 0.003].forEach((y, row) => { for (let i = 0; i < 4; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.033, 0.033, 0.12, 14), new THREE.MeshStandardNodeMaterial({ color: cols[(i + row * 2) % 6], roughness: 0.3, metalness: 0.5 })); c.position.set(xc - 0.18 + i * 0.12, y + 0.06, -0.17); root.add(c); } });
+  // glass door with a stainless frame, hinged on the left (x0) side
+  const hinge = new THREE.Group(); hinge.position.set(x0 + 0.004, y0, fz); root.add(hinge);
+  const dw = w - 0.008, fw = 0.045;
+  const fr = (x, y, ww, hh) => b.box(M.stainless, [x, y, 0.015], [ww, hh, 0.03], { parent: hinge, collide: false });
+  fr(dw / 2, fw / 2, dw, fw); fr(dw / 2, ih - fw / 2, dw, fw); fr(fw / 2, ih / 2, fw, ih); fr(dw - fw / 2, ih / 2, fw, ih);
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(dw - 2 * fw, ih - 2 * fw), new THREE.MeshPhysicalNodeMaterial({ roughness: 0.05, transparent: true, opacity: 0.25, color: 0x9ab6c4, depthWrite: false }));
+  glass.position.set(dw / 2, ih / 2, 0.02); hinge.add(glass);
+  const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, ih * 0.6, 10), M.stainless); bar.position.set(dw - 0.03, ih / 2, 0.05); hinge.add(bar);
+  const door = sys.add(new Hinge({ id: `${id}.door`, name: 'soda fridge', object: hinge, anchor: [dw * 0.7, ih * 0.6, 0.1], pivot: hinge, axis: 'y', angle: -100, duration: 0.5, sound: 'fridge', radius: 1.6,
+    onChange: open => { lamp.visible = open; light.intensity = open ? 0.9 : 0; } }));
+  const slots = [];
+  shelfY.forEach((y, k) => { for (const dx of [-0.13, 0.0, 0.13]) slots.push(sys.addSlot(new Slot({ id: `${id}_s${k}_${slots.length}`, name: 'in the soda fridge', parent: root, pos: [xc + dx, y + 0.003, 0.05], enabled: () => door.openAmount > 0.6, accepts: it => it.tags.has('drink'), radius: 1.6 }))); });
+  // a soft glow through the glass even when shut, so it reads as a drinks fridge
+  const glowStrip = new THREE.Mesh(new THREE.BoxGeometry(w - 0.12, 0.006, 0.01), M.ledStrip); glowStrip.position.set(xc, y0 + ih - 0.05, -d / 2 + 0.05); root.add(glowStrip);
+  return { door, slots };
 }
 
 // ------------------------------------------------------------------ dishwasher (panel-ready)
