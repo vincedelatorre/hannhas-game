@@ -1700,7 +1700,46 @@
       "tileable": true,
       "max_size": 1024,
       "status": {
+        "production": "retired",
+        "validation": "pending"
+      },
+      "history": [
+        "2026-10-19: too dark; replaced by T_Natural_Oak_Floor"
+      ]
+    },
+    {
+      "id": "t_natural_oak_floor",
+      "name": "T_Natural_Oak_Floor",
+      "kind": "texture",
+      "room": "house",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "ffbab165-8073-47ee-a03e-958c6d94fcc3",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_184017_ffbab165-8073-47ee-a03e-958c6d94fcc3.png"
+      },
+      "prompt": "wide-plank natural European white oak, light warm tan, matte oil finish (family reference photo 2)",
+      "use": "floor 1: foyer, kitchen, pantry",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
         "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen2_bird_of_paradise",
+      "name": "Bird of Paradise",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/kitchen.js"
+      },
+      "materials": "procedural (TSL leaf veins, speckled ivory ceramic)",
+      "description": "tall Strelitzia nicolai, ten paddle leaves on slender stems with gentle sway, ivory matte planter (collider on the pot only), in the corner beside the freezer",
+      "status": {
+        "production": "built",
         "validation": "pending"
       }
     }

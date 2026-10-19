@@ -27,7 +27,7 @@ export const HOUSE_MODELS = ['SM_Kitchen_Cupcake', 'SM_Kitchen_MilkBottle', 'SM_
   'SM_House_Monstera', 'SM_Kitchen_CopperPots',
   'SM_Kitchen_EspressoMachine', 'SM_Kitchen_Grinder', 'SM_Kitchen_Skillet', 'SM_Kitchen_DutchOven', 'SM_Kitchen_Herbs', 'SM_Kitchen_StandMixer'];
 export const HOUSE_TEXTURES = ['T_Wall_Plaster', 'T_Cabinet_Turquoise', 'T_Honey_Wood', 'T_Window_View', 'T_Art_Fruit', 'T_Art_Turtle',
-  'T_Oak_Floor', 'T_Sage_Cabinet', 'T_Limestone_Tile', 'T_Soapstone', 'T_Limewash', 'T_Aged_Copper', 'T_White_Oak', 'T_Cereal_Boxes', 'T_Cookbook', 'T_Countertop_Marble', 'T_Zellige_Tile', 'T_Hickory_Floor'];
+  'T_Oak_Floor', 'T_Sage_Cabinet', 'T_Limestone_Tile', 'T_Soapstone', 'T_Limewash', 'T_Aged_Copper', 'T_White_Oak', 'T_Cereal_Boxes', 'T_Cookbook', 'T_Countertop_Marble', 'T_Zellige_Tile', 'T_Natural_Oak_Floor'];
 
 export class House {
   constructor(game, scene, A, physics) {
@@ -86,7 +86,7 @@ export class House {
   buildFoyer() {
     const b = this.b, M = this.M, sys = this.sys;
     // staircase up to floor 2 (built next milestone): visible steps, blocked by a rope
-    for (let i = 0; i < 10; i++) { const top = (i + 1) * 0.2; b.box(M.wood, [-2.75 + i * 0.3, top / 2, 0.57], [0.3, top, 0.9], { round: 0.02 }); }
+    for (let i = 0; i < 10; i++) { const top = (i + 1) * 0.2; b.box(M.oakFloor, [-2.75 + i * 0.3, top / 2, 0.57], [0.3, top, 0.9], { round: 0.02 }); }
     b.box(M.teak, [-1.4, 1.05, 1.06], [3.0, 0.06, 0.06], { collide: false });           // handrail
     const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.0, 8), M.coral); rope.rotation.x = Math.PI / 2; rope.position.set(-3.0 + 0.15, 0.85, 0.6); this.root.add(rope);
     { const c = new THREE.Mesh(); c.visible = false; c.position.set(-1.4, 1.2, 1.15); this.root.add(c); b.solid(c, 3.2, 2.4, 0.12); }   // keeps you off the unfinished stairs

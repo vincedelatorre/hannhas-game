@@ -9,7 +9,7 @@
 //   south-east  : round oak table with four black ladder-back chairs
 //   pantry      : x 12.5..15.5, z 0.4..4.0: oak shelves with LED strips, jars, cereal, a counter
 import * as THREE from 'three/webgpu';
-import { texture, uv, vec2 } from 'three/tsl';
+import { texture, uv, vec2, vec3, float, mix, color, mx_noise_float, positionWorld, smoothstep, abs, sin } from 'three/tsl';
 import { archWindow, C } from './kit.js';
 import { cabinetRun, buildRange, buildHood, buildColumn, glassUppers, roundTable, ladderChair, counterStool, pendant, pull } from './appliances.js';
 import { Interactable, Item, Slot, Seat, Hinge, Toggle, Dial } from './interact.js';
@@ -153,11 +153,15 @@ export function buildKitchen(H) {
     onSet: on => { for (const g of [H.glassL, H.glassR]) g.strip.visible = on; for (const st of H.nicheStrips || []) st.visible = on; } });
 
   // ---- east: built-in freezer + fridge columns, coffee station
-  H.freezer = buildColumn(b, M, sys, { id: 'kitchen_freezer', name: 'freezer', at: L(12.02, 0, -2.43), rotY: -Math.PI / 2, freezer: true, hingeRight: false, game });
-  H.fridge = buildColumn(b, M, sys, { id: 'kitchen_fridge', name: 'fridge', at: L(12.02, 0, -1.53), rotY: -Math.PI / 2, hingeRight: true, game });
-  b.box(M.sage, [12.02, 2.975, -1.98], [0.72, 1.65, 1.8], { collide: false });               // panel above
-  b.box(M.sage, [12.02, 1.9, -1.05], [0.74, 3.8, 0.05], { collide: false });                  // end panel
-  b.box(M.sage, [12.25, 0.46, -0.96], [0.26, 0.92, 0.18], { collide: true });                 // filler
+  // the columns sit 1 m clear of the north corner so the freezer door (hinged on its north
+  // side) can swing past 90 degrees without hitting the range-wall counter; the corner they
+  // freed holds the Bird of Paradise
+  const zF = -1.4, zR = -0.5;                    // freezer z -1.85..-0.95, fridge z -0.95..-0.05
+  H.freezer = buildColumn(b, M, sys, { id: 'kitchen_freezer', name: 'freezer', at: L(12.02, 0, zF), rotY: -Math.PI / 2, freezer: true, hingeRight: false, game });
+  H.fridge = buildColumn(b, M, sys, { id: 'kitchen_fridge', name: 'fridge', at: L(12.02, 0, zR), rotY: -Math.PI / 2, hingeRight: true, game });
+  b.box(M.sage, [12.02, 2.975, (zF + zR) / 2], [0.72, 1.65, 1.8], { collide: false });            // panel above
+  for (const z of [-1.875, -0.025]) b.box(M.sage, [12.02, 1.9, z], [0.74, 3.8, 0.05], { collide: false });   // end panels
+  b.box(M.sage, [12.25, 0.46, 0.05], [0.26, 0.92, 0.1], { collide: true });                     // filler to the counter
   if (A.textures.T_Art_Turtle) {   // a child's drawing on the freezer door
     const art = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.29), new THREE.MeshStandardNodeMaterial({ roughness: 0.9 }));
     art.material.colorNode = texture(A.textures.T_Art_Turtle, uv()).rgb; art.position.set(0.45, 1.5, 0.052);
@@ -165,20 +169,22 @@ export function buildKitchen(H) {
     const magnet = new THREE.Mesh(new THREE.SphereGeometry(0.014, 10, 8), M.coral); magnet.position.set(0.45, 1.64, 0.058); H.freezer.door.pivot.add(magnet);
   }
   // a short serving counter between the fridge and the pantry door, open oak shelves above
-  H.runE = cabinetRun(b, M, sys, { id: 'kitchen_runE', at: L(12.38 - 0.32, 0, -0.85), rotY: -Math.PI / 2, modules: [{ kind: 'drawers', w: 0.6 }, { kind: 'doors2', w: 0.85 }, { kind: 'drawers', w: 0.6 }], game });
-  const ER = H.runE.root;
-  b.box(M.limestone, [1.025, 1.2, -0.314], [2.05, 0.56, 0.012], { parent: ER, collide: false, cast: false });
+  H.runE = cabinetRun(b, M, sys, { id: 'kitchen_runE', at: L(12.38 - 0.32, 0, 0.1), rotY: -Math.PI / 2, modules: [{ kind: 'drawers', w: 0.6 }, { kind: 'doors2', w: 0.75 }], game });
+  const ER = H.runE.root, EW = 1.35;
+  b.box(M.limestone, [EW / 2, 1.2, -0.314], [EW, 0.56, 0.012], { parent: ER, collide: false, cast: false });
   for (const y of [1.55, 1.95]) {
-    b.box(M.whiteOak, [1.025, y, -0.18], [2.0, 0.04, 0.28], { parent: ER, collide: false, round: 0.006 });
-    for (const x of [0.25, 1.8]) b.box(M.blackSteel, [x, y - 0.05, -0.27], [0.02, 0.08, 0.08], { parent: ER, collide: false, cast: false });
+    b.box(M.whiteOak, [EW / 2, y, -0.18], [EW - 0.05, 0.04, 0.28], { parent: ER, collide: false, round: 0.006 });
+    for (const x of [0.15, EW - 0.15]) b.box(M.blackSteel, [x, y - 0.05, -0.27], [0.02, 0.08, 0.08], { parent: ER, collide: false, cast: false });
   }
-  for (let i = 0; i < 4; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.028, 0.07, 14), M.white); c.position.set(1.0 + i * 0.12, 1.605, -0.2); ER.add(c); }
-  for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.1, 16), i === 1 ? M.sageDark : M.white); c.position.set(0.5 + i * 0.5, 2.02, -0.2); ER.add(c); }
+  for (let i = 0; i < 4; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.028, 0.07, 14), M.white); c.position.set(0.4 + i * 0.12, 1.605, -0.2); ER.add(c); }
+  for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.05, 0.1, 16), i === 1 ? M.sageDark : M.white); c.position.set(0.3 + i * 0.37, 2.02, -0.2); ER.add(c); }
   {   // a bowl of lemons on the counter
-    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.09, 0.08, 24, 1, true), M.white); bowl.material = M.white; bowl.position.set(1.5, 0.96, -0.05); ER.add(bowl);
+    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.09, 0.08, 24, 1, true), M.white); bowl.position.set(0.95, 0.96, -0.05); ER.add(bowl);
     const lem = new THREE.MeshStandardNodeMaterial({ color: 0xF2D23C, roughness: 0.5 });
-    for (let i = 0; i < 6; i++) { const l = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 8), lem); l.scale.set(1, 0.85, 1.25); const a = i * 1.05; l.position.set(1.5 + Math.cos(a) * 0.07 * (i < 5), 0.98 + (i === 5) * 0.05, -0.05 + Math.sin(a) * 0.07 * (i < 5)); ER.add(l); }
+    for (let i = 0; i < 6; i++) { const l = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 8), lem); l.scale.set(1, 0.85, 1.25); const a = i * 1.05; l.position.set(0.95 + Math.cos(a) * 0.07 * (i < 5), 0.98 + (i === 5) * 0.05, -0.05 + Math.sin(a) * 0.07 * (i < 5)); ER.add(l); }
   }
+  // Bird of Paradise in the corner the fridge freed (beyond the freezer door's swing)
+  H.birdOfParadise = birdOfParadise(H, L(12.04, 0, -2.47));
 
   // ---- island: soapstone top, drawers / trash / cupboards / microwave drawer on the range side
   H.island = cabinetRun(b, M, sys, { id: 'island', at: L(9.85, 0, -0.125), rotY: Math.PI, d: 0.95, noTop: true, game,
@@ -405,6 +411,57 @@ function buildSinkNiche(H) {
       it.baseScale = 1; sys.add(it); sys.place(it, it.home); H.items[`soda_${i}`] = it;
     });
   };
+}
+
+// ------------------------------------------------------------------ Bird of Paradise (Strelitzia nicolai)
+/** tall, narrow floor plant in an ivory matte planter; leaves sway gently. Collides only at the pot. */
+function birdOfParadise(H, at, { height = 2.15, seed = 7 } = {}) {
+  const { b, M } = H, R = H.root;
+  const root = new THREE.Group(); root.position.copy(at); R.add(root);
+  let s = seed; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  // planter: a rounded ivory ceramic pot (lathe), matte with a soft speckle
+  const potMat = new THREE.MeshStandardNodeMaterial({ roughness: 0.92 });
+  potMat.colorNode = mix(color(0xEDE6D6), color(0xD9CFBC), mx_noise_float(positionWorld.mul(38)).mul(0.5).add(0.5).mul(0.6));
+  const prof = [[0.0, 0], [0.17, 0.0], [0.215, 0.05], [0.245, 0.17], [0.25, 0.3], [0.235, 0.4], [0.225, 0.44], [0.21, 0.44], [0.205, 0.41]].map(([x, y]) => new THREE.Vector2(x, y));
+  const pot = new THREE.Mesh(new THREE.LatheGeometry(prof, 40), potMat); pot.castShadow = pot.receiveShadow = true; root.add(pot);
+  const soil = new THREE.Mesh(new THREE.CircleGeometry(0.205, 28), new THREE.MeshStandardNodeMaterial({ color: 0x3a2a1e, roughness: 1 })); soil.rotation.x = -Math.PI / 2; soil.position.y = 0.4; root.add(soil);
+  const c = new THREE.Mesh(); c.visible = false; c.position.set(0, 0.22, 0); root.add(c); b.solid(c, 0.48, 0.44, 0.48);
+  // leaf material: deep green, lighter midrib, fine parallel veins running out from the rib
+  const leafMat = new THREE.MeshStandardNodeMaterial({ roughness: 0.55, side: THREE.DoubleSide });
+  const u = uv().x, v = uv().y, rib = smoothstep(0.06, 0.0, abs(u.sub(0.5)));
+  const veins = sin(u.sub(0.5).abs().mul(90).add(v.mul(14))).mul(0.5).add(0.5).mul(0.12);
+  const varN = mx_noise_float(vec3(u.mul(3), v.mul(6), 0)).mul(0.08);
+  leafMat.colorNode = mix(vec3(0.035, 0.16, 0.06).mul(float(1).sub(veins).add(varN)), vec3(0.32, 0.5, 0.2), rib.mul(0.7));
+  const stemMat = new THREE.MeshStandardNodeMaterial({ color: 0x4F7A3A, roughness: 0.6 });
+  // one paddle leaf: tapered blade, folded slightly along the rib, curling back at the tip,
+  // with a few natural splits along the edge
+  const leafGeo = (L, W) => {
+    const g = new THREE.PlaneGeometry(1, 1, 6, 16); const p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), y = p.getY(i) + 0.5;                 // y: 0 at base .. 1 at tip
+      const width = W * Math.pow(Math.sin(Math.PI * Math.min(1, y * 0.92 + 0.04)), 0.7);
+      const split = (Math.abs(x) > 0.3 && (Math.floor(y * 9) % 3 === 1)) ? 0.85 : 1;
+      const xx = x * width * split, fold = Math.abs(xx) * 0.35, curl = -Math.pow(y, 2.2) * L * 0.18;
+      p.setXYZ(i, xx, y * L, fold + curl);
+    }
+    g.computeVertexNormals(); return g;
+  };
+  root.leaves = [];
+  const N = 10;
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2 + rnd() * 0.5, lean = 0.05 + rnd() * 0.1;
+    const stemH = height * (0.38 + rnd() * 0.36), L = 0.5 + rnd() * 0.3, W = 0.15 + rnd() * 0.06;
+    const g = new THREE.Group(); g.position.set(Math.cos(a) * 0.04, 0.4, Math.sin(a) * 0.04); g.rotation.y = -a + Math.PI / 2; g.rotation.z = 0; root.add(g);
+    const tilt = new THREE.Group(); tilt.rotation.x = lean; g.add(tilt);
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.014, stemH, 6), stemMat); stem.position.y = stemH / 2; tilt.add(stem);
+    const leaf = new THREE.Mesh(leafGeo(L, W), leafMat); leaf.position.y = stemH - 0.02; leaf.rotation.x = 0.05 + rnd() * 0.2; leaf.rotation.y = (rnd() - 0.5) * 0.6; leaf.castShadow = true; tilt.add(leaf);
+    root.leaves.push({ tilt, base: lean, ph: rnd() * 6.28, sp: 0.6 + rnd() * 0.5 });
+  }
+  // a couple of young rolled leaves in the middle
+  for (let i = 0; i < 2; i++) { const y = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.018, 0.5 + i * 0.25, 6), stemMat); y.position.set(0.02 * (i ? 1 : -1), 0.4 + (0.5 + i * 0.25) / 2 + height * 0.35, 0); root.add(y); const st = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.012, height * 0.35, 6), stemMat); st.position.set(0.02 * (i ? 1 : -1), 0.4 + height * 0.175, 0); root.add(st); }
+  root.scale.set(0.85, 1, 0.85);
+  root.update = t => { for (const l of root.leaves) l.tilt.rotation.x = l.base + Math.sin(t * l.sp + l.ph) * 0.012; };
+  return root;
 }
 
 // ------------------------------------------------------------------ coffee station
@@ -687,6 +744,7 @@ export function updateKitchen(H, dt) {
     } else { ov.glow.intensity = 0; ov.coil.material.color.set(0x3a2a22); }
   }
   // ---- appliances
+  H.birdOfParadise?.update(performance.now() / 1000);
   H.dishwasher.update(dt); H.microwave.update(dt); H.freezer.update(dt); H.fridge.update(dt); H.coffee.update(dt);
   // ---- toaster
   const T = H.pantry.toast;

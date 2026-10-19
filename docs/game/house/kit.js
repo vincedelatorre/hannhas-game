@@ -44,8 +44,8 @@ export function makeMaterials(T) {
   M.lamp = std({ roughness: 0.4, color: 0xFFE2A8 }); M.lamp.emissiveNode = color(0xFFC46A).mul(2.2);
 
   // ---- Mediterranean kitchen (Option A: sage & copper) ----
-  // downstairs floor: hand-scraped hickory (the family's pick); falls back to the oak planks
-  M.oakFloor = std({ roughness: 0.62 }, T.T_Hickory_Floor ? worldTiled(T.T_Hickory_Floor, 0.8) : T.T_Oak_Floor ? worldTiled(T.T_Oak_Floor, 0.32) : color(0x8A5E36));
+  // downstairs floor: matte wide-plank natural oak (the family's pick)
+  M.oakFloor = std({ roughness: 0.88 }, T.T_Natural_Oak_Floor ? worldTiled(T.T_Natural_Oak_Floor, 0.75) : T.T_Oak_Floor ? worldTiled(T.T_Oak_Floor, 0.32) : color(0xB08A60));
   M.sage = std({ roughness: 0.55 }, T.T_Sage_Cabinet ? worldTiled(T.T_Sage_Cabinet, 0.9) : color(0x9AA88A));
   M.sageDark = std({ roughness: 0.55 }, T.T_Sage_Cabinet ? worldTiled(T.T_Sage_Cabinet, 0.9, 0.82) : color(0x7E8C6F));
   M.limestone = std({ roughness: 0.6 }, T.T_Limestone_Tile ? worldTiled(T.T_Limestone_Tile, 0.75) : color(0xD8CBB4));
