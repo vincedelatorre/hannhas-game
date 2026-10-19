@@ -1,0 +1,35 @@
+<!doctype html><html><body><canvas id=c width=320 height=200></canvas>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.webgpu.js","three/webgpu":"https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.webgpu.js","three/tsl":"https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.tsl.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.184.0/examples/jsm/","@dimforge/rapier3d-compat":"https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.19.3/rapier.mjs"}}</script>
+<script type="module">
+import * as THREE from 'three/webgpu';
+import zone from '../zones/pearl_cove.js';
+import { TIERS } from '../game/quality.js';
+import { buildTerrain, heightTexture } from '../game/terrain.js';
+import { createWaterSystem } from '../game/water.js';
+import { scatter, dressWorld } from '../game/dressing.js';
+import { SkyAndSun, createPipeline } from '../game/render.js';
+import { Character } from '../game/characters.js';
+import { Particles, TEX } from '../game/fx.js';
+import { Assets } from '../game/assets.js';
+const r = new THREE.WebGPURenderer({ canvas: c }); await r.init();
+const cam = new THREE.PerspectiveCamera(50, 1.6, 0.1, 1000); cam.position.set(0, 20, 40); cam.lookAt(0, 0, 0);
+const Q = TIERS.low; const out = {};
+const errs = []; const orig = console.error; console.error = (...a) => { errs.push(a.join(' ')); orig(...a); };
+async function test(name, build) {
+  const s = new THREE.Scene(); s.add(new THREE.DirectionalLight()); errs.length = 0;
+  try { await build(s); await r.compileAsync(s, cam); r.render(s, cam); } catch (e) { errs.push('THROW ' + e.message); }
+  out[name] = errs.slice(0, 2).join(' | ') || 'ok';
+}
+const A = new Assets('../assets/'); await Promise.all([A.texture('T_Sand_Dry'), A.texture('T_Sand_Wet'), A.texture('T_JungleFloor'), A.texture('T_Rock_Coastal'), A.model('SM_PalmTree_LOD')]);
+await test('terrain', s => s.add(buildTerrain(zone, A.textures, Q)));
+await test('water', s => createWaterSystem(s, zone, heightTexture(zone), Q));
+await test('waterRefr', s => createWaterSystem(s, zone, heightTexture(zone), TIERS.high));
+await test('palms', s => scatter(s, A.models.SM_PalmTree_LOD, [{ x: 0, z: 0, h: 0, yaw: 0, scale: 10 }], { windOpts: { bend: 0.03, flutter: 0.005 } }));
+await test('particles', s => { const p = new Particles(s, TEX.glow(), { max: 10 }); p.emit(new THREE.Vector3(), new THREE.Vector3(), {}); p.update(0.01); });
+await test('sky', async s => { const k = new SkyAndSun(r, s, Q, {}); await k.updateEnvironment(); });
+await Promise.all(['SM_PearlCove_Clubhouse','SM_PalmTree','SM_Hibiscus','SM_Boulder_Mossy','SM_Shells_Cluster','SM_PalmSwing','SM_TikiTorch','SM_Driftwood','SM_TreasureChest','SM_Clam_Pearl','Wren'].map(m => A.model(m)).concat([A.texture('T_Bamboo_Woven'), A.texture('T_Thatch')]));
+await test('dress', s => dressWorld(s, zone, A, Q));
+await test('wren', s => new Character(s, A.models.Wren, {}, {}));
+for (const q of ['low', 'medium', 'high']) await test('pipe_' + q, s => { const k = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardNodeMaterial()); s.add(k); const sun = new THREE.DirectionalLight(); sun.castShadow = true; s.add(sun); k.castShadow = true; r.shadowMap.enabled = true; r.render(s, cam); const { pipeline } = createPipeline(r, s, cam, sun, TIERS[q]); pipeline.render(); pipeline.render(); });
+document.title = 'done:' + JSON.stringify(out);
+</script></body></html>
