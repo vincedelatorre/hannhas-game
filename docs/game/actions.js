@@ -145,12 +145,12 @@ export class Actions {
     if (this.clip('Kick')) this.wren.play('Kick', { fadeIn: 0.1 });
     if (!best) { this.say('Find a ball to kick!'); return; }
     const d = best.pos.clone().sub(P.pos); d.y = 0; P.face = Math.atan2(d.x, d.z);
-    setTimeout(() => {
+    this.pendingKick = { t: 0.22, run: () => {
       const dir = V3(Math.sin(P.face), 0, Math.cos(P.face));
       const power = best.inside ? 2.6 : 4.6;
       best.vel.copy(dir.multiplyScalar(power)).add(V3(0, best.inside ? 1.6 : 3.2, 0));
       this.g.audio?.house?.('drawer'); this.g.audio?.sfx?.(220, 0.08, 'sine', 0.12);
-    }, 220);
+    } };
   }
 
   // ------------------------------------------------------------------ sit (B), nap (N)
@@ -292,6 +292,7 @@ export class Actions {
     // the shell hides while she carries something (one hand each), comes back when hands are free
     const c = g.clam; if (c) { const want2 = this.inv.shell.equipped && !g.interact?.held && !(this.t.store > 0.35 && this.storing === 'out'); if (c.visible !== want2 && !(this.t.store > 0)) c.visible = want2; }
     // a running dance can pause for her friend's moves
+    if (this.pendingKick && (this.pendingKick.t -= dt) <= 0) { const k = this.pendingKick; this.pendingKick = null; k.run(); }
     this.updateBalls(dt);
     this.dialogue.update(dt);
   }
