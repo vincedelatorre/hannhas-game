@@ -359,6 +359,66 @@
         0.71
       ],
       "bytes": 301376
+    },
+    "SM_Kitchen_EspressoMachine": {
+      "tris_before": 7081,
+      "tris": 7081,
+      "size": [
+        1,
+        0.87,
+        0.839
+      ],
+      "bytes": 142828
+    },
+    "SM_Kitchen_Grinder": {
+      "tris_before": 4786,
+      "tris": 4786,
+      "size": [
+        0.535,
+        1,
+        0.39
+      ],
+      "bytes": 104056
+    },
+    "SM_Kitchen_Skillet": {
+      "tris_before": 3796,
+      "tris": 3796,
+      "size": [
+        1,
+        0.296,
+        0.853
+      ],
+      "bytes": 52540
+    },
+    "SM_Kitchen_DutchOven": {
+      "tris_before": 4646,
+      "tris": 4646,
+      "size": [
+        0.757,
+        0.608,
+        1
+      ],
+      "bytes": 70080
+    },
+    "SM_Kitchen_Herbs": {
+      "tris_before": 5421,
+      "tris": 5421,
+      "size": [
+        0.729,
+        0.837,
+        1
+      ],
+      "bytes": 132384
+    },
+    "SM_Kitchen_StandMixer": {
+      "tris_before": 5760,
+      "tris": 5760,
+      "size": [
+        0.59,
+        0.995,
+        1
+      ],
+      "bytes": 93964
     }
   },
   "characters": {
@@ -412,6 +472,15 @@
     "T_Art_Fruit": 173216,
     "T_Art_Turtle": 88066,
     "T_Rug_Tropical": 269082,
+    "T_Oak_Floor": 82258,
+    "T_Sage_Cabinet": 88498,
+    "T_Limestone_Tile": 124132,
+    "T_Soapstone": 148742,
+    "T_Limewash": 77098,
+    "T_Aged_Copper": 235764,
+    "T_White_Oak": 92500,
+    "T_Cereal_Boxes": 264452,
+    "T_Cookbook": 126640,
     "T_Sand_Dry": 401198,
     "T_Sand_Wet": 352276,
     "T_JungleFloor": 421936,
