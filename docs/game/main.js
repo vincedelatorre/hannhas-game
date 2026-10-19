@@ -12,7 +12,7 @@ import { Physics } from './physics.js';
 import { Character, Player, Companion } from './characters.js';
 import { Particles, TEX } from './fx.js';
 import { Powers, Creatures, Quests } from './gameplay.js';
-import { Input, Hud, Audio } from './ui.js';
+import { Input, Hud, Audio, Speech } from './ui.js';
 import { Decals } from './decals.js';
 import { buildGrass, buildBeachDetail } from './grass.js';
 import { H, G, V } from './world.js';
@@ -107,6 +107,7 @@ async function boot() {
   game.quests = new Quests(game, zone);
   game.powers = new Powers(game);
   game.toast = t => hud.toast(t);
+  game.speech = new Speech(zone.dialogue);
   const swingProp = zone.props.find(p => p.model === 'SM_PalmSwing');
   if (swingProp) game.swingSeat = V(swingProp.pos[0], swingProp.pos[1]);
   game.onWin = pos => win(pos);
@@ -202,6 +203,7 @@ function start() {
   game.cam.yaw = 0; game.cam.pitch = 0.28;
   game.toast('Welcome to Pearl Cove!');
   setTimeout(() => game.toast('Your friend is waiting by the lagoon. Collect the glowing shells!'), 3000);
+  setTimeout(() => game.speech.say('start', { force: true }), 6500);
 }
 
 function win(pos) {
@@ -209,6 +211,7 @@ function win(pos) {
   $('win').hidden = false;
   for (let i = 0; i < 70; i++) (i % 2 ? game.fxHeart : game.fxGlow).emit(pos.clone().add(new THREE.Vector3(0, 1, 0)), new THREE.Vector3((Math.random() - 0.5) * 6, 4 + Math.random() * 5, (Math.random() - 0.5) * 6), { life: 2.2, size: 0.3 + Math.random() * 0.2, gravity: 3, color: [1, 0.9, 0.7] });
   game.friend?.cheer();
+  setTimeout(() => game.speech.say('win', { force: true }), 1500);
 }
 
 function resize() {
@@ -342,6 +345,7 @@ function tick(dt) {
 
   updateCamera(dt, t);
   game.under.update(dt, game.camera, P, game.friend);
+  if (game.friend) game.speech.update(dt, game.camera, game.friend.pos.clone().add(new THREE.Vector3(0, 2.05, 0)), game.renderer.domElement);
   const diveBtn = $('b-dive'); const canDive = game.started && (P.c.swimming || P.underwater); if (diveBtn.hidden === canDive) diveBtn.hidden = !canDive;
   game.sky.follow(game.started ? pp : new THREE.Vector3(0, 0, -6));
   mapT -= dt; if (mapT <= 0) { game.hud.map(game.quests.S, game.quests, P, game.friend); mapT = 0.1; }

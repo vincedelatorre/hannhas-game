@@ -85,6 +85,7 @@ export class Hud {
     $('q-slide').classList.toggle('done', S.slid);
     $('n-pools').textContent = `${S.pools}/2`; $('q-pools').classList.toggle('done', S.pools >= 2);
     $('q-gull').classList.toggle('done', S.gull);
+    $('q-turtle')?.classList.toggle('done', !!S.turtle);
     $('q-chest').classList.toggle('locked', !ready); $('q-chest').classList.toggle('done', S.chest);
     document.querySelectorAll('#quests li .box').forEach(b => b.textContent = b.closest('li').classList.contains('done') ? '✓' : '');
   }
@@ -188,5 +189,38 @@ export class Audio {
   setShore(dist) {
     if (this.loops.amb_surf) this.loops.amb_surf.gain.value = Math.max(0.12, 0.75 - dist * 0.012);
     if (this.loops.amb_island) this.loops.amb_island.gain.value = Math.min(0.55, 0.15 + dist * 0.01);
+  }
+}
+
+/** speech bubble that follows a character on screen */
+export class Speech {
+  constructor(lines) {
+    this.lines = lines || {}; this.el = document.getElementById('speech'); this.text = document.getElementById('speech-text');
+    this.t = 0; this.cool = 0; this.last = {}; this.quiet = 0;
+  }
+  /** say a line for an event; low-priority lines wait for silence */
+  say(event, { force = false } = {}) {
+    const L = this.lines[event]; if (!L || !L.length) return false;
+    if (!force && (this.t > 0 || this.cool > 0)) return false;
+    let line = L[Math.floor(Math.random() * L.length)];
+    if (L.length > 1 && line === this.last[event]) line = L[(L.indexOf(line) + 1) % L.length];
+    this.last[event] = line;
+    this.text.textContent = line; this.el.classList.add('show');
+    this.t = 2.2 + line.length * 0.045; this.cool = 1.5; this.quiet = 0;
+    return true;
+  }
+  update(dt, camera, anchor, canvas) {
+    this.quiet += dt;
+    if (this.t > 0) {
+      this.t -= dt; if (this.t <= 0) this.el.classList.remove('show');
+    } else this.cool -= dt;
+    if (!anchor) return;
+    const p = anchor.clone().project(camera);
+    const behind = p.z > 1;
+    const r = canvas.getBoundingClientRect();
+    const x = (p.x * 0.5 + 0.5) * r.width, y = (-p.y * 0.5 + 0.5) * r.height;
+    this.el.style.left = `${Math.min(r.width - 130, Math.max(130, x))}px`;
+    this.el.style.top = `${Math.max(60, y - 12)}px`;
+    this.el.style.visibility = behind ? 'hidden' : 'visible';
   }
 }

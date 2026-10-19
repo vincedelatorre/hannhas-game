@@ -60,7 +60,29 @@ export default {
     shells: [[-38, -8], [-26, -3], [-10, -3.5], [6, -3.5], [14, -3], [26, -1.5], [34, -8], [-2, -4.5]],
     gull: [-27.6, 0.6],
     chest: [53, 6],
+    turtle: true,          // bonus: dive down and say hi to the sea turtle
   },
 
   companion: { start: [3, 6] },
+
+  // what Wren's friend says. Each key is an event; one line is picked at random.
+  // hint_* lines play when nothing has happened for a while and that quest is still open.
+  dialogue: {
+    start: ['Race you to the lagoon!', 'The shells only glow at Pearl Cove. Let\'s find them all!'],
+    shell: ['Ooh, a sparkly one!', 'That one\'s my favourite.', 'The museum is going to love these.'],
+    shells_done: ['All eight! You found every shell!'],
+    pool: ['Look, a crab popped out!', 'Your water power is amazing!'],
+    slide: ['That was the best ride ever!', 'Again! Again!'],
+    gull: ['The seagull is smiling now.'],
+    dive: ['Whoa, look at all the fish down there!', 'Hold Q to swim deeper. I\'ll keep watch up here!'],
+    turtle: ['You found the sea turtle! She likes you.'],
+    flowers: ['Flowers! Your love power makes everything bloom.'],
+    ready: ['I think the treasure chest just opened. Look for the light on the east cliff!'],
+    win: ['We did it! Pearl Cove is the best.'],
+    hint_shells: ['I saw a glowing shell down by the water.', 'Shells like the edge of the sand. Keep looking!'],
+    hint_slide: ['See the mint ring by the slide tower? Stand in it!'],
+    hint_pools: ['The tide pools on the east beach are empty. Use your water power on them!'],
+    hint_gull: ['That seagull by the swing looks sad. Maybe your love power can help?'],
+    hint_turtle: ['Want to see something cool? Swim out past the beach and dive down. There\'s a turtle!'],
+  },
 };

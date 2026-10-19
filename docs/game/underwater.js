@@ -331,6 +331,8 @@ class Turtle {
     const v = this.root.position.clone().sub(prev);
     if (v.lengthSq() > 1e-8) this.root.rotation.y = Math.atan2(v.x, v.z);
     this.root.rotation.z = Math.sin(this.t * 40) * 0.05;
+    // a happy barrel roll after meeting Wren
+    if (this.happy > 0) { this.happy -= dt; this.root.rotation.z += (1 - this.happy / 2.5) * Math.PI * 2; }
   }
 }
 

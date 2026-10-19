@@ -140,7 +140,9 @@ export class Creatures {
 export class Quests {
   constructor(game, zone) {
     this.g = game; this.zone = zone;
-    this.S = { shells: 0, slid: false, pools: 0, gull: false, chest: false };
+    this.S = { shells: 0, slid: false, pools: 0, gull: false, chest: false, turtle: false };
+    this.say = (e, force = false) => game.speech?.say(e, { force });
+    this.wasReady = false;
     const mat = new THREE.MeshPhysicalNodeMaterial({ color: 0xffc9d8, roughness: 0.25, clearcoat: 1, emissive: 0xff7aa0, emissiveIntensity: 0.55 });
     this.shells = zone.quests.shells.map(([x, y]) => {
       const g = new THREE.Group(); g.position.copy(V(x, y, H(x, y) + 0.35)); game.scene.add(g);
@@ -168,13 +170,17 @@ export class Quests {
       const d = Math.hypot(origin.x - p.x, -origin.z - p.y);
       if (d < 7.5) {
         p.fill = Math.min(1, p.fill + 0.03);
-        if (p.fill >= 1) { p.done = true; this.S.pools++; this.g.creatures.crabs[this.pools.indexOf(p)].c.visible = true; this.g.toast(this.S.pools === 2 ? 'Both tide pools are full. The crabs are dancing!' : 'A crab popped out to say thanks!'); this.g.audio?.chime(); this.g.friend?.cheer(); this.changed(); }
+        if (p.fill >= 1) { p.done = true; this.S.pools++; this.g.creatures.crabs[this.pools.indexOf(p)].c.visible = true; this.g.toast(this.S.pools === 2 ? 'Both tide pools are full. The crabs are dancing!' : 'A crab popped out to say thanks!'); this.g.audio?.chime(); this.g.friend?.cheer(); this.say('pool', true); this.changed(); }
       }
     }
   }
   onLove(origin) {
     const gl = this.g.creatures.gull;
-    if (!this.S.gull && origin.distanceTo(gl.g.position) < 9) { this.S.gull = true; gl.happy = true; this.g.toast('The seagull is happy again!'); this.g.audio?.chime(880); this.changed(); }
+    if (!this.S.gull && origin.distanceTo(gl.g.position) < 9) { this.S.gull = true; gl.happy = true; this.g.toast('The seagull is happy again!'); this.g.audio?.chime(880); this.say('gull', true); this.changed(); }
+    else if (!this._flowersSaid && !this.g.player.c.swimming) { this._flowersSaid = true; setTimeout(() => this.say('flowers'), 900); }
+    // love works under water too: the turtle loves it
+    const tu = this.g.under?.turtle;
+    if (tu && origin.distanceTo(tu.root.position) < 5) this.meetTurtle();
   }
 
   update(dt, t) {
@@ -187,6 +193,7 @@ export class Quests {
         for (let i = 0; i < 18; i++) g.fxGlow.emit(s.g.position, new THREE.Vector3((Math.random() - 0.5) * 3, 2 + Math.random() * 2, (Math.random() - 0.5) * 3), { life: 0.9, size: 0.2, color: [1, 0.8, 0.9], gravity: 3 });
         g.audio?.pickup();
         g.toast(this.S.shells === 8 ? 'All 8 shells! The museum is full.' : `Shell ${this.S.shells} of 8`);
+        if (this.S.shells === 8) this.say('shells_done', true); else if (Math.random() < 0.45) this.say('shell');
         this.changed();
       }
     }
@@ -197,6 +204,15 @@ export class Quests {
       // scale around the pool centre
       p.mesh.position.x = p.x * (1 - p.mesh.scale.x); p.mesh.position.z = -p.y * (1 - p.mesh.scale.z);
     }
+    // bonus: swim down to the sea turtle
+    const tu = g.under?.turtle;
+    if (tu && !this.S.turtle && g.player.underwater && P.distanceTo(tu.root.position) < 3.5) this.meetTurtle();
+    if (g.player.underwater && !this._diveSaid) this._diveSaid = this.say('dive');
+    // nothing has happened for a while: a gentle hint about something still to do
+    if (g.speech && g.speech.quiet > 40) {
+      const S = this.S, open = [S.shells < 8 && 'hint_shells', !S.slid && 'hint_slide', S.pools < 2 && 'hint_pools', !S.gull && 'hint_gull', !S.turtle && 'hint_turtle'].filter(Boolean);
+      if (open.length) this.say(open[Math.floor(Math.random() * open.length)]); else g.speech.quiet = 0;
+    }
     this.ring.visible = !this.S.slid; this.ring.rotation.z += dt; this.ring.scale.setScalar(1 + Math.sin(t * 3) * 0.06);
     this.beam.material.opacity = this.ready && !this.S.chest ? 0.16 + Math.sin(t * 2) * 0.04 : 0;
     const dc = Math.hypot(P.x - this.chestPos.x, P.z - this.chestPos.z);
@@ -206,5 +222,18 @@ export class Quests {
     }
   }
 
-  changed() { this.g.hud.quests(this.S, this.ready); }
+  meetTurtle() {
+    if (this.S.turtle) return;
+    const g = this.g, tu = g.under.turtle;
+    this.S.turtle = true; tu.happy = 2.5;
+    g.toast('The sea turtle says hello!'); g.audio?.chime(660);
+    for (let i = 0; i < 14; i++) g.fxHeart.emit(tu.root.position.clone().add(new THREE.Vector3(0, 0.6, 0)), new THREE.Vector3((Math.random() - 0.5) * 2, 1 + Math.random(), (Math.random() - 0.5) * 2), { life: 1.4, size: 0.22, drag: 1.2, gravity: -0.4 });
+    this.say('turtle', true);
+    this.changed();
+  }
+
+  changed() {
+    this.g.hud.quests(this.S, this.ready);
+    if (this.ready && !this.wasReady && !this.S.chest) { this.wasReady = true; setTimeout(() => this.say('ready', true), 3200); }
+  }
 }
