@@ -8,7 +8,7 @@
         0.664,
         0.98
       ],
-      "bytes": 3509552
+      "bytes": 3147036
     },
     "SM_PalmTree": {
       "tris_before": 284162,
@@ -18,7 +18,7 @@
         0.979,
         0.539
       ],
-      "bytes": 790856
+      "bytes": 705632
     },
     "SM_PalmTree_LOD": {
       "tris_before": 284162,
@@ -28,7 +28,7 @@
         0.971,
         0.532
       ],
-      "bytes": 249612
+      "bytes": 220736
     },
     "SM_Hibiscus": {
       "tris_before": 192272,
@@ -38,7 +38,7 @@
         0.976,
         0.963
       ],
-      "bytes": 647452
+      "bytes": 591348
     },
     "SM_Boulder_Mossy": {
       "tris_before": 470558,
@@ -48,7 +48,7 @@
         0.655,
         0.98
       ],
-      "bytes": 881412
+      "bytes": 647116
     },
     "SM_Shells_Cluster": {
       "tris_before": 145551,
@@ -58,7 +58,7 @@
         0.352,
         0.979
       ],
-      "bytes": 652996
+      "bytes": 501176
     },
     "SM_PalmSwing": {
       "tris_before": 194840,
@@ -68,7 +68,7 @@
         0.981,
         0.843
       ],
-      "bytes": 872136
+      "bytes": 788160
     },
     "SM_TikiTorch": {
       "tris_before": 97238,
@@ -78,7 +78,7 @@
         0.982,
         0.143
       ],
-      "bytes": 512192
+      "bytes": 400980
     },
     "SM_Driftwood": {
       "tris_before": 292244,
@@ -88,7 +88,7 @@
         0.229,
         0.977
       ],
-      "bytes": 658648
+      "bytes": 518348
     },
     "SM_TreasureChest": {
       "tris_before": 142641,
@@ -98,7 +98,7 @@
         0.75,
         0.979
       ],
-      "bytes": 946084
+      "bytes": 730844
     },
     "SM_Clam_Pearl": {
       "tris_before": 98761,
@@ -108,22 +108,25 @@
         0.981,
         0.79
       ],
-      "bytes": 287448
+      "bytes": 258348
     }
   },
   "characters": {
     "Wren": {
       "tris_before": 193935,
       "tris": 60000,
-      "bytes": 3440552,
+      "bytes": 2750056,
       "clips": [
         "Idle",
         "Backflip",
         "Jump",
         "LoveHeart",
         "Run",
+        "Sit",
         "Skip",
         "Sprint",
+        "Swim",
+        "SwimIdle",
         "Walk",
         "WaterCast"
       ]
@@ -131,12 +134,15 @@
     "Boy": {
       "tris_before": 196563,
       "tris": 60000,
-      "bytes": 3098696,
+      "bytes": 2462420,
       "clips": [
         "Idle",
         "Backflip",
         "Jump",
         "Run",
+        "Sit",
+        "Swim",
+        "SwimIdle",
         "Walk",
         "Wave"
       ]
