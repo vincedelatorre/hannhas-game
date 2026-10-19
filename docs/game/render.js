@@ -17,7 +17,7 @@ export async function createRenderer(canvas, Q) {
   const renderer = new THREE.WebGPURenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, Q.pixelRatio));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.55;
+  renderer.toneMappingExposure = 0.6;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   await renderer.init();
@@ -30,8 +30,8 @@ export class SkyAndSun {
     this.renderer = renderer; this.scene = scene; this.Q = Q;
     this.sky = new SkyMesh();
     this.sky.scale.setScalar(4500);
-    this.sky.turbidity.value = 2.4;
-    this.sky.rayleigh.value = 1.6;
+    this.sky.turbidity.value = 1.7;
+    this.sky.rayleigh.value = 2.5;      // deeper blue sky
     this.sky.mieCoefficient.value = 0.004;
     this.sky.mieDirectionalG.value = 0.82;
     this.sky.cloudCoverage.value = 0.38;
@@ -50,7 +50,7 @@ export class SkyAndSun {
     Object.assign(this.sun.shadow.camera, { left: -48, right: 48, top: 48, bottom: -48, near: 1, far: 260 });
     scene.add(this.sun, this.sun.target);
 
-    this.fill = new THREE.HemisphereLight(0xcfe9ff, 0xd9c29a, 0.35);
+    this.fill = new THREE.HemisphereLight(0xb8dcff, 0xb08e5e, 0.2);
     scene.add(this.fill);
 
     // night sky: stars and a moon that fade in after sunset
@@ -88,7 +88,7 @@ export class SkyAndSun {
     const k = THREE.MathUtils.smoothstep(elevation, -4, 35);
     this.sun.color.setRGB(1.0, 0.72 + 0.24 * k, 0.5 + 0.4 * k);
     this.sun.intensity = 0.3 + 5.2 * k;
-    this.fill.intensity = 0.1 + 0.25 * k;
+    this.fill.intensity = 0.06 + 0.12 * k;   // less flat fill: shadows keep their depth
     const night = 1 - THREE.MathUtils.smoothstep(elevation, -6, 4);
     this.night.value = night;
     if (this.moon) {
@@ -124,7 +124,7 @@ export class SkyAndSun {
     if (this.envRT) this.envRT.dispose();
     this.envRT = rt;
     this.scene.environment = rt.texture;
-    this.scene.environmentIntensity = 1.0;
+    this.scene.environmentIntensity = 0.55;
   }
 }
 
@@ -160,13 +160,13 @@ export function createPipeline(renderer, scene, camera, sun, Q) {
   }
 
   if (Q.bloom) {
-    const b = bloom(col, 0.22, 0.45, 0.82);
+    const b = bloom(col, 0.07, 0.3, 0.97);   // only real highlights glow
     col = col.add(b);
     fx.bloom = b;
   }
 
   // colour grade: a touch more saturation for the tropical palette
-  col = vec4(saturation(col.rgb, float(1.12)), col.a);
+  col = vec4(saturation(col.rgb, float(1.28)), col.a);
 
   // under water: light loses red first, everything turns blue-green and darker toward the edges
   const uw = underwater;
@@ -187,7 +187,10 @@ export function createPipeline(renderer, scene, camera, sun, Q) {
   col = vec4(col.rgb.mul(float(1).sub(vig.mul(mix(float(0.28), float(0.55), uw)))), col.a);
 
   pipeline.outputColorTransform = false;
-  const displayed = renderOutput(col);
+  // contrast: an S-curve on the final picture (deeper darks, crisper brights)
+  const out = renderOutput(col);
+  const c = out.rgb.clamp(0, 1);
+  const displayed = vec4(mix(c, c.mul(c).mul(float(3).sub(c.mul(2))), float(0.55)), out.a);
   pipeline.outputNode = Q.aa === 'smaa' ? smaa(displayed) : fxaa(displayed);
   return { pipeline, fx };
 }

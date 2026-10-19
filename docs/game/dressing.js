@@ -99,13 +99,15 @@ export function dressWorld(scene, zone, A, Q) {
 
   // ---- hibiscus bushes ----
   const bushes = zone.hibiscus.map(([x, y]) => ({ x, z: -y, h: H(x, y), yaw: R() * 6.28, scale: (1.5 + R() * 0.7) / 0.98 }));
-  scatter(scene, M.SM_Hibiscus, bushes, { windOpts: { bend: 0.025, flutter: 0.012, speed: 1.6 } });
+  const bushSet = scatter(scene, M.SM_Hibiscus, bushes, { windOpts: { bend: 0.025, flutter: 0.012, speed: 1.6 } });
+  if (bushSet) out.colliders.push({ type: 'hullInstances', mesh: bushSet.mesh, shrink: 0.8 });
 
   // ---- boulders (tide pool rocks, cliffs, sea stacks) ----
   // sink rocks deeper on slopes so no side floats
   const rocks = zone.boulders.map(([x, y, s]) => { const sc = s * 1.7 / 0.98, sl = Math.min(1.2, slope(x, y)); const deep = H(x, y) < -1.5; return { x, z: -y, h: H(x, y) - sl * sc * 0.32, yaw: R() * 6.28, scale: sc, scaleY: sc * (0.75 + R() * 0.35) * (deep ? 2.1 : 1) }; });
   const rockSet = scatter(scene, M.SM_Boulder_Mossy, rocks, { sink: 0.12 });
-  for (const r of rocks) out.colliders.push({ type: 'ball', x: r.x, z: r.z, h: r.h + r.scale * 0.2, r: r.scale * 0.46 });
+  if (rockSet) out.colliders.push({ type: 'hullInstances', mesh: rockSet.mesh });
+  else for (const r of rocks) out.colliders.push({ type: 'ball', x: r.x, z: r.z, h: r.h + r.scale * 0.2, r: r.scale * 0.46 });
   out.rockSet = rockSet;
 
   // ---- props ----
@@ -115,7 +117,14 @@ export function dressWorld(scene, zone, A, Q) {
     const mesh = place(scene, M[p.model], { x: p.pos[0], y: p.pos[1], yaw, height: p.height, width: p.width, length: p.length });
     if (!mesh) continue;
     if (p.id) out[p.id] = mesh;
-    if (p.collider === 'box') out.colliders.push({ type: 'box', mesh });
+    mesh.updateMatrixWorld(true);
+    if (p.model === 'SM_PalmSwing') {
+      // only the two side posts are solid, so Wren can still sit on the seat
+      const sz = mesh.userData.size, a = THREE.MathUtils.degToRad(yaw), base = V(p.pos[0], p.pos[1]);
+      const ax = new THREE.Vector3(Math.cos(a), 0, -Math.sin(a)).multiplyScalar(Math.max(sz.x, sz.z) / 2 - 0.12);
+      for (const sgn of [1, -1]) { const q = base.clone().addScaledVector(ax, sgn); out.colliders.push({ type: 'cylinder', x: q.x, z: q.z, h: H(p.pos[0], p.pos[1]), r: 0.12, height: sz.y }); }
+    } else if (p.model === 'SM_TreasureChest') out.colliders.push({ type: 'box', mesh });     // straight sides: can't be climbed
+    else if (p.collider || p.model === 'SM_Driftwood') out.colliders.push({ type: 'hull', geometry: mesh.geometry, matrix: mesh.matrixWorld.clone() });
   }
 
   // ---- torches with flames; the nearest few cast real light ----
@@ -137,6 +146,7 @@ export function dressWorld(scene, zone, A, Q) {
 
   // ---- jetty ----
   buildJetty(scene, zone, A, out);
+  if (zone.cliffSteps) buildCliffSteps(scene, zone, A, out);
 
   // ---- clam shell for Wren's hand ----
   out.clamGltf = M.SM_Clam_Pearl;
@@ -210,9 +220,38 @@ function buildSlide(scene, zone, A, out) {
     if (hgt < 0.8) continue;
     const post = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, hgt, 8), bam);
     post.position.set(p.x, p.y - hgt / 2 - 0.5, p.z); post.castShadow = true; g.add(post);
+    out.colliders.push({ type: 'cylinder', x: p.x, z: p.z, h: H(p.x, -p.z), r: 0.12, height: hgt });
   }
   out.slideCurve = curve;
   out.colliders.push({ type: 'cylinder', x: tx, z: -ty, h: base, r: 1.9, height: S.top });
+}
+
+/** stone steps from the beach up the cliff face, each one solid (walkable, not walk-through) */
+function buildCliffSteps(scene, zone, A, out) {
+  const S = zone.cliffSteps;
+  const a = V(S.from[0], S.from[1]), b = V(S.to[0], S.to[1]);
+  const run = Math.hypot(b.x - a.x, b.z - a.z), dir = new THREE.Vector3(b.x - a.x, 0, b.z - a.z).normalize(), yaw = Math.atan2(dir.x, dir.z);
+  if (S.topAt) b.y = H(S.topAt[0], S.topAt[1]);
+  const rise = b.y - a.y, n = Math.max(2, Math.ceil(rise / 0.28)), tread = run / n;
+  const mat = new THREE.MeshStandardNodeMaterial({ roughness: 0.9 });
+  const T = A.textures.T_Rock_Coastal;
+  if (T) mat.colorNode = texture(T, positionWorld.xz.add(positionWorld.y).mul(0.35)).rgb.mul(vec3(0.62, 0.58, 0.52)); else mat.color.set(0x8a8478);
+  const g = new THREE.Group(); scene.add(g);
+  const step = (cx, cz, top, depth, width) => {
+    const bottom = Math.min(H(cx, -cz), top - 0.3) - 1.2;
+    const h = top - bottom;
+    const m = new THREE.Mesh(new THREE.BoxGeometry(width, h, depth), mat);
+    m.position.set(cx, bottom + h / 2, cz); m.rotation.y = yaw; m.castShadow = m.receiveShadow = true; g.add(m);
+    out.colliders.push({ type: 'cuboid', x: cx, y: bottom + h / 2, z: cz, hx: width / 2, hy: h / 2, hz: depth / 2, yaw });
+  };
+  for (let i = 0; i < n; i++) {
+    const p = a.clone().addScaledVector(dir, (i + 0.5) * tread);
+    step(p.x, p.z, a.y + (i + 1) * (rise / n), tread + 0.02, S.width);
+  }
+  // a flat ledge at the top for the chest
+  const top = a.y + rise, l = b.clone().addScaledVector(dir, S.landing / 2);
+  step(l.x, l.z, top, S.landing, S.width + 1.2);
+  out.cliffTop = top;
 }
 
 function buildJetty(scene, zone, A, out) {
@@ -231,12 +270,19 @@ function buildJetty(scene, zone, A, out) {
     plank.position.set(p.x, Math.max(1.05, H(p.x, -p.z) + 0.6), p.z); plank.rotation.y = yaw + (Math.random() - 0.5) * 0.02;
     plank.castShadow = plank.receiveShadow = true; g.add(plank);
   }
+  // walkable deck: one thin box per metre at plank height
+  for (let i = 0; i < len; i += 1) {
+    const p = a.clone().addScaledVector(dir, i + 0.5);
+    const top = Math.max(1.05, H(p.x, -p.z) + 0.6);
+    out.colliders.push({ type: 'cuboid', x: p.x, y: top - 0.03, z: p.z, hx: J.width / 2, hy: 0.05, hz: 0.52, yaw });
+  }
   for (let i = 0; i <= len; i += 3) {
     const p = a.clone().addScaledVector(dir, i);
     for (const s of [-1, 1]) {
       const side = new THREE.Vector3(-dir.z, 0, dir.x).multiplyScalar(s * (J.width / 2 - 0.1));
       const post = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 4.2, 10), wood);
       post.position.set(p.x + side.x, -0.9, p.z + side.z); post.castShadow = true; g.add(post);
+      out.colliders.push({ type: 'cylinder', x: p.x + side.x, z: p.z + side.z, h: -3.0, r: 0.14, height: 4.0 });
     }
   }
   out.jetty = { a, b, dir, len, width: J.width, top: 1.12 };

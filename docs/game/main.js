@@ -35,7 +35,7 @@ async function boot() {
   $('quality').value = Q.name;
 
   const scene = game.scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0xb9d6e4, 0.0015);
+  scene.fog = new THREE.FogExp2(0x9cc4dc, 0.0009);
   const camera = game.camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.08, 6000);
   camera.position.set(30, 18, 40);
 
@@ -83,7 +83,7 @@ async function boot() {
     if (D.clamGltf) game.clam = game.wren.attach('RightHand', D.clamGltf, { size: 0.17, offset: [0, 0.09, 0.04], rotation: [0.3, 0, 0] });
   } else game.wren = standIn(scene, 0xf2c25a);
   const player = game.player = new Player(game.wren, wrenBody, input, { level: zone.seaLevel });
-  player.lagoon = zone.lagoon; player.face = Math.PI;   // looking inland at the clubhouse
+  player.lagoon = zone.lagoon; player.face = Math.PI; player.groundAt = (x, z) => G(x, z);   // looking inland at the clubhouse
 
   if (A.models.Boy) {
     const [bx, by] = zone.companion.start;
@@ -103,6 +103,7 @@ async function boot() {
   game.fxFoam = new Particles(scene, TEX.foam(), { max: 300 });
   game.decals = new Decals(scene);
   game.under = new Underwater(scene, zone, A, Q, game.fxGlow);
+  for (const m of game.under.coral) { m.updateMatrixWorld(true); physics.addCollider({ type: 'hullInstances', mesh: m, shrink: 0.85 }); }   // solid reef
   game.blooms = new Blooms(scene);
   game.dolphins = new Dolphins(scene, A, game.fxWater, { level: zone.seaLevel });
   game.parrots = new Parrots(scene, A, zone);
@@ -351,7 +352,7 @@ function tick(dt) {
   updateCamera(dt, t);
   game.under.update(dt, game.camera, P, game.friend);
   if (game.friend) game.speech.update(dt, game.camera, game.friend.pos.clone().add(new THREE.Vector3(0, 2.05, 0)), game.renderer.domElement);
-  const diveBtn = $('b-dive'); const canDive = game.started && (P.c.swimming || P.underwater); if (diveBtn.hidden === canDive) diveBtn.hidden = !canDive;
+  const diveBtn = $('b-dive'), upBtn = $('b-surface'); const canDive = game.started && (P.c.swimming || P.underwater), canUp = game.started && (P.diving || P.underwater); if (diveBtn.hidden === canDive) diveBtn.hidden = !canDive; if (upBtn.hidden === canUp) upBtn.hidden = !canUp;
   game.sky.follow(game.started ? pp : new THREE.Vector3(0, 0, -6));
   mapT -= dt; if (mapT <= 0) { game.hud.map(game.quests.S, game.quests, P, game.friend); mapT = 0.1; }
   game.hud.tick(dt, () => `${game.renderer.info.render.drawCalls ?? '?'} draws · ${(game.renderer.info.render.triangles / 1e6).toFixed(2)}M tris · ${Q.name} · ${game.renderer.backend.isWebGPUBackend ? 'WebGPU' : 'WebGL2'}`);

@@ -5,13 +5,17 @@ export class Input {
   constructor(canvas) {
     this.keys = new Set(); this.x = 0; this.y = 0; this.sprint = false; this.jumpPressed = false;
     this.look = { dx: 0, dy: 0 }; this.zoom = 0; this.onWater = () => {}; this.onLove = () => {}; this.onToggleView = () => {}; this.onStats = () => {}; this.onPhoto = () => {};
+    this.diveTaps = 0; this.surfaceTaps = 0;   // D dives (again = deeper), S swims back up
     this.waterHeld = false; this.joy = { x: 0, y: 0 }; this.speedHeld = false; this.enabled = false;
     addEventListener('keydown', e => {
       if (!this.enabled) return;
       if (e.repeat && e.code === 'Space') return;
       this.keys.add(e.code);
       if (e.code === 'Space') { this.jumpPressed = true; e.preventDefault(); }
-      if (e.code === 'KeyE') this.onLove();
+      if (e.code === 'KeyL' && !e.repeat) this.onLove();
+      if (e.code === 'KeyD' && !e.repeat) this.diveTaps++;
+      if (e.code === 'KeyS' && !e.repeat) this.surfaceTaps++;
+      if (e.code.startsWith('Arrow')) e.preventDefault();
       if (e.code === 'KeyV') this.onToggleView();
       if (e.code === 'KeyP') this.onPhoto();
       if (e.code === 'F3') { this.onStats(); e.preventDefault(); }
@@ -36,7 +40,9 @@ export class Input {
     bj.addEventListener('click', () => this.jumpPressed = true);
     bj.addEventListener('pointerdown', () => this.jumpHeldBtn = true); bj.addEventListener('pointerup', () => this.jumpHeldBtn = false); bj.addEventListener('pointerleave', () => this.jumpHeldBtn = false);
     const bd = document.getElementById('b-dive');
-    if (bd) { bd.addEventListener('pointerdown', () => this.diveHeld = true); bd.addEventListener('pointerup', () => this.diveHeld = false); bd.addEventListener('pointerleave', () => this.diveHeld = false); }
+    if (bd) bd.addEventListener('click', () => this.diveTaps++);
+    const bu = document.getElementById('b-surface');
+    if (bu) bu.addEventListener('click', () => this.surfaceTaps++);
     const bw = document.getElementById('b-water');
     bw.addEventListener('pointerdown', () => this.waterHeld = true); bw.addEventListener('pointerup', () => this.waterHeld = false); bw.addEventListener('pointerleave', () => this.waterHeld = false);
     document.getElementById('b-love').addEventListener('click', () => this.onLove());
@@ -44,13 +50,14 @@ export class Input {
 
   poll() {
     const k = this.keys;
-    let x = (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0) - (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0) + this.joy.x;
-    let y = (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0) - (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0) - this.joy.y;
+    // arrow keys move; letters are powers (W water, L love, D dive, S surface)
+    let x = (k.has('ArrowRight') ? 1 : 0) - (k.has('ArrowLeft') ? 1 : 0) + this.joy.x;
+    let y = (k.has('ArrowUp') ? 1 : 0) - (k.has('ArrowDown') ? 1 : 0) - this.joy.y;
     let sprint = k.has('ShiftLeft') || k.has('ShiftRight') || this.speedHeld;
-    let water = k.has('KeyF') || this.waterHeld;
+    let water = k.has('KeyW') || this.waterHeld;
     // walk modifier: hold Alt or C to walk/skip
     const walk = k.has('KeyC') || k.has('AltLeft');
-    let dive = k.has('KeyQ') || this.diveHeld, jumpHeld = k.has('Space') || this.jumpHeldBtn;
+    let jumpHeld = k.has('Space') || this.jumpHeldBtn;
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     for (const p of pads) {
       if (!p) continue;
@@ -61,12 +68,13 @@ export class Input {
       if (p.buttons[2]?.pressed || p.buttons[7]?.pressed) water = true;
       if (p.buttons[3]?.pressed && !this._padLove) this.onLove(); this._padLove = p.buttons[3]?.pressed;
       if (p.buttons[1]?.pressed || p.buttons[10]?.pressed || p.buttons[6]?.pressed) sprint = true;
-      if (p.buttons[4]?.pressed) dive = true;
+      if (p.buttons[4]?.pressed && !this._padDive) this.diveTaps++; this._padDive = p.buttons[4]?.pressed;
+      if (p.buttons[5]?.pressed && !this._padUp) this.surfaceTaps++; this._padUp = p.buttons[5]?.pressed;
       if (p.buttons[0]?.pressed) jumpHeld = true;
     }
     const l = Math.hypot(x, y); if (l > 1) { x /= l; y /= l; }
     const scale = walk ? 0.45 : 1;
-    this.x = x * scale; this.y = y * scale; this.sprint = sprint; this.water = water; this.dive = dive; this.jumpHeld = jumpHeld;
+    this.x = x * scale; this.y = y * scale; this.sprint = sprint; this.water = water; this.jumpHeld = jumpHeld;
   }
 }
 

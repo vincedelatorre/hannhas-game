@@ -54,6 +54,9 @@ export default {
     [-30, -40, 6.5], [-23, -46, 4.2], [-36, -34, 3.2], [-27, -52, 3.0], [31, -42, 5.5], [25, -49, 3.6], [37, -37, 2.6],
   ],
 
+  // stone steps cut into the east cliff up to the treasure chest ledge
+  cliffSteps: { from: [45.2, 6], to: [51.6, 6], topAt: [53, 6], width: 1.9, landing: 2.6 },
+
   jetty: { from: [36, -14], to: [42, -36], width: 2.4 },
 
   quests: {
@@ -74,7 +77,7 @@ export default {
     pool: ['Look, a crab popped out!', 'Your water power is amazing!'],
     slide: ['That was the best ride ever!', 'Again! Again!'],
     gull: ['The seagull is smiling now.'],
-    dive: ['Whoa, look at all the fish down there!', 'Hold Q to swim deeper. I\'ll keep watch up here!'],
+    dive: ['Whoa, look at all the fish down there!', 'Press D again to swim deeper, and S to come back up!'],
     turtle: ['You found the sea turtle! She likes you.'],
     flowers: ['Flowers! Your love power makes everything bloom.'],
     ready: ['I think the treasure chest just opened. Look for the light on the east cliff!'],

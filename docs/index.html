@@ -120,7 +120,7 @@ body.photo #speech { display: none; }
     <li id="q-pools"><span class="box"></span><span>Refill the tide pools with water power</span><span class="n" id="n-pools">0/2</span></li>
     <li id="q-gull"><span class="box"></span><span>Cheer up the sad seagull by the swing</span><span class="n"></span></li>
     <li id="q-turtle" class="bonus"><span class="box"></span><span>Bonus: dive down and visit the sea turtle</span><span class="n"></span></li>
-    <li id="q-chest" class="locked"><span class="box"></span><span>Open the treasure chest on the east cliff</span><span class="n"></span></li>
+    <li id="q-chest" class="locked"><span class="box"></span><span>Climb the cliff steps and open the treasure chest</span><span class="n"></span></li>
   </ul>
 </div>
 
@@ -130,7 +130,7 @@ body.photo #speech { display: none; }
 <button id="gear" type="button" aria-label="Settings" aria-expanded="false">⚙</button>
 <button id="photo-btn" type="button" aria-label="Photo mode (P)">📷</button>
 <div class="chip" id="photo-bar" hidden>
-  <span>Photo mode: drag to look, WASD to fly, scroll to zoom</span>
+  <span>Photo mode: drag to look, arrow keys to fly, scroll to zoom</span>
   <select id="p-filter" aria-label="Filter"><option value="0">Natural</option><option value="1">Golden</option><option value="2">Dreamy</option><option value="3">Black and white</option><option value="4">Ocean</option></select>
   <button type="button" id="p-snap">Take photo</button>
   <button type="button" id="p-exit">Done</button>
@@ -147,13 +147,14 @@ body.photo #speech { display: none; }
 </div>
 
 <div class="hud chip" id="energy"><span>Pearl energy</span><div class="bar"><div class="fill" id="energy-fill"></div></div></div>
-<div class="hud chip" id="help"><b>Move</b> WASD · <b>Walk</b> hold C · <b>Look</b> drag · <b>Jump</b> Space (twice for a backflip)<br><b>Super speed</b> Shift · <b>Water</b> F or click · <b>Love</b> E · <b>Dive</b> hold Q while swimming · <b>View</b> V · <b>Photo</b> P · <b>Stats</b> F3</div>
+<div class="hud chip" id="help"><b>Move</b> arrow keys · <b>Walk</b> hold C · <b>Look</b> drag · <b>Jump</b> Space (twice for a backflip)<br><b>Super speed</b> Shift · <b>Water</b> W or click · <b>Love</b> L · <b>Dive</b> D (again = deeper) · <b>Swim up</b> S · <b>View</b> V · <b>Photo</b> P</div>
 <div class="hud" id="toast" role="status" aria-live="polite"></div>
 <div id="stick" aria-hidden="true"><div class="knob"></div></div>
 <div class="hud" id="buttons">
   <button type="button" class="speed" id="b-speed" aria-label="Super speed (hold)">Speed</button>
   <button type="button" id="b-jump" aria-label="Jump">Jump</button>
-  <button type="button" class="dive" id="b-dive" aria-label="Dive (hold, while swimming)" hidden>Dive</button>
+  <button type="button" class="dive" id="b-dive" aria-label="Dive (D)" hidden>Dive</button>
+  <button type="button" class="dive" id="b-surface" aria-label="Swim up (S)" hidden>Up</button>
   <button type="button" class="water" id="b-water" aria-label="Water power (hold)">Water</button>
   <button type="button" class="love" id="b-love" aria-label="Love power">Love</button>
 </div>

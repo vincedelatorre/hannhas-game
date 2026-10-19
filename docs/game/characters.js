@@ -206,22 +206,34 @@ export class Player {
       this.c.play('Backflip', { from: 0.58, to: 1.55, timeScale: 1.05, fadeIn: 0.05 });
     }
 
-    // diving: hold Q (or the Dive button) while swimming to go under; let go to float back up.
-    // Jump while under water kicks toward the surface. Wren never runs out of air; after a long
-    // dive she drifts up on her own.
+    // diving: press D while swimming to dive (press again to go deeper). Wren stays at that
+    // depth, swimming level with the arrow keys, until S brings her back to the surface.
+    // Space gives a quick kick upward. She never runs out of air.
     const surfaceY = this.waterLevelAt(feet) - 1.12;     // feet height while floating at the top
     const under = feet.y < surfaceY - 0.35;
     this.underwater = under;
-    this.diveTime = under ? (this.diveTime || 0) + dt : 0;
-    const wantDive = I.dive && (swimming || under) && this.diveTime < 20;
-    this.diving = wantDive;
+    const floorY = this.groundAt ? this.groundAt(feet.x, feet.z) : -99;
+    while (I.diveTaps > 0) {
+      I.diveTaps--;
+      if (swimming || under) {
+        const maxDepth = Math.max(0.8, surfaceY - (floorY + 0.35));
+        this.diveDepth = Math.min(maxDepth, (this.diveDepth || 0) + 2.0);
+      }
+    }
+    while (I.surfaceTaps > 0) { I.surfaceTaps--; this.diveDepth = 0; }
+    if (!(swimming || under)) this.diveDepth = 0;
+    this.diving = this.diveDepth > 0;
     if (swimming || under) {
       const floor = this.body.grounded;
       let target;
-      if (wantDive) target = -2.4 * (0.6 + 0.4 * mag);            // sink
-      else if (under) target = I.jumpHeld ? 3.2 : 1.4;              // swim / drift up
+      if (this.diving) {
+        // hold the chosen depth (but never below the sea floor)
+        const wantY = Math.max(floorY + 0.35, surfaceY - this.diveDepth);
+        target = THREE.MathUtils.clamp((wantY - feet.y) * 2.2, -2.6, 2.6);
+        if (I.jumpHeld) { target = 2.6; this.diveDepth = Math.max(0, surfaceY - feet.y - 0.05); }
+      } else if (under) target = I.jumpHeld ? 3.2 : 2.2;            // swim back up
       else target = (surfaceY - feet.y) * 4;                         // bob at the surface
-      this.vy += (target - this.vy) * Math.min(1, dt * (wantDive || under ? 3 : 8));
+      this.vy += (target - this.vy) * Math.min(1, dt * (this.diving || under ? 3 : 8));
       if (floor && this.vy < 0) this.vy = 0;
       if (jumped && under) jumped = null;
     } else if (this.body.grounded && this.vy <= 0) this.vy = -2;
@@ -231,7 +243,9 @@ export class Player {
     const moved = this.body.move(new THREE.Vector3(this.vel.x * dt, this.vy * dt, this.vel.z * dt));
     if (this.body.grounded && this.vy < 0) this.vy = -2;
     // walked into a wall: drop only the part of the velocity that pushes into it
-    for (const n of this.body.walls || []) { const d = this.vel.x * n.x + this.vel.z * n.z; if (d < 0) { this.vel.x -= n.x * d; this.vel.z -= n.z * d; } }
+    // pressing into something solid: keep the wish velocity (so stairs and kerbs auto-step),
+    // but animate with the speed she really moved at so she doesn't run on the spot
+    const realSpeed = dt > 0 ? Math.hypot(moved.x, moved.z) / dt : 0;
     // face the direction of travel
     const hs = Math.hypot(this.vel.x, this.vel.z);
     if (hs > 0.3) {
@@ -241,7 +255,8 @@ export class Player {
     }
     this.c.skipping = mag > 0.1 && mag < 0.55 && !this.sprinting;
     this.c.setWet?.(depth, dt);
-    this.c.update(dt, this.body.grounded || depth > 0.9 ? hs : hs * 0.4);
+    const animSpeed = Math.min(hs, realSpeed + 0.4);
+    this.c.update(dt, this.body.grounded || depth > 0.9 ? animSpeed : animSpeed * 0.4);
     const p = this.pos;
     this.c.root.position.copy(p);
     this.c.root.rotation.y = this.face;
