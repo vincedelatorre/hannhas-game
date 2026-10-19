@@ -207,6 +207,8 @@ for (const t of TEXTURES) {
 
 // sound: loudness-normalised mono/stereo mp3 via ffmpeg (ambience and music stay stereo)
 import { execFileSync } from 'node:child_process';
+let FFMPEG = 'ffmpeg';
+try { FFMPEG = (await import('ffmpeg-static')).default || FFMPEG; } catch (e) { /* use system ffmpeg */ }
 const audioDir = path.join(SRC, 'audio');
 if (fs.existsSync(audioDir)) {
   fs.mkdirSync(path.join(OUT, 'audio'), { recursive: true });
@@ -215,7 +217,7 @@ if (fs.existsSync(audioDir)) {
     const name = path.parse(f).name, out = path.join(OUT, 'audio', `${name}.mp3`);
     const stereo = /^(amb_|music_)/.test(name);
     try {
-      execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', path.join(audioDir, f), '-af', 'loudnorm=I=-18:TP=-2', '-ac', stereo ? '2' : '1', '-ar', '44100', '-b:a', stereo ? '128k' : '96k', out]);
+      execFileSync(FFMPEG, ['-y', '-loglevel', 'error', '-i', path.join(audioDir, f), '-af', 'loudnorm=I=-18:TP=-2', '-ac', stereo ? '2' : '1', '-ar', '44100', '-b:a', stereo ? '128k' : '96k', out]);
       report.audio[name] = fs.statSync(out).size; console.log(`${name}: ${kb(out)}`);
     } catch (e) { console.warn('audio failed', name, e.message); }
   }

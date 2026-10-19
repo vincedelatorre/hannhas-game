@@ -247,6 +247,9 @@ function tick(dt) {
       if (!game.quests.S.slid && P.pos.distanceTo(game.quests.ringPos) < 1.4) { game.sliding = 0; game.toast('Up to the deck. Here we go!'); game.audio.sfx(440, 0.4, 'triangle', 0.07); }
     }
     if (I.water) game.powers.water(dt);
+    // Wren glances at her friend or the nearest glowing shell
+    const near = game.quests.shells.filter(s => !s.got).map(s => s.g.position).sort((a, b) => a.distanceToSquared(P.pos) - b.distanceToSquared(P.pos))[0];
+    game.wren.lookTarget = near && near.distanceTo(P.pos) < 6 ? near : (game.friend && game.friend.pos.distanceTo(P.pos) < 6 ? game.friend.pos : null);
     game.friend?.update(dt);
     game.powers.update(dt);
     game.quests.update(dt, t);

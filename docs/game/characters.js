@@ -2,6 +2,7 @@
 // Wren, and a companion that follows her around.
 import * as THREE from 'three/webgpu';
 import { toNodeMaterial } from './dressing.js';
+import { texture, uv, uniform, mix, float } from 'three/tsl';
 import { extractMesh } from './assets.js';
 
 const LOCO = ['Idle', 'Walk', 'Run', 'Sprint'];
@@ -19,6 +20,8 @@ export class Character {
   constructor(scene, gltf, clips, { name, height = 1.6 } = {}) {
     this.name = name;
     this.root = new THREE.Group(); scene.add(this.root);
+    this.wet = uniform(0);
+    this.lookTarget = null; this.lookYaw = 0;
     this.model = gltf.scene;
     this.root.add(this.model);
     this.model.traverse(o => {
@@ -28,6 +31,11 @@ export class Character {
         // Meshy exports a full-strength emissive map that makes characters glow; they are lit by the scene instead
         o.material.emissiveMap = null; o.material.emissive.setRGB(0, 0, 0);
         o.material.roughness = 0.82; o.material.metalness = 0;
+        // wet look: darker and glossier after swimming, drying over time
+        if (o.material.map) {
+          o.material.colorNode = texture(o.material.map, uv()).rgb.mul(mix(float(1), float(0.68), this.wet));
+          o.material.roughnessNode = mix(float(0.82), float(0.35), this.wet);
+        }
       }
     });
     this.bones = {};
@@ -98,6 +106,31 @@ export class Character {
       if (o.fading) { o.doneAt -= dt; if (o.doneAt <= 0) { a.stop(); this.oneShot = null; } }
     }
     this.mixer.update(dt);
+    this.lookAt(dt);
+  }
+
+  /** turn the head toward something interesting, on top of the animation */
+  lookAt(dt) {
+    const head = this.bones.Head; if (!head) return;
+    let want = 0;
+    if (this.lookTarget && !this.oneShot) {
+      const p = this.root.position, f = this.root.rotation.y;
+      const a = Math.atan2(this.lookTarget.x - p.x, this.lookTarget.z - p.z) - f;
+      want = THREE.MathUtils.clamp(Math.atan2(Math.sin(a), Math.cos(a)), -0.9, 0.9);
+      if (Math.abs(Math.atan2(Math.sin(a), Math.cos(a))) > 2.0) want = 0;   // behind: don't twist
+    }
+    this.lookYaw += (want - this.lookYaw) * Math.min(1, dt * 4);
+    if (Math.abs(this.lookYaw) < 1e-3) return;
+    const bw = head.getWorldQuaternion(new THREE.Quaternion());
+    const pw = head.parent.getWorldQuaternion(new THREE.Quaternion());
+    const delta = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), this.lookYaw);
+    head.quaternion.copy(pw.invert().multiply(delta.multiply(bw)));
+  }
+
+  /** soak or dry the outfit (0..1) */
+  setWet(depth, dt) {
+    const target = depth > 0.6 ? 1 : 0;
+    this.wet.value = target ? Math.min(1, this.wet.value + dt * 2) : Math.max(0, this.wet.value - dt / 25);
   }
 
   /** attach a static model (the clam) to a bone, sized in metres */
@@ -188,6 +221,7 @@ export class Player {
       this.face += d * Math.min(1, dt * 12);
     }
     this.c.skipping = mag > 0.1 && mag < 0.55 && !this.sprinting;
+    this.c.setWet?.(depth, dt);
     this.c.update(dt, this.body.grounded || depth > 0.9 ? hs : hs * 0.4);
     const p = this.pos;
     this.c.root.position.copy(p);
@@ -244,6 +278,8 @@ export class Companion {
     else { // when idle, turn to look at Wren
       const w = Math.atan2(lp.x - me.x, lp.z - me.z); let a = w - this.face; a = Math.atan2(Math.sin(a), Math.cos(a)); this.face += a * Math.min(1, dt * 3);
     }
+    this.c.setWet?.(depth, dt);
+    this.c.lookTarget = lp.distanceTo(me) < 8 ? lp.clone() : null;
     this.idle = hs < 0.2 ? this.idle + dt : 0;
     if (this.idle > 6 && !this.c.busy) { this.idle = -4; this.c.play('Wave', { timeScale: 1 }); }
     this.c.update(dt, hs);

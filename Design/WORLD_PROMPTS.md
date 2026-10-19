@@ -23,6 +23,21 @@ from several angles and fix what looks wrong before telling me it's done.
 
 ---
 
+## Progress (updated as prompts are completed)
+
+| Phase | Status | What exists now (docs/game) |
+| --- | --- | --- |
+| 1 Foundations | Mostly done | three.js r184 WebGPU + TSL with WebGL 2 fallback, modular engine, zone data file, asset registry, quality tiers, FPS/stats (F3), automated asset build on GitHub. Not yet: Vite build, asset viewer page |
+| 2 Terrain | Started | Splat material with real textures, anti-tiling, macro variation, dynamic beach wetness, footprints, instanced grass with gusts, pebbles, coconuts, all props placed and snapped. Not yet: tessellation, stream, dithered LOD fades |
+| 3 Water | Started | Gerstner ocean damped by depth, swash run-up, Beer's law absorption, refraction (WebGPU), shore and crest foam, lagoon and tide pools that fill, ripples, swimming. Not yet: FFT, breaking waves, caustics, underwater view, reef |
+| 4 Sky and light | Started | Physical sky with clouds, image-based light from the sky, shadows that follow the player, AO, god rays, bloom, ACES, grading, vignette, SMAA, stars, moon, torch lights, time-of-day/sun/sea/wind settings. Not yet: cascaded shadows, volumetric clouds, TAA |
+| 5 Wren | Mostly done | Rapier character controller, blend tree (idle, walk, skip, run, sprint, swim), retargeted clips, coyote time, jump buffer, backflip double jump, walkable clubhouse, slide ride sitting down, swing. Not yet: foot IK, look-at, hair/dress physics, ladders |
+| 6 Powers | Started | Water stream with splashes and ripples, love burst with hearts, super speed trail and FOV kick. Not yet: real fluid, flowers blooming, run on water |
+| 7 Companion | Started | Follows with physics, catches up, waves, cheers, swims. Not yet: navmesh, commands, co-op |
+| 8 Life | Started | Seagull, crabs, butterflies. Not yet: parrots, fish, turtle, dolphins |
+| 9-13 | Not started | Clubhouse interior, quest data files, dialogue, journal, photo mode, world streaming, zone 2, polish passes |
+| 11 Audio | Started | Generated recorded-style ambience, music, footsteps, splashes, powers, pickups |
+
 ## Phase 1 — Foundations
 
 - set up the project for a world that will grow: Vite + three.js WebGPURenderer with TSL, a small engine layer (world, zones, entities, systems, asset registry, input, audio, save), and a zone file format so Pearl Cove is data, not hard-coded. keep the current docs/index.html game working until the new one replaces it. deploy the build to docs/ so the Play link uses it.
