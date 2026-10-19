@@ -157,5 +157,18 @@
     "T_Bamboo_Woven": 159632,
     "T_Thatch": 281394
   },
-  "audio": {}
+  "audio": {
+    "amb_island": 321453,
+    "amb_surf": 321453,
+    "chest_open": 48945,
+    "jump": 25121,
+    "music_island": 961064,
+    "pickup_shell": 25121,
+    "power_love": 37033,
+    "power_water": 37033,
+    "splash_big": 37033,
+    "splash_small": 25121,
+    "step_sand": 48945,
+    "step_water": 48945
+  }
 }
