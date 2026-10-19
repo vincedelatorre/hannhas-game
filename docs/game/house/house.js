@@ -45,6 +45,7 @@ export class House {
     this.b = new Builder(this.root, physics); this.b.mats = this.M;
     this.sys = game.interact || (game.interact = new InteractionSystem(game, scene));
     this.indoors = false;
+    this.floorY = HOUSE_ORIGIN.y;
     this.sys.saveKey = 'hg.save.house.v2';      // the kitchen was rebuilt: old saves no longer fit
     this.windows = [];
     buildShell(this);
@@ -234,6 +235,13 @@ export class House {
     b.box(M.coral, [0, 0.005, 5.4], [1.3, 0.01, 0.8], { collide: false, cast: false });
   }
 
+  /** places for Wren's moves inside: a nap on the foyer bench, a soft ball to kick around */
+  addActionSpots(A) {
+    const L = (x, y, z) => new THREE.Vector3(x, y, z).add(HOUSE_ORIGIN);
+    A.addNapSpot({ name: 'foyer bench', center: L(2.0, 0.28, 4.8), face: Math.PI / 2, inside: true });
+    A.placeBalls(null, L(-0.6, 0.11, 3.4));
+  }
+
   buildLights() {
     const R = this.root;
     this.lights = [];
@@ -260,7 +268,7 @@ export class House {
     if (!this.outdoor) {
       const keep = new Set([this.root, this.fill, this.game.sky.sky, this.game.sky.stars, this.game.sky.moon, this.game.sky.sun, this.game.sky.sun.target, this.game.sky.fill, this.game.sky.moonLight,
         this.game.wren.root, this.game.friend?.c.root, this.sys.marker, ...['fxWater', 'fxGlow', 'fxHeart', 'fxFoam'].map(k => this.game[k]?.sprite)].filter(Boolean));
-      this.outdoor = this.scene.children.filter(o => !keep.has(o) && !o.isCamera);
+      this.outdoor = this.scene.children.filter(o => !keep.has(o) && !o.isCamera && !o.userData.keep);
     }
     for (const o of this.outdoor) o.visible = v;
   }

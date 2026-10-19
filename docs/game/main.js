@@ -21,7 +21,9 @@ import { Blooms, clock as bloomClock } from './flowers.js';
 import { Dolphins, Parrots } from './wildlife.js';
 import { SlideRide } from './slide.js';
 import { House, HOUSE_MODELS, HOUSE_TEXTURES } from './house/house.js';
-import { InteractionSystem } from './house/interact.js';
+import { InteractionSystem, Item, Slot, Seat } from './house/interact.js';
+import { Actions } from './actions.js';
+import { HudExtra } from './hud.js';
 window.__H = H;
 
 const $ = id => document.getElementById(id);
@@ -124,7 +126,7 @@ async function boot() {
   input.onPointer = (x, y, inside) => FOCUS().pointer(x, y, inside);
   input.onClick = b => FOCUS().active ? FOCUS().click(b) : false;
   input.onWheel = d => FOCUS().wheel(d);
-  input.onEscape = () => { if (BOOK().isOpen) BOOK().close(); else if (FOCUS().active) FOCUS().exit(); else if (game.view === 'first') game.view = 'third'; };
+  input.onEscape = () => { if (game.actions?.s.talk) game.actions.dialogue.close(); else if (game.hudExtra?.closeTop()) return; else if (BOOK().isOpen) BOOK().close(); else if (FOCUS().active) FOCUS().exit(); else if (game.view === 'first') game.view = 'third'; };
   input.onRecipe = () => { if (!game.started) return; if (BOOK().isOpen) BOOK().close(); else { FOCUS().exit(); BOOK().open(BOOK().active?.id); } };
   $('b-book')?.addEventListener('click', () => input.onRecipe());
   input.onDrop = () => game.started && game.interact.drop();
@@ -138,8 +140,16 @@ async function boot() {
   const swingProp = zone.props.find(p => p.model === 'SM_PalmSwing');
   if (swingProp) game.swingSeat = V(swingProp.pos[0], swingProp.pos[1]);
   game.onWin = pos => win(pos);
-  input.onWater = () => game.started && game.powers.water();
-  input.onLove = () => game.started && game.powers.love();
+  input.onWater = () => game.started && game.actions.ensureShell() && game.powers.water();
+  input.onLove = () => game.started && game.actions.ensureShell() && game.powers.love();
+  // ---- Wren's extra moves, the shell inventory and the tidy HUD
+  game.houseKit = { Item, Slot, Seat };
+  game.rayHit = (from, dir, len) => { const h = physics.world.castRayAndGetNormal(new RAPIER.Ray(from, dir), len, true, undefined, (0x0001 << 16) | 0x0001); return h ? { toi: h.timeOfImpact, normal: new THREE.Vector3(h.normal.x, h.normal.y, h.normal.z) } : null; };
+  game.floorAt = (p, inside) => inside ? game.house.floorY : Math.max(G(p.x, p.z), player.waterLevelAt(p) - 0.12);
+  game.toySpot = () => { const pl = game.quests.pools?.[game.quests.pools.length - 1]; const x = pl ? pl.x + 2.2 : 14, z = pl ? -pl.y + 1.6 : 2; return new THREE.Vector3(x, G(x, z) + 0.01, z); };
+  game.actions = new Actions(game);
+  game.hudExtra = new HudExtra(game);
+  setupMoves();
   input.onToggleView = () => { game.view = game.view === 'third' ? 'first' : 'third'; };
   input.onStats = () => { hud.fps.visible = !hud.fps.visible; };
   input.onPhoto = () => game.started && togglePhoto();
@@ -147,6 +157,7 @@ async function boot() {
   $('p-exit').addEventListener('click', () => togglePhoto(false));
   $('p-filter').addEventListener('change', e => { photoFilter.value = +e.target.value; });
   $('p-snap').addEventListener('click', snapPhoto);
+  { const q = hud.quests.bind(hud); hud.quests = (...a) => { q(...a); game.hudExtra?.refresh(); }; }
   hud.quests(game.quests.S, game.quests.ready);
 
   // ---- render pipeline ----
@@ -179,6 +190,55 @@ async function boot() {
   $('gear').addEventListener('click', () => { const p = $('settings'); p.hidden = !p.hidden; $('gear').setAttribute('aria-expanded', String(!p.hidden)); });
 
   renderer.setAnimationLoop(loop);
+}
+
+// ------------------------------------------------------------------ the extra keys (see KEYMAP in ui.js)
+function setupMoves() {
+  const I = game.input, A = game.actions, X = game.hudExtra, BOOK = () => game.house.recipeBook;
+  for (const a of ['shell', 'run', 'dance', 'wave', 'sit', 'nap', 'talk', 'cheer', 'kick', 'light', 'crouch']) I.on(a, () => { if (!BOOK().isOpen) A.key(a); });
+  I.on('inventory', () => X.toggleInventory());
+  I.on('map', () => X.toggleBigMap());
+  I.on('objectives', () => X.toggleObjectives());
+  I.on('controls', () => X.toggleControls());
+  I.on('quickhud', () => X.toggleQuick());
+  I.on('settings', () => { const p = $('settings'); p.hidden = !p.hidden; $('gear').setAttribute('aria-expanded', String(!p.hidden)); });
+  I.on('photohud', () => document.body.classList.toggle('photo-clean'));
+  I.on('save', () => { try { game.interact.save?.(); game.house.saveExtra?.(); A.save(); game.quests.save?.(); } catch (e) { console.warn(e); } game.toast('Game saved! 💾'); });
+  I.on('load', () => { if (confirm('Load your last save? Anything since then will be lost.')) location.reload(); });
+  I.on('close', () => { if (A.s.talk) A.dialogue.close(); else if (!X.closeTop()) I.onEscape(); });
+  I.on('confirm', () => { if (A.s.talk) A.dialogue.choose(0); });
+  for (const n of [1, 2, 3]) I.on(`choice${n}`, () => { if (A.s.talk) A.dialogue.choose(n - 1); });
+  // R toggles running: a speed between jogging and super speed; Z sneaks slowly
+  game.player.speedHook = max => A.speedScale(max);
+  // things to kick and places to nap
+  const [sx, sy] = zone.spawn.pos;
+  // dry, flat sand near the start: not in the surf, not on the grass
+  let spot = [sx + 5.5, -sy - 3];
+  for (let r = 2; r < 18 && !spot.ok; r += 1) for (let a = 0; a < 12; a++) {
+    const x = sx + Math.cos(a / 12 * 6.283) * r, z = -sy - 2 + Math.sin(a / 12 * 6.283) * r, h = G(x, z);
+    const flat = Math.abs(G(x + 1, z) - h) + Math.abs(G(x, z + 1) - h) < 0.18;
+    if (h > 0.9 && h < 2.0 && flat && Math.hypot(x - zone.lagoon.center[0], z + zone.lagoon.center[1]) > 9) { spot = [x, z]; spot.ok = true; break; }
+  }
+  const towel = beachTowel(spot[0], spot[1]);
+  A.addNapSpot({ name: 'beach towel', center: towel, face: Math.PI / 2, inside: false });
+  { const bx = towel.x - 1.4, bz = towel.z - 1.2; A.placeBalls(new THREE.Vector3(bx, G(bx, bz) + 0.3, bz), null); }
+  game.house.addActionSpots?.(A);
+}
+
+/** a striped beach towel on the sand (a nap spot) */
+function beachTowel(x, z) {
+  const c = document.createElement('canvas'); c.width = 64; c.height = 256; const g = c.getContext('2d');
+  const cols = ['#f08aa8', '#fff6e6', '#1f9fa6', '#fff6e6', '#ffd166', '#fff6e6'];
+  for (let i = 0; i < 16; i++) { g.fillStyle = cols[i % cols.length]; g.fillRect(0, i * 16, 64, 16); }
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const y = G(x, z) + 0.02;
+  const geo = new THREE.PlaneGeometry(0.9, 1.9, 4, 10); geo.rotateX(-Math.PI / 2);
+  // drape it over the sand
+  const pos = geo.attributes.position; for (let i = 0; i < pos.count; i++) pos.setY(i, G(x + pos.getX(i), z + pos.getZ(i)) - y + 0.025);
+  geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, new THREE.MeshStandardNodeMaterial({ map: tex, roughness: 0.95 }));
+  m.position.set(x, y, z); m.rotation.y = Math.PI / 2; m.receiveShadow = true; game.scene.add(m);
+  return new THREE.Vector3(x, y + 0.03, z);
 }
 
 // ------------------------------------------------------------------ photo mode
@@ -267,6 +327,13 @@ function updateCamera(dt, t) {
   const feet = game.wren.root.position;
   if (!C.look) C.look = C.target.clone();
   const blend = 1 - Math.exp(-dt * 8);          // ~0.35 s glide between views
+  if (game.camShot && !game.focus) {
+    // conversations: over Wren's shoulder toward her friend
+    const f = game.camShot; I.look.dx = I.look.dy = 0;
+    cam.position.lerp(f.pos, blend); C.look.lerp(f.look, blend); cam.lookAt(C.look);
+    cam.fov += ((f.fov || 50) - cam.fov) * blend; cam.updateProjectionMatrix(); game.wren.root.visible = true;
+    return;
+  }
   if (game.focus) {
     // first-person close-up of a cupboard, the fridge, the range…
     I.look.dx = I.look.dy = 0;
@@ -336,10 +403,12 @@ function tick(dt) {
     else if (game.ride.riding) rideStep(dt);
     else if (game.sliding >= 0) slideStep(dt);
     else if (game.onSwing) swingStep(dt, t);
+    else if (game.actions.frozen) { P.vel.set(0, P.vel.y, 0); game.wren.update(dt, 0); if (!game.actions.s.nap) { game.wren.root.position.copy(P.pos); game.wren.root.rotation.set(0, P.face, 0); } if (game.actions.s.nap && (Math.abs(I.x) > 0.3 || Math.abs(I.y) > 0.3 || I.jumpPressed)) { I.jumpPressed = false; game.actions.wake(); } }
     else if (game.house.focus.active && !(Math.abs(I.x) > 0.3 || Math.abs(I.y) > 0.3 || I.jumpPressed)) { P.vel.set(0, P.vel.y, 0); game.wren.update(dt, 0); game.wren.root.position.copy(P.pos); game.wren.root.rotation.y = P.face; }
     else {
       if (game.house.focus.active) game.house.focus.exit();
       const r = P.update(dt, game.cam.yaw);
+      if (r.speed > 0.6 || r.jumped) game.actions.moved();
       if (r.jumped) game.audio.jump();
       if (P.sprinting && Math.random() < 0.7) game.powers.speedTrail();
       // sit on the swing when stopping on it
@@ -348,12 +417,13 @@ function tick(dt) {
       // slide ring
       if (P.pos.distanceTo(game.quests.ringPos) < 1.4 && !(game._rideCool > 0)) startRide();
     }
-    if (I.water) game.powers.water(dt);
+    if (I.water && game.actions.ensureShell()) game.powers.water(dt);
     // Wren glances at her friend or the nearest glowing shell
     const near = game.quests.shells.filter(s => !s.got).map(s => s.g.position).sort((a, b) => a.distanceToSquared(P.pos) - b.distanceToSquared(P.pos))[0];
     game.wren.lookTarget = near && near.distanceTo(P.pos) < 6 ? near : (game.friend && game.friend.pos.distanceTo(P.pos) < 6 ? game.friend.pos : null);
     if (!game.ride.riding) game.friend?.update(dt);
     game.powers.update(dt);
+    game.actions.update(dt);
     game.quests.update(dt, t);
     game.hud.energy(P.energy);
     game.audio.setShore(Math.abs(-P.pos.z - (-5)));
@@ -395,6 +465,7 @@ function tick(dt) {
   game.interact.enabled = game.started && !game.ride.riding && !game.onSwing && !game.photo && !game.house.focus.active && !game.house.recipeBook.isOpen;
   game.interact.update(dt);
   game.house.update(dt);
+  game.hudExtra?.update(dt);
   $('map').style.visibility = game.indoors ? 'hidden' : '';
   { const bb = $('b-book'); if (bb && bb.hidden === !!game.indoors) bb.hidden = !game.indoors; }
   game.under.update(dt, game.camera, P, game.friend);

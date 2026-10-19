@@ -184,6 +184,7 @@ export class Player {
     const swimming = depth > 1.05 || this.underwater;
     this.c.swimming = swimming;
     let max = this.sprinting ? 13 : (mag < 0.55 ? 1.6 : 4.4);
+    if (!swimming && this.speedHook) max = this.speedHook(max);   // run toggle, crouch
     if (swimming) max = this.sprinting ? 4.2 : 2.2;
     else if (depth > 0.45) max *= this.sprinting ? 0.75 : 0.6;
     this.energy = THREE.MathUtils.clamp(this.energy + (this.sprinting ? -0.3 : 0.15) * dt, 0, 1);
@@ -302,7 +303,8 @@ export class Companion {
     if (d > 30) { this.body.teleport(lp.x - 2, lp.y + 0.5, lp.z + 2); return; }
     const leaderSpeed = Math.hypot(this.leader.vel.x, this.leader.vel.z);
     let want = 0;
-    if (d > 0.6) want = Math.min(d > 6 ? 12 : d > 2.5 ? 4.4 : 1.6, Math.max(1.4, leaderSpeed * 1.05));
+    if (this.talking || this.dancing) want = 0;
+    else if (d > 0.6) want = Math.min(d > 6 ? 12 : d > 2.5 ? 4.4 : 1.6, Math.max(1.4, leaderSpeed * 1.05));
     const target = d > 0.01 ? to.normalize().multiplyScalar(want) : new THREE.Vector3();
     const dv = target.sub(new THREE.Vector3(this.vel.x, 0, this.vel.z));
     const k = Math.min(1, dt * 7); this.vel.x += dv.x * k; this.vel.z += dv.z * k;

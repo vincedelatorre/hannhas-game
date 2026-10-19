@@ -1,30 +1,53 @@
 // Input (keyboard, mouse, touch joystick, gamepad), HUD, minimap and sound.
 import { H } from './world.js';
 
+/** every keyboard control in one place (the Controls panel is generated from this too) */
+export const KEYMAP = {
+  Escape: { action: 'escape', always: true, only: true, legacy: 'onEscape' },
+  KeyX: { action: 'recipe', always: true, only: true, legacy: 'onRecipe' },
+  KeyJ: { action: 'dive', legacy: '_dive' }, KeyD: { action: 'dive', legacy: '_dive' }, KeyS: { action: 'surface', legacy: '_surface' },
+  KeyL: { action: 'love', legacy: 'onLove' }, KeyE: { action: 'use', legacy: 'onUse' }, KeyQ: { action: 'drop', legacy: 'onDrop' },
+  KeyV: { action: 'view', legacy: 'onToggleView' }, KeyP: { action: 'photo', legacy: 'onPhoto' }, F3: { action: 'stats', prevent: true, legacy: 'onStats' },
+  KeyH: { action: 'shell' }, KeyR: { action: 'run' }, KeyF: { action: 'dance' }, KeyG: { action: 'wave' }, KeyB: { action: 'sit' }, KeyN: { action: 'nap' },
+  KeyT: { action: 'talk' }, KeyY: { action: 'cheer' }, KeyK: { action: 'kick' }, KeyU: { action: 'light' }, KeyZ: { action: 'crouch' },
+  KeyI: { action: 'inventory' }, KeyM: { action: 'map' }, KeyO: { action: 'objectives', always: true }, Tab: { action: 'quickhud', always: true, prevent: true },
+  F1: { action: 'controls', always: true, prevent: true }, F2: { action: 'settings', always: true, prevent: true }, F4: { action: 'photohud', always: true, prevent: true },
+  F5: { action: 'save', always: true, prevent: true }, F9: { action: 'load', always: true, prevent: true },
+  Backspace: { action: 'close', always: true, prevent: true }, Enter: { action: 'confirm', always: true },
+  Digit1: { action: 'choice1', always: true }, Digit2: { action: 'choice2', always: true }, Digit3: { action: 'choice3', always: true },
+};
+
+/** the Controls panel: section, keys, what it does */
+export const CONTROLS = [
+  ['Move', [['← ↑ → ↓', 'Move'], ['C', 'Walk (hold)'], ['Shift', 'Super speed (hold)'], ['R', 'Run on / off'], ['Z', 'Crouch and sneak'], ['Space', 'Jump (twice = backflip)'], ['Drag', 'Look around']]],
+  ['Shell powers', [['H', 'Take out / put away shell'], ['W', 'Water (or click)'], ['L', 'Love'], ['D', 'Dive (again = deeper)'], ['S', 'Swim up']]],
+  ['Things to do', [['E', 'Use / pick up'], ['Q', 'Put down'], ['B', 'Sit / stand'], ['N', 'Nap / wake up'], ['K', 'Kick a ball'], ['U', 'Magic flashlight'], ['X', 'Recipe book']]],
+  ['Friends and fun', [['T', 'Talk'], ['G', 'Wave'], ['F', 'Dance'], ['Y', 'Celebrate']]],
+  ['Menus', [['O', 'Objectives'], ['I', 'Inventory'], ['M', 'Big map'], ['F1', 'Controls'], ['F2', 'Settings'], ['Tab', 'Hide / show the screen buttons'], ['V', 'First-person view'], ['P', 'Photo mode'], ['F4', 'Hide photo buttons'], ['F5', 'Save'], ['F9', 'Load'], ['Esc / Backspace', 'Close']]],
+];
+
 export class Input {
   constructor(canvas) {
     this.keys = new Set(); this.x = 0; this.y = 0; this.sprint = false; this.jumpPressed = false;
     this.look = { dx: 0, dy: 0 }; this.zoom = 0; this.onWater = () => {}; this.onLove = () => {}; this.onToggleView = () => {}; this.onStats = () => {}; this.onPhoto = () => {}; this.onUse = () => false; this.onDrop = () => {}; this.onPointer = () => {}; this.onClick = () => false; this.onWheel = () => false; this.onEscape = () => {}; this.onRecipe = () => {};
-    this.diveTaps = 0; this.surfaceTaps = 0;   // D dives (again = deeper), S swims back up
+    this.diveTaps = 0; this.surfaceTaps = 0; this._dive = () => { this.diveTaps++; }; this._surface = () => { this.surfaceTaps++; };   // D dives (again = deeper), S swims back up
     this.waterHeld = false; this.joy = { x: 0, y: 0 }; this.speedHeld = false; this.enabled = false;
+    // one table for every key: action name, whether it needs the game running, and whether held keys repeat
+    this.bindings = {};
+    this.on = (action, fn) => { this.bindings[action] = fn; };
     addEventListener('keydown', e => {
-      if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'SELECT' || e.target?.tagName === 'TEXTAREA') return;   // typing in a menu
-      if (e.code === 'Escape') { this.onEscape(); return; }
-      if (e.code === 'KeyX' && !e.repeat) { this.onRecipe(); return; }
+      if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'SELECT' || e.target?.tagName === 'TEXTAREA' || e.target?.isContentEditable) return;   // typing in a menu
+      const k = KEYMAP[e.code];
+      if (k?.prevent) e.preventDefault();
+      if (k && (k.always || this.enabled) && !(e.repeat && !k.repeat)) {
+        const fn = this.bindings[k.action] || this[k.legacy];
+        if (fn) { const r = fn.call(this, e); if (k.only) return; if (r === 'stop') return; }
+      }
       if (!this.enabled) return;
-      if (e.code === 'KeyJ' && !e.repeat) this.diveTaps++;
       if (e.repeat && e.code === 'Space') return;
       this.keys.add(e.code);
       if (e.code === 'Space') { this.jumpPressed = true; e.preventDefault(); }
-      if (e.code === 'KeyL' && !e.repeat) this.onLove();
-      if (e.code === 'KeyE' && !e.repeat) this.onUse();
-      if (e.code === 'KeyQ' && !e.repeat) this.onDrop();
-      if (e.code === 'KeyD' && !e.repeat) this.diveTaps++;
-      if (e.code === 'KeyS' && !e.repeat) this.surfaceTaps++;
       if (e.code.startsWith('Arrow')) e.preventDefault();
-      if (e.code === 'KeyV') this.onToggleView();
-      if (e.code === 'KeyP') this.onPhoto();
-      if (e.code === 'F3') { this.onStats(); e.preventDefault(); }
     });
     addEventListener('keyup', e => this.keys.delete(e.code));
     addEventListener('blur', () => this.keys.clear());
@@ -312,6 +335,8 @@ export class Speech {
     this.t = 2.2 + line.length * 0.045; this.cool = 1.5; this.quiet = 0;
     return true;
   }
+  /** show any line right now (dialogue reactions) */
+  show(line, secs = 2.2) { this.text.textContent = line; this.el.classList.add('show'); this.t = secs; this.cool = 1; this.quiet = 0; }
   update(dt, camera, anchor, canvas) {
     this.quiet += dt;
     if (this.t > 0) {

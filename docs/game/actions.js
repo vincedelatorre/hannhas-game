@@ -27,6 +27,10 @@ export class Actions {
     // pose on top of the animation every frame
     const prev = w.afterPose;
     w.afterPose = () => { prev?.(); this.pose(); };
+    this.baseY = w.model?.position.y || 0;
+    // her friend can dance too
+    const fc = game.friend?.c;
+    if (fc) { const fp = fc.afterPose; fc.afterPose = () => { fp?.(); this.friendPose(); }; this.friendBaseY = fc.model.position.y; }
     this.buildFlashlight();
     this.buildBalls();
     this.napSpots = [];
@@ -39,13 +43,14 @@ export class Actions {
 
   // ------------------------------------------------------------------ helpers
   get wren() { return this.g.wren; }
+  get frozen() { return !!(this.s.nap || this.s.talk); }
   get busyBody() { const g = this.g; return !!(g.seated || g.ride?.riding || g.sliding >= 0 || g.onSwing || g.photo || this.s.nap || this.s.talk || g.house?.focus?.active); }
   get swimming() { const P = this.g.player; return !!(P.c?.swimming || P.underwater || P.diving); }
   say(t) { this.g.toast?.(t); }
   /** rotate a bone by `angle` about an axis given in Wren's own space (x = her left, y = up, z = forward) */
-  rot(name, axis, angle) {
-    const b = this.wren.bones[name]; if (!b || !angle) return;
-    this.wren.root.getWorldQuaternion(_q3);
+  rot(name, axis, angle, ch = this.wren) {
+    const b = ch.bones[name]; if (!b || !angle) return;
+    ch.root.getWorldQuaternion(_q3);
     _ax.set(...axis).applyQuaternion(_q3).normalize();
     b.getWorldQuaternion(_q1); b.parent.getWorldQuaternion(_q2);
     const d = new THREE.Quaternion().setFromAxisAngle(_ax, angle);
@@ -121,7 +126,7 @@ export class Actions {
     const f = this.g.friend;
     if (f && f.pos.distanceTo(this.g.player.pos) < 12) {
       const P = this.g.player, d = f.pos.clone().sub(P.pos); P.face = Math.atan2(d.x, d.z);
-      setTimeout(() => { f.c.play?.('Wave', { fadeIn: 0.15 }); this.g.audio?.chime?.(660); this.g.speech?.show?.('Hi Hannah! 👋', 2.2); }, 500);
+      setTimeout(() => { f.c.play?.('Wave', { fadeIn: 0.15 }); this.g.audio?.chime?.(660); this.g.speech?.show('Hi Hannah! 👋', 2.2); }, 500);
     }
   }
   cheer() {
@@ -135,15 +140,14 @@ export class Actions {
   }
   kick() {
     if (this.busyBody || this.swimming) return;
-    const P = this.g.player; let best = null, bd = 1.5;
-    for (const b of this.balls) { if (b.root.visible === false || b.inside !== !!this.g.indoors) continue; const d = b.pos.distanceTo(P.pos); if (d < bd) { bd = d; best = b; } }
+    const P = this.g.player, best = this.nearestBall(1.6);
     this.t.kick = 0.55;
     if (this.clip('Kick')) this.wren.play('Kick', { fadeIn: 0.1 });
     if (!best) { this.say('Find a ball to kick!'); return; }
     const d = best.pos.clone().sub(P.pos); d.y = 0; P.face = Math.atan2(d.x, d.z);
     setTimeout(() => {
       const dir = V3(Math.sin(P.face), 0, Math.cos(P.face));
-      const power = best.inside ? 3.2 : 6.5;
+      const power = best.inside ? 2.6 : 4.6;
       best.vel.copy(dir.multiplyScalar(power)).add(V3(0, best.inside ? 1.6 : 3.2, 0));
       this.g.audio?.house?.('drawer'); this.g.audio?.sfx?.(220, 0.08, 'sine', 0.12);
     }, 220);
@@ -154,19 +158,25 @@ export class Actions {
     const g = this.g, sys = g.interact;
     if (g.seated) { sys.stand(); return; }
     if (this.busyBody || this.swimming) return;
-    const seats = sys.list.filter(x => x.constructor.name === 'Seat');
-    let best = null, bd = 2.0;
-    for (const s of seats) { const d = s.anchor(V3(0, 0, 0)).distanceTo(g.player.pos.clone().add(V3(0, 0.5, 0))); if (d < bd) { bd = d; best = s; } }
+    const best = this.nearestSeat(2.0);
     if (!best) { if (g.swingSeat && Math.hypot(g.player.pos.x - g.swingSeat.x, g.player.pos.z - g.swingSeat.z) < 2) { g.onSwing = { t: 0 }; return; } this.say('No seat nearby. Try a chair or a stool!'); return; }
     sys.sit(best);
   }
+  nearestSeat(max) {
+    const g = this.g, sys = g.interact, Seat = g.houseKit?.Seat; if (!Seat) return null;
+    let best = null, bd = max;
+    for (const s of sys.list) { if (!(s instanceof Seat)) continue; const p = s.seatPose(); const d = Math.hypot(p.x - g.player.pos.x, p.z - g.player.pos.z) + Math.abs(p.y - g.player.pos.y) * 0.3; if (d < bd) { bd = d; best = s; } }
+    return best;
+  }
+  nearestNap(max = 2.2) { const g = this.g; let best = null, bd = max; for (const s of this.napSpots) { if (!!s.inside !== !!g.indoors) continue; const d = Math.hypot(s.center.x - g.player.pos.x, s.center.z - g.player.pos.z); if (d < bd) { bd = d; best = s; } } return best; }
+  nearestBall(max = 1.6) { const g = this.g; let best = null, bd = max; for (const b of this.balls) { if (b.inside !== !!g.indoors) continue; const d = Math.hypot(b.pos.x - g.player.pos.x, b.pos.z - g.player.pos.z); if (d < bd) { bd = d; best = b; } } return best; }
+  /** spot: { name, center: world Vector3 of the surface middle, face: yaw her body lies along, inside } */
   addNapSpot(spot) { this.napSpots.push(spot); }
   nap() {
     const g = this.g;
     if (this.s.nap) return this.wake();
     if (this.busyBody || this.swimming) return;
-    let best = null, bd = 2.2;
-    for (const s of this.napSpots) { if (!!s.inside !== !!g.indoors) continue; const d = s.pos().distanceTo(g.player.pos); if (d < bd) { bd = d; best = s; } }
+    const best = this.nearestNap();
     if (!best) { this.say('Find somewhere comfy to nap: a beach towel, the hammock, or the foyer bench.'); return; }
     this.s.nap = { spot: best, t: 0 }; g.player.vel.set(0, 0, 0);
     if (this.clip('Nap')) this.wren.actions.Nap.reset().setLoop(THREE.LoopRepeat, Infinity).fadeIn(0.5).play();
@@ -176,7 +186,8 @@ export class Actions {
     const n = this.s.nap; if (!n) return;
     this.s.nap = null; this.wren.actions.Nap?.fadeOut(0.4);
     const w = this.wren; w.root.rotation.x = 0; w.root.rotation.z = 0;
-    const p = n.spot.pos(); this.g.player.body.teleport(p.x + Math.sin(n.spot.face) * 0.8, p.y + 0.1, p.z + Math.cos(n.spot.face) * 0.8);
+    const c = n.spot.center, sd = V3(Math.cos(n.spot.face), 0, -Math.sin(n.spot.face));
+    this.g.player.body.teleport(c.x + sd.x * 0.75, c.y + 0.15, c.z + sd.z * 0.75);
     this.say('Good morning!');
   }
 
@@ -193,7 +204,7 @@ export class Actions {
   buildFlashlight() {
     const g = this.g;
     const L = this.light = new THREE.SpotLight(0xfff0d0, 0, 14, 0.42, 0.55, 1.4); L.castShadow = false;
-    g.scene.add(L, L.target);
+    g.scene.add(L, L.target); L.userData.keep = L.target.userData.keep = true;
     const prop = this.torch = new THREE.Group();
     const body = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.016, 0.13, 12), new THREE.MeshStandardNodeMaterial({ color: 0x2BB5B0, roughness: 0.35, metalness: 0.3 }));
     body.rotation.x = Math.PI / 2; prop.add(body);
@@ -218,7 +229,7 @@ export class Actions {
     const ballTex = (cols) => { const c = document.createElement('canvas'); c.width = 256; c.height = 128; const x = c.getContext('2d'); cols.forEach((col, i) => { x.fillStyle = col; x.fillRect(i * 256 / cols.length, 0, 256 / cols.length + 1, 128); }); x.fillStyle = '#fff'; x.beginPath(); x.arc(128, 6, 10, 0, 7); x.fill(); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
     const mk = (r, cols, pos, inside) => {
       const m = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), new THREE.MeshStandardNodeMaterial({ map: ballTex(cols), roughness: 0.4 }));
-      m.castShadow = true; g.scene.add(m);
+      m.castShadow = true; m.userData.keep = true; g.scene.add(m);
       const b = { root: m, r, pos: pos.clone(), vel: V3(0, 0, 0), inside, spin: new THREE.Quaternion() };
       m.position.copy(b.pos); this.balls.push(b); return b;
     };
@@ -244,7 +255,8 @@ export class Actions {
       if (len > 1e-4 && g.rayHit) { const h = g.rayHit(b.pos, hz.clone().normalize(), len + b.r); if (h) { const n = h.normal; const vn = b.vel.dot(n); if (vn < 0) b.vel.addScaledVector(n, -1.7 * vn); step.set(0, step.y, 0); } }
       b.pos.add(step);
       const floor = g.floorAt ? g.floorAt(b.pos, b.inside) : 0;
-      if (b.pos.y - b.r < floor) { b.pos.y = floor + b.r; if (b.vel.y < 0) b.vel.y = -b.vel.y * 0.55; if (Math.abs(b.vel.y) < 0.4) b.vel.y = 0; b.vel.x *= 1 - Math.min(1, dt * 1.6); b.vel.z *= 1 - Math.min(1, dt * 1.6); }
+      if (b.pos.y - b.r < floor) { b.pos.y = floor + b.r; if (b.vel.y < 0) b.vel.y = -b.vel.y * 0.55; if (Math.abs(b.vel.y) < 0.4) b.vel.y = 0; }
+      if (b.pos.y - b.r < floor + 0.06) { const fr = 1 - Math.min(1, dt * (b.inside ? 1.4 : 1.9)); b.vel.x *= fr; b.vel.z *= fr; }
       b.root.position.copy(b.pos);
       const sp = Math.hypot(b.vel.x, b.vel.z); if (sp > 0.01) { const ax = V3(b.vel.z, 0, -b.vel.x).normalize(); b.root.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(ax, sp * dt / b.r)); }
     }
@@ -258,13 +270,16 @@ export class Actions {
     // blend weights toward the wanted poses
     const want = { dance: this.s.dance && !this.clip('Dance') ? 1 : 0, wave: this.t.wave > 0 && !this.clip('Wave') ? 1 : 0, crouch: this.s.crouch ? 1 : 0, kick: this.t.kick > 0 && !this.clip('Kick') ? 1 : 0, talk: this.s.talk ? 1 : 0, nap: this.s.nap ? 1 : 0, store: this.t.store > 0 ? 1 : 0 };
     for (const k of Object.keys(this.k)) this.k[k] += (want[k] - this.k[k]) * Math.min(1, dt * (k === 'kick' ? 18 : 7));
+    if (this.s.crouch && this.swimming) this.s.crouch = false;
     g.crouch = this.k.crouch > 0.5;
     // napping: lie on the spot, breathe, little z's
     if (this.s.nap) {
-      const n = this.s.nap, sp = n.spot, p = sp.pos(); n.t += dt;
-      P.body.teleport(p.x, p.y + 0.02, p.z); P.vel.set(0, 0, 0); P.face = sp.face;
-      w.root.position.copy(p); w.root.rotation.set(-Math.PI / 2 * Math.min(1, n.t * 2), sp.face, 0, 'YXZ'); w.root.position.y += 0.12;
-      if (Math.random() < dt * 1.2) g.fxGlow?.emit(p.clone().add(V3(0, 0.5, 0)), V3(0.15, 0.4, 0), { life: 1.6, size: 0.12, color: [0.8, 0.85, 1], alpha: 0.7 });
+      const n = this.s.nap, sp = n.spot; n.t += dt;
+      // feet at one end, lying on her back along the spot
+      const fwd = V3(Math.sin(sp.face), 0, Math.cos(sp.face)), lie = Math.min(1, n.t * 1.6);
+      const p = sp.center.clone().addScaledVector(fwd, 0.72 * lie); p.y = sp.center.y + 0.11 * lie;
+      w.root.position.copy(p); w.root.rotation.set(-Math.PI / 2 * lie, sp.face, 0); P.vel.set(0, 0, 0); P.face = sp.face;
+      if (Math.random() < dt * 1.2) g.fxGlow?.emit(sp.center.clone().addScaledVector(fwd, -0.6).add(V3(0, 0.45, 0)), V3(0.15, 0.4, 0), { life: 1.6, size: 0.12, color: [0.8, 0.85, 1], alpha: 0.7 });
     }
     // flashlight follows her hand and aims where she (or the camera in first person) looks
     if (this.s.flashlight) {
@@ -288,10 +303,10 @@ export class Actions {
     // crouch: knees bend, hips drop, lean forward
     if (k.crouch > 0.01) {
       const c = k.crouch;
-      w.model.position.y = -0.36 * c;
+      w.model.position.y = this.baseY - 0.36 * c;
       for (const side of ['Left', 'Right']) { this.rot(`${side}UpLeg`, [1, 0, 0], -1.25 * c); this.rot(`${side}Leg`, [1, 0, 0], 2.1 * c); this.rot(`${side}Foot`, [1, 0, 0], -0.8 * c); }
       this.rot('Spine', [1, 0, 0], 0.45 * c);
-    } else if (w.model.position.y !== 0 && !k.dance) w.model.position.y = 0;
+    } else if (!k.dance) w.model.position.y = this.baseY;
     // dance: arms up in turn, hips sway, head bobs, a little bounce
     if (k.dance > 0.01) {
       const d = k.dance, ph = t * 4.2, up = Math.max(0, Math.sin(ph)), up2 = Math.max(0, Math.sin(ph + Math.PI));
@@ -301,7 +316,7 @@ export class Actions {
       this.rot('LeftArm', [0, 0, 1], (1.0 + 1.4 * up2) * d); this.rot('LeftForeArm', [0, 0, 1], 0.6 * up2 * d);
       this.rot('Head', [1, 0, 0], 0.18 * Math.sin(ph * 2) * d);
       for (const [side, s] of [['Left', 1], ['Right', -1]]) { const b = Math.max(0, Math.sin(ph + (s > 0 ? 0 : Math.PI))); this.rot(`${side}UpLeg`, [1, 0, 0], -0.5 * b * d); this.rot(`${side}Leg`, [1, 0, 0], 0.9 * b * d); }
-      w.model.position.y = (k.crouch > 0.01 ? w.model.position.y : 0) + Math.abs(Math.sin(ph)) * 0.05 * d;
+      w.model.position.y = (k.crouch > 0.01 ? w.model.position.y : this.baseY) + Math.abs(Math.sin(ph)) * 0.05 * d;
     }
     // wave: right arm up over the head, hand swings
     if (k.wave > 0.01) { this.rot('RightArm', [0, 0, 1], -2.5 * k.wave); this.rot('RightForeArm', [0, 0, 1], (-0.3 + 0.45 * Math.sin(t * 11)) * k.wave); this.rot('Head', [0, 0, 1], 0.12 * k.wave); }
@@ -316,7 +331,37 @@ export class Actions {
   }
 
   /** her friend joins in or stops */
-  friendJoin(what) { const f = this.g.friend; if (!f) return; f.dancing = what === 'dance'; if (f.dancing) this.g.speech?.show?.('Dance party! 🎶', 2.5); }
+  friendJoin(what) { const f = this.g.friend; if (!f) return; f.dancing = what === 'dance' && f.pos.distanceTo(this.g.player.pos) < 14; if (f.dancing) this.g.speech?.show('Dance party! 🎶', 2.5); }
+  friendPose() {
+    const f = this.g.friend; if (!f) return;
+    f.danceK = (f.danceK || 0) + ((f.dancing ? 1 : 0) - (f.danceK || 0)) * 0.08;
+    const d = f.danceK, c = f.c; if (d < 0.01) { if (c.model.position.y !== this.friendBaseY) c.model.position.y = this.friendBaseY; return; }
+    const ph = performance.now() / 1000 * 4.2 + 0.8, up = Math.max(0, Math.sin(ph)), up2 = Math.max(0, Math.sin(ph + Math.PI));
+    this.rot('Hips', [0, 1, 0], -0.3 * Math.sin(ph) * d, c);
+    this.rot('RightArm', [1, 0, 0], (-1.2 - 1.0 * up) * d, c); this.rot('LeftArm', [1, 0, 0], (-1.2 - 1.0 * up2) * d, c);
+    this.rot('RightForeArm', [1, 0, 0], -0.5 * d, c); this.rot('LeftForeArm', [1, 0, 0], -0.5 * d, c);
+    this.rot('Head', [0, 0, 1], 0.2 * Math.sin(ph) * d, c);
+    c.model.position.y = this.friendBaseY + Math.abs(Math.sin(ph)) * 0.06 * d;
+  }
+  /** the little key prompts at the bottom of the screen: only what you can do right here */
+  contextTips() {
+    const g = this.g, P = g.player, tips = [];
+    if (this.s.nap) return [['N', 'Wake up']];
+    if (this.s.talk) return [];
+    if (g.seated) return [['B', 'Stand up']];
+    if (g.house?.focus?.active || g.photo || g.ride?.riding) return tips;
+    const f = g.friend, fd = f ? f.pos.distanceTo(P.pos) : 99;
+    if (fd < 4) tips.push(['T', this.dialogue.quest.state === 'active' && g.interact?.held?.id === 'toy_boat' ? 'Give the boat back!' : 'Talk']);
+    if (this.nearestSeat(1.6)) tips.push(['B', 'Sit']);
+    if (this.nearestNap(1.8)) tips.push(['N', 'Nap']);
+    if (this.nearestBall(1.4)) tips.push(['K', 'Kick']);
+    if (!this.inv.shell.equipped && !g.interact?.held) tips.push(['H', 'Take out shell']);
+    if (this.s.dance) tips.push(['F', 'Stop dancing']);
+    if (this.s.crouch) tips.push(['Z', 'Stand up']);
+    const dark = g.indoors ? false : (g.sky?.elevation ?? 30) < 4;
+    if (dark && !this.s.flashlight) tips.push(['U', 'Flashlight']);
+    return tips.slice(0, 3);
+  }
 
   // ------------------------------------------------------------------ persistence
   save() { try { localStorage.setItem(SAVE, JSON.stringify({ inv: this.inv, light: this.s.flashlight, run: this.s.run, quest: this.dialogue?.quest })); } catch (e) { /* storage blocked */ } }
@@ -337,10 +382,13 @@ class Dialogue {
     // conversation camera: over Wren's shoulder looking at her friend
     const mid = P.pos.clone().lerp(f.pos, 0.5).add(V3(0, 1.4, 0));
     const side = V3(d.z, 0, -d.x).normalize();
-    g.focus = { pos: P.pos.clone().addScaledVector(d.clone().normalize(), -1.1).addScaledVector(side, 0.7).add(V3(0, 1.75, 0)), look: mid, fov: 50 };
+    const camP = P.pos.clone().addScaledVector(d.clone().normalize(), -1.3).addScaledVector(side, 0.75).add(V3(0, 1.7, 0));
+    if (!g.indoors) camP.y = Math.max(camP.y, (g.floorAt?.(camP, false) ?? 0) + 0.6);
+    g.camShot = { pos: camP, look: mid, fov: 48 };
+    document.body.classList.add('talking'); f.talking = true;
     this.node(this.start());
   }
-  close() { const A = this.A; A.s.talk = null; this.g.focus = null; this.el.hidden = true; }
+  close() { const A = this.A; A.s.talk = null; this.g.camShot = null; this.el.hidden = true; document.body.classList.remove('talking'); if (this.g.friend) this.g.friend.talking = false; }
   start() {
     const q = this.quest, held = this.g.interact?.held;
     if (q.state === 'active' && held?.id === 'toy_boat') return 'found';
@@ -367,6 +415,7 @@ class Dialogue {
     this.el.hidden = false;
     this.el.innerHTML = `<div class="who"><span class="face">${n.face}</span><b>Your friend</b></div><p>${n.text}</p><div class="choices">${n.choices.map(([t, next], i) => `<button data-next="${next ?? ''}">${i + 1}. ${t}</button>`).join('')}</div><small>Choose with the mouse or number keys · T or Esc to leave</small>`;
     this.el.querySelectorAll('button').forEach(b => b.onclick = () => { const nx = b.dataset.next; if (nx) this.node(nx); else this.close(); });
+    this.el.querySelector('button')?.focus({ preventScroll: true });
     this.g.audio?.chime?.(700 + Math.random() * 200);
   }
   choose(i) { const b = this.el.querySelectorAll('.choices button')[i]; b?.click(); }
@@ -395,5 +444,13 @@ class Dialogue {
     const it = new Item({ id: 'toy_boat', name: 'toy boat', object: grp, tags: ['toy', 'keep'], home: slot });
     it.baseScale = 1; sys.add(it); sys.place(it, slot); this.toy = it;
   }
-  update(dt) { if (this._quest && !this._restored && this.g.houseKit) { this._restored = true; if (this.quest.state === 'active') this.spawnToy(); } }
+  update(dt) {
+    if (!this._restored && this.g.houseKit && this.g.hudExtra) {
+      this._restored = true; const H = this.g.hudExtra, T = 'Find your friend\'s toy boat';
+      if (this.quest.state === 'active') { this.spawnToy(); H.newObjective(T); }
+      if (this.quest.state === 'done') { H.newObjective(T); H.completeObjective(T); }
+    }
+    // the toy boat bobs and glints so it can be spotted from afar
+    const t = this.toy; if (t && t.slot?.id === 'toy_spot' && Math.random() < dt * 2) this.g.fxGlow?.emit(t.object.getWorldPosition(V3(0, 0, 0)).add(V3(0, 0.25, 0)), V3(0, 0.6, 0), { life: 0.9, size: 0.1, color: [1, 0.9, 0.6], alpha: 0.8 });
+  }
 }
