@@ -158,6 +158,7 @@ export class Quests {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.08, 10, 48), new THREE.MeshStandardNodeMaterial({ color: 0x8fe0c8, emissive: 0x5fe0c0, emissiveIntensity: 1.2 }));
     ring.rotation.x = Math.PI / 2; ring.position.copy(this.ringPos).add(new THREE.Vector3(0, 0.12, 0)); game.scene.add(ring); this.ring = ring;
     const cpos = zone.quests.chest; this.chestPos = V(cpos[0], cpos[1]);
+    this.load();
     const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 40, 24, 1, true), new THREE.MeshBasicNodeMaterial({ color: 0xfff3b0, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }));
     beam.position.copy(this.chestPos).add(new THREE.Vector3(0, 20, 0)); game.scene.add(beam); this.beam = beam;
   }
@@ -232,7 +233,26 @@ export class Quests {
     this.changed();
   }
 
+  // ---- save game: progress is kept in this browser between visits
+  get saveKey() { return `hg.save.${this.zone.id || 'pearl_cove'}`; }
+  save() {
+    try { localStorage.setItem(this.saveKey, JSON.stringify({ v: 1, S: this.S, shells: this.shells.map(s => s.got), pools: this.pools.map(p => p.fill) })); } catch (e) { /* storage may be blocked */ }
+  }
+  load() {
+    let d = null;
+    try { d = JSON.parse(localStorage.getItem(this.saveKey) || 'null'); } catch (e) { d = null; }
+    if (!d || d.v !== 1) return;
+    Object.assign(this.S, d.S);
+    d.shells?.forEach((got, i) => { if (got && this.shells[i]) { this.shells[i].got = true; this.shells[i].g.visible = false; } });
+    d.pools?.forEach((f, i) => { const p = this.pools[i]; if (!p) return; p.fill = f; if (f >= 1) { p.done = true; const c = this.g.creatures.crabs[i]; if (c) c.c.visible = true; } });
+    if (this.S.gull && this.g.creatures.gull) this.g.creatures.gull.happy = true;
+    this.wasReady = this.ready;
+    this.restored = true;
+  }
+  static reset(zoneId = 'pearl_cove') { try { localStorage.removeItem(`hg.save.${zoneId}`); } catch (e) { /* ignore */ } }
+
   changed() {
+    this.save();
     this.g.hud.quests(this.S, this.ready);
     if (this.ready && !this.wasReady && !this.S.chest) { this.wasReady = true; setTimeout(() => this.say('ready', true), 3200); }
   }

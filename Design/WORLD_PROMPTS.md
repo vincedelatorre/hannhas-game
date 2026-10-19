@@ -35,7 +35,7 @@ from several angles and fix what looks wrong before telling me it's done.
 | 6 Powers | Started | Water stream with splashes and ripples, love burst with hearts and flowers that bloom from the sand, super speed trail and FOV kick. Not yet: real fluid, run on water |
 | 7 Companion | Started | Follows with physics, catches up, waves, cheers, swims, talks in speech bubbles (event lines and hints from the zone's dialogue data). Not yet: navmesh, commands, co-op |
 | 8 Life | Started | Seagull, crabs, butterflies, four schools of reef fish (boids that scatter from swimmers, one species from a generated model), a sea turtle, a pod of leaping dolphins with splashes, scarlet macaws circling over the jungle (all generated models). Not yet: hermit crabs, jumping fish, night creatures |
-| 10 UI | Started | Photo mode (P): free camera, five filters, saves a picture. Dialogue lines and quest data in the zone file, bonus sea turtle quest. Not yet: journal, save game |
+| 10 UI | Started | Photo mode (P): free camera, five filters, saves a picture. Dialogue lines and quest data in the zone file, bonus sea turtle quest. Progress saves in the browser, with a "Start the island again" button. Not yet: journal |
 | 9, 12, 13 | Not started | Clubhouse interior, world streaming, zone 2, polish passes |
 | 11 Audio | Started | Generated recorded-style ambience, music, footsteps, splashes, powers, pickups |
 

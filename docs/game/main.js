@@ -123,7 +123,7 @@ async function boot() {
   $('p-exit').addEventListener('click', () => togglePhoto(false));
   $('p-filter').addEventListener('change', e => { photoFilter.value = +e.target.value; });
   $('p-snap').addEventListener('click', snapPhoto);
-  hud.quests(game.quests.S, false);
+  hud.quests(game.quests.S, game.quests.ready);
 
   // ---- render pipeline ----
   sky.follow(new THREE.Vector3(0, 0, 0));
@@ -151,6 +151,7 @@ async function boot() {
   $('s-time').addEventListener('input', applySun); $('s-az').addEventListener('input', applySun);
   $('s-sea').addEventListener('input', e => { seaState.amplitude.value = +e.target.value; });
   $('s-wind').addEventListener('input', e => { wind.strength.value = +e.target.value; });
+  $('s-new').addEventListener('click', () => { if (confirm('Start Pearl Cove again from the beginning?')) { Quests.reset(zone.id); location.reload(); } });
   $('gear').addEventListener('click', () => { const p = $('settings'); p.hidden = !p.hidden; $('gear').setAttribute('aria-expanded', String(!p.hidden)); });
 
   renderer.setAnimationLoop(loop);
@@ -204,7 +205,7 @@ function start() {
   $('start').hidden = true; game.started = true; game.input.enabled = true;
   game.audio.start();
   game.cam.yaw = 0; game.cam.pitch = 0.28;
-  game.toast('Welcome to Pearl Cove!');
+  game.toast(game.quests.restored ? 'Welcome back to Pearl Cove!' : 'Welcome to Pearl Cove!');
   setTimeout(() => game.toast('Your friend is waiting by the lagoon. Collect the glowing shells!'), 3000);
   setTimeout(() => game.speech.say('start', { force: true }), 6500);
 }
