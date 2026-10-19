@@ -1,5 +1,51 @@
 # Production status: The Enchanted Island House
 
+## Batch 2 (19 Oct 2026): kitchen rebuild (Option A, sage & copper) and the walk-in pantry
+
+The batch-1 turquoise kitchen was replaced by a modern Mediterranean kitchen built from the
+Option A mockups and the family's reference photos (48" range, round oak table with black
+ladder-back chairs). Wide-plank oak floors throughout.
+
+### Acceptance checks (headless Chrome, WebGL2 fallback, scripted)
+
+| Feature | Status | Check |
+| --- | --- | --- |
+| Range burners | **Done** | Each burner's red knob cycles off, low, medium, high; flames grow; cookware on a lit burner steams and sizzles |
+| Griddle and two ovens | **Done** | Griddle heats (glow); small and big oven doors hinge down; racks slide out; big oven bakes the cupcakes |
+| Copper hood | **Done** | Light toggles a spotlight; fan dial off, low, medium, high with sound; steam rises faster with the fan on |
+| Fridge and freezer columns | **Done** | Doors hinge on the outer sides, interior lights, freezer mist, food on shelves and door bins |
+| Farmhouse sink | **Done** | Hot and cold handles (steam when hot); stopper fills the basin to 0.15 m, pulling it drains; mug fills to 1.0; dishes wash clean |
+| Dishwasher | **Done** | Door, sliding rack, plate slots; start refused while open; 9 s cycle, light, ding; dirty plate comes out clean |
+| Microwave drawer | **Done** | Drawer slides; start refused while open; a mug of water becomes hot cocoa |
+| Coffee station | **Done** | Beans into the grinder, grind into the handle, handle into the machine, cup under the spout, brew: cup fills with coffee |
+| Island and stools | **Done** | Soapstone island with drawers, trash pull-out, microwave; four woven stools you can sit on; cookbook turns pages of recipes |
+| Round table and chairs | **Done** | Oak table, four ladder-back chairs (sit), dirty plates and the fruit bowl |
+| Windows | **Done** | Five arched black-steel windows; both casement sashes swing open into the room |
+| Lights | **Done** | Kitchen pendant switch, under-cabinet switch, hood light, pantry switch (LED shelf strips) |
+| Walk-in pantry | **Done** | Sage door with collider, light switch, oak shelves floor to ceiling, 8 jars and 6 cereal boxes to pick up, drawers, toaster that pops, stand mixer |
+| Save and load | **Done** | Mug position, clean plate, moved jar, pantry light, hood light and pendants restored after reload (save key `hg.save.house.v2`) |
+
+### Created this batch
+
+- **Higgsfield images:** 11 kitchen mockups (Option A hero, reverse, isometric, range detail, pantry,
+  evening; Options B to F hero views), 9 textures (oak floor, sage cabinet, limestone tile,
+  soapstone, limewash, aged copper, white oak, cereal box atlas, cookbook cover) and 6 reference
+  images.
+- **Higgsfield 3D (Tripo H3.1):** espresso machine, coffee grinder, cast-iron skillet, Dutch oven,
+  potted herbs, stand mixer.
+- **Code:** `appliances.js` (range, hood, columns, cabinet runs with sink, dishwasher and microwave,
+  glass uppers, table, chairs, stools, pendants), `kitchen.js` (layout, pantry, coffee station,
+  per-frame behaviour), `props.js`, `archWindow()` and the new materials in `kit.js`, the `Dial`
+  behaviour in `interact.js`, appliance sounds in `ui.js`.
+
+### Known limits
+
+- Not yet hand-played on a real GPU and WebGPU; checked in headless WebGL2.
+- The generated espresso machine and grinder are single meshes: their slots (group head, cup,
+  hopper) are placed by eye in front of the models.
+- About 16 point lights in the kitchen and pantry; watch the frame rate on tablets.
+- The rest of the house (living room, floor 2, rooftop) is unchanged and comes next.
+
 ## Batch 1 (19 Oct 2026): discovery, standards, interaction system, kitchen vertical slice
 
 ### Kitchen prototype checklist (from the blueprint)
@@ -76,7 +122,7 @@ hand-play check on the live site.
    from the top floor.
 
 <!-- validation:start -->
-Automated check (2026-10-19): 40/40 valid.
+Automated check (2026-10-19): 68/68 valid.
 
 | Asset | Kind | Valid | Notes |
 | --- | --- | --- | --- |
@@ -120,4 +166,32 @@ Automated check (2026-10-19): 40/40 valid.
 | Kitchen door | assembly | yes | built in code |
 | Floor 1 shell | assembly | yes | built in code |
 | Wooden spoon | assembly | yes | built in code |
+| T_Oak_Floor | texture | yes | 80 KB |
+| T_Sage_Cabinet | texture | yes | 86 KB |
+| T_Limestone_Tile | texture | yes | 121 KB |
+| T_Soapstone | texture | yes | 145 KB |
+| T_Limewash | texture | yes | 75 KB |
+| T_Aged_Copper | texture | yes | 230 KB |
+| T_White_Oak | texture | yes | 90 KB |
+| T_Cereal_Boxes | texture | yes | 258 KB |
+| T_Cookbook | texture | yes | 124 KB |
+| SM_Kitchen_EspressoMachine | model | yes | 7081 tris, 139 KB |
+| SM_Kitchen_Grinder | model | yes | 4786 tris, 102 KB |
+| SM_Kitchen_Skillet | model | yes | 3796 tris, 51 KB |
+| SM_Kitchen_DutchOven | model | yes | 4646 tris, 68 KB |
+| SM_Kitchen_Herbs | model | yes | 5421 tris, 129 KB |
+| SM_Kitchen_StandMixer | model | yes | 5760 tris, 92 KB |
+| 48in range | assembly | yes | built in code |
+| Copper hood | assembly | yes | built in code |
+| Fridge + freezer columns | assembly | yes | built in code |
+| Cabinet runs | assembly | yes | built in code |
+| Farmhouse sink | assembly | yes | built in code |
+| Dishwasher | assembly | yes | built in code |
+| Microwave drawer | assembly | yes | built in code |
+| Glass uppers | assembly | yes | built in code |
+| Island + stools | assembly | yes | built in code |
+| Round table + chairs | assembly | yes | built in code |
+| Coffee station | assembly | yes | built in code |
+| Walk-in pantry | assembly | yes | built in code |
+| Arched windows | assembly | yes | built in code |
 <!-- validation:end -->

@@ -46,7 +46,7 @@ export function cabinetRun(b, M, sys, { id, at, rotY = 0, modules, d = 0.64, h =
   for (const [i, mod] of modules.entries()) {
     const w = mod.w, xc = x0 + w / 2, m = { ...mod, x0, xc };
     const carcass = () => {
-      b.box(M.sage, [x0 + 0.009, h / 2 + 0.05, 0], [0.018, h - 0.1, d - 0.03], { parent: root, collide: false, cast: false });
+      b.box(M.sage, [x0 + 0.009, 0.1 + (h - 0.16) / 2, 0], [0.018, h - 0.16, d - 0.03], { parent: root, collide: false, cast: false });
       b.box(M.white, [xc, 0.115, 0], [w - 0.03, 0.018, d - 0.05], { parent: root, collide: false, cast: false });
       b.box(M.white, [xc, h / 2 + 0.05, -d / 2 + 0.015], [w - 0.03, h - 0.12, 0.018], { parent: root, collide: false, cast: false });
     };
