@@ -52,6 +52,8 @@ export class Powers {
     for (let i = 0; i < 16; i++) g.fxGlow.emit(origin, new THREE.Vector3((Math.random() - 0.5) * 4, Math.random() * 2, (Math.random() - 0.5) * 4), { life: 1.1, size: 0.25, color: [1, 0.6, 0.78], alpha: 0.7, drag: 2 });
     g.fxGlow.emit(origin, new THREE.Vector3(), { life: 0.7, size: 3.5, grow: 1.4, color: [1, 0.55, 0.75], alpha: 0.35 });
     g.audio?.love();
+    // flowers spring up around her (not in the water)
+    g.blooms?.spawn(g.player.pos, { now: g.time, waterLevelAt: (x, z) => g.player.waterLevelAt(new THREE.Vector3(x, 0, z)) });
     g.quests.onLove(origin);
     g.friend?.cheer?.();
   }

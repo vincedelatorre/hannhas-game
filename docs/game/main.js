@@ -17,6 +17,7 @@ import { Decals } from './decals.js';
 import { buildGrass, buildBeachDetail } from './grass.js';
 import { H, G, V } from './world.js';
 import { Underwater, causticStrength } from './underwater.js';
+import { Blooms, clock as bloomClock } from './flowers.js';
 window.__H = H;
 
 const $ = id => document.getElementById(id);
@@ -101,6 +102,7 @@ async function boot() {
   game.fxFoam = new Particles(scene, TEX.foam(), { max: 300 });
   game.decals = new Decals(scene);
   game.under = new Underwater(scene, zone, A, Q, game.fxGlow);
+  game.blooms = new Blooms(scene);
   game.creatures = new Creatures(scene, zone);
   game.quests = new Quests(game, zone);
   game.powers = new Powers(game);
@@ -235,7 +237,7 @@ game.sim = (seconds, keys = [], { jump = false, look = 0 } = {}) => {
 };
 
 function tick(dt) {
-  gameTime += dt; const t = gameTime;
+  gameTime += dt; const t = gameTime; game.time = t; bloomClock.value = t;
   const P = game.player, I = game.input;
   I.poll();
 

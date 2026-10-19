@@ -139,6 +139,30 @@
       "job": "d72154bc-96f7-4693-86ba-f2e8313b5635",
       "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261018_234634_d72154bc-96f7-4693-86ba-f2e8313b5635.glb",
       "note": "Tripo H3.1 multiview, detailed geometry+texture, PBR, 100k faces; attach to the hand_r socket"
+    },
+    {
+      "name": "SM_Coral_Cluster.glb",
+      "job": "7d519b95-d4e9-4b43-a9c9-a569615f4230",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_030228_7d519b95-d4e9-4b43-a9c9-a569615f4230.glb",
+      "note": "Meshy image-to-3D, PBR, coral reef cluster"
+    },
+    {
+      "name": "SM_SeaTurtle.glb",
+      "job": "eb66e9cc-8235-4765-9d68-19f271048993",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_030232_eb66e9cc-8235-4765-9d68-19f271048993.glb",
+      "note": "Meshy image-to-3D, PBR, green sea turtle"
+    },
+    {
+      "name": "SM_SeaGrass_Rock.glb",
+      "job": "8898674a-52db-4e3b-a864-1b8d643962ee",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_030234_8898674a-52db-4e3b-a864-1b8d643962ee.glb",
+      "note": "Meshy image-to-3D, PBR, sea grass on rock with starfish"
+    },
+    {
+      "name": "SM_ReefFish.glb",
+      "job": "74afca2b-d1f1-4fcd-a65b-c6117a75b187",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_030237_74afca2b-d1f1-4fcd-a65b-c6117a75b187.glb",
+      "note": "Meshy image-to-3D, low poly yellow reef fish"
     }
   ],
   "materials": [
