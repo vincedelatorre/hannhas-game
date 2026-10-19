@@ -58,6 +58,11 @@ export class Physics {
     }
   }
 
+  /** a box collider in world space (returns it so callers can enable/disable it) */
+  addCuboid(p, q, hx, hy, hz) {
+    return this.world.createCollider(RAPIER.ColliderDesc.cuboid(hx, hy, hz).setTranslation(p.x, p.y, p.z).setRotation({ x: q.x, y: q.y, z: q.z, w: q.w }).setFriction(0.6));
+  }
+
   addHull(geometry, matrix, shrink = 1) {
     const pos = geometry.attributes.position, v = new THREE.Vector3();
     const step = Math.max(1, Math.floor(pos.count / 900));

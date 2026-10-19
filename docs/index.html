@@ -84,6 +84,13 @@ body.touch #stick { display: block; } body.touch #help { display: none; }
 @media (max-width: 560px) { #photo-btn { right: calc(12px + env(safe-area-inset-right, 0px)); top: calc(238px + env(safe-area-inset-top, 0px)); } }
 body.photo .hud, body.photo #gear, body.photo #settings, body.photo #mute, body.photo #stick, body.photo #photo-btn { display: none !important; }
 #flash { position: fixed; inset: 0; z-index: 10; background: #fff; opacity: 0; pointer-events: none; transition: opacity 0.35s; }
+#prompt { position: fixed; z-index: 4; left: 0; top: 0; transform: translate(-50%, -100%); display: flex; gap: 8px; align-items: center; padding: 7px 12px 7px 7px; border-radius: 999px; background: rgba(27, 20, 16, 0.82); color: #fff8ec; font-size: 0.86rem; font-weight: 600; pointer-events: none; opacity: 0; transition: opacity 0.15s; white-space: nowrap; }
+#prompt.show { opacity: 1; } #prompt.disabled { background: rgba(80, 70, 60, 0.75); color: #e6dccb; }
+#prompt kbd { font-family: var(--display); background: #F2B521; color: #1B1410; border-radius: 7px; padding: 2px 8px; font-size: 0.8rem; }
+#prompt.disabled kbd { background: #8c8172; }
+body.touch #prompt kbd { display: none; }
+body.photo #prompt, body.riding #prompt { display: none; }
+#buttons .use { background: #F2B521; }
 #speech { position: fixed; z-index: 4; left: 0; top: 0; max-width: 240px; padding: 9px 13px; border-radius: 16px; background: var(--card); color: var(--ink); font-size: 0.86rem; line-height: 1.35; box-shadow: 0 6px 18px rgba(19, 70, 78, 0.25); pointer-events: none; opacity: 0; transition: opacity 0.25s; transform: translate(-50%, -100%); }
 #speech.show { opacity: 1; }
 #speech::after { content: ''; position: absolute; left: 50%; bottom: -8px; margin-left: -8px; border: 8px solid transparent; border-bottom: 0; border-top-color: var(--card); }
@@ -137,6 +144,7 @@ body.riding .hud:not(#toast), body.riding #gear, body.riding #mute, body.riding 
   <button type="button" id="p-exit">Done</button>
 </div>
 <div id="flash"></div>
+<div id="prompt" aria-live="polite"><kbd>E</kbd><span id="prompt-text"></span></div>
 <div id="speech" role="status" aria-live="polite"><b>Your friend</b><span id="speech-text"></span></div>
 <div class="chip" id="settings" hidden>
   <h4>World settings</h4>
@@ -148,7 +156,7 @@ body.riding .hud:not(#toast), body.riding #gear, body.riding #mute, body.riding 
 </div>
 
 <div class="hud chip" id="energy"><span>Pearl energy</span><div class="bar"><div class="fill" id="energy-fill"></div></div></div>
-<div class="hud chip" id="help"><b>Move</b> arrow keys · <b>Walk</b> hold C · <b>Look</b> drag · <b>Jump</b> Space (twice for a backflip)<br><b>Super speed</b> Shift · <b>Water</b> W or click · <b>Love</b> L · <b>Dive</b> D (again = deeper) · <b>Swim up</b> S · <b>View</b> V · <b>Photo</b> P</div>
+<div class="hud chip" id="help"><b>Move</b> arrow keys · <b>Walk</b> hold C · <b>Look</b> drag · <b>Jump</b> Space (twice for a backflip)<br><b>Super speed</b> Shift · <b>Water</b> W or click · <b>Love</b> L · <b>Dive</b> D (again = deeper) · <b>Swim up</b> S · <b>Use</b> E · <b>Put down</b> Q · <b>View</b> V · <b>Photo</b> P</div>
 <div class="hud" id="toast" role="status" aria-live="polite"></div>
 <div id="stick" aria-hidden="true"><div class="knob"></div></div>
 <div class="hud" id="buttons">
@@ -158,6 +166,7 @@ body.riding .hud:not(#toast), body.riding #gear, body.riding #mute, body.riding 
   <button type="button" class="dive" id="b-surface" aria-label="Swim up (S)" hidden>Up</button>
   <button type="button" class="water" id="b-water" aria-label="Water power (hold)">Water</button>
   <button type="button" class="love" id="b-love" aria-label="Love power">Love</button>
+  <button type="button" class="use" id="b-use" aria-label="Use (E)" hidden>Use</button>
 </div>
 
 <div id="start">

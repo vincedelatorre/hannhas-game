@@ -4,7 +4,7 @@ import { H } from './world.js';
 export class Input {
   constructor(canvas) {
     this.keys = new Set(); this.x = 0; this.y = 0; this.sprint = false; this.jumpPressed = false;
-    this.look = { dx: 0, dy: 0 }; this.zoom = 0; this.onWater = () => {}; this.onLove = () => {}; this.onToggleView = () => {}; this.onStats = () => {}; this.onPhoto = () => {};
+    this.look = { dx: 0, dy: 0 }; this.zoom = 0; this.onWater = () => {}; this.onLove = () => {}; this.onToggleView = () => {}; this.onStats = () => {}; this.onPhoto = () => {}; this.onUse = () => false; this.onDrop = () => {};
     this.diveTaps = 0; this.surfaceTaps = 0;   // D dives (again = deeper), S swims back up
     this.waterHeld = false; this.joy = { x: 0, y: 0 }; this.speedHeld = false; this.enabled = false;
     addEventListener('keydown', e => {
@@ -13,6 +13,8 @@ export class Input {
       this.keys.add(e.code);
       if (e.code === 'Space') { this.jumpPressed = true; e.preventDefault(); }
       if (e.code === 'KeyL' && !e.repeat) this.onLove();
+      if (e.code === 'KeyE' && !e.repeat) this.onUse();
+      if (e.code === 'KeyQ' && !e.repeat) this.onDrop();
       if (e.code === 'KeyD' && !e.repeat) this.diveTaps++;
       if (e.code === 'KeyS' && !e.repeat) this.surfaceTaps++;
       if (e.code.startsWith('Arrow')) e.preventDefault();
@@ -46,6 +48,7 @@ export class Input {
     const bw = document.getElementById('b-water');
     bw.addEventListener('pointerdown', () => this.waterHeld = true); bw.addEventListener('pointerup', () => this.waterHeld = false); bw.addEventListener('pointerleave', () => this.waterHeld = false);
     document.getElementById('b-love').addEventListener('click', () => this.onLove());
+    document.getElementById('b-use')?.addEventListener('click', () => this.onUse());
   }
 
   poll() {
@@ -66,7 +69,7 @@ export class Input {
       this.look.dx += dz(p.axes[2]) * 10; this.look.dy += dz(p.axes[3]) * 8;
       if (p.buttons[0]?.pressed && !this._padJump) this.jumpPressed = true; this._padJump = p.buttons[0]?.pressed;
       if (p.buttons[2]?.pressed || p.buttons[7]?.pressed) water = true;
-      if (p.buttons[3]?.pressed && !this._padLove) this.onLove(); this._padLove = p.buttons[3]?.pressed;
+      if (p.buttons[3]?.pressed && !this._padLove) { if (!this.onUse()) this.onLove(); } this._padLove = p.buttons[3]?.pressed;
       if (p.buttons[1]?.pressed || p.buttons[10]?.pressed || p.buttons[6]?.pressed) sprint = true;
       if (p.buttons[4]?.pressed && !this._padDive) this.diveTaps++; this._padDive = p.buttons[4]?.pressed;
       if (p.buttons[5]?.pressed && !this._padUp) this.surfaceTaps++; this._padUp = p.buttons[5]?.pressed;
@@ -185,6 +188,46 @@ export class Audio {
     const g = AC.createGain(); g.gain.value = 0.3; src.connect(lp).connect(g).connect(this.ambBus); src.start();
     this.loops.amb_surf = g;
   }
+  /** small synthesized household sounds (creaks, clicks, clinks, water) */
+  house(kind, on) {
+    const AC = this.AC; if (!AC || this.muted) return;
+    const noise = (dur, f, q, vol, type = 'bandpass') => {
+      const len = Math.ceil(AC.sampleRate * dur), b = AC.createBuffer(1, len, AC.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
+      const src = AC.createBufferSource(); src.buffer = b; const fl = AC.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q;
+      const g = AC.createGain(); g.gain.value = vol; src.connect(fl).connect(g).connect(this.sfxBus); src.start();
+    };
+    switch (kind) {
+      case 'door': this.sfx(on ? 140 : 110, 0.35, 'sawtooth', 0.025); noise(0.25, 900, 2, 0.12); if (!on) setTimeout(() => this.sfx(70, 0.12, 'square', 0.05), 300); break;
+      case 'fridge': this.sfx(on ? 95 : 70, 0.18, 'square', 0.04); noise(0.12, 2500, 1, 0.06); break;
+      case 'cupboard': this.sfx(on ? 420 : 300, 0.08, 'triangle', 0.05); noise(0.12, 1800, 2, 0.08); break;
+      case 'drawer': noise(0.35, 700, 1.5, 0.14); break;
+      case 'oven': this.sfx(on ? 180 : 120, 0.25, 'sawtooth', 0.03); noise(0.2, 1200, 2, 0.08); break;
+      case 'knob': case 'click': this.sfx(1800, 0.03, 'square', 0.04); break;
+      case 'tap': this.sfx(on ? 600 : 420, 0.05, 'triangle', 0.04); break;
+      case 'pickup': this.play('pickup_shell', { vol: 0.2, rate: 1.4 }) || this.sfx(880, 0.08, 'sine', 0.05); break;
+      case 'place': this.sfx(1320, 0.06, 'sine', 0.06); this.sfx(1980, 0.05, 'sine', 0.03); break;
+      case 'pour': noise(0.8, 500, 1, 0.12, 'lowpass'); break;
+      case 'stir': for (let i = 0; i < 6; i++) setTimeout(() => noise(0.2, 1500, 3, 0.08), i * 330); break;
+      case 'ding': this.chime(1047); break;
+      case 'eat': for (let i = 0; i < 3; i++) setTimeout(() => noise(0.08, 3000, 4, 0.12), i * 140); break;
+      case 'drink': for (let i = 0; i < 3; i++) setTimeout(() => this.sfx(300 + i * 60, 0.12, 'sine', 0.06), i * 220); break;
+    }
+  }
+  /** running tap: a soft filtered-noise loop */
+  houseTap(on) {
+    const AC = this.AC; if (!AC) return;
+    if (!this.tap) {
+      const len = AC.sampleRate * 2, buf = AC.createBuffer(1, len, AC.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      const src = AC.createBufferSource(); src.buffer = buf; src.loop = true;
+      const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2400; f.Q.value = 0.6;
+      const g = AC.createGain(); g.gain.value = 0; src.connect(f).connect(g).connect(this.sfxBus); src.start();
+      this.tap = g;
+    }
+    this.tap.gain.setTargetAtTime(on && !this.muted ? 0.12 : 0, AC.currentTime, 0.08);
+  }
+
   /** rushing water and wind inside the slide: filtered noise that follows the speed */
   rideStart() {
     const AC = this.AC; if (!AC) return;

@@ -20,6 +20,8 @@ import { Underwater, causticStrength } from './underwater.js';
 import { Blooms, clock as bloomClock } from './flowers.js';
 import { Dolphins, Parrots } from './wildlife.js';
 import { SlideRide } from './slide.js';
+import { House, HOUSE_MODELS, HOUSE_TEXTURES } from './house/house.js';
+import { InteractionSystem } from './house/interact.js';
 window.__H = H;
 
 const $ = id => document.getElementById(id);
@@ -36,7 +38,7 @@ async function boot() {
   $('quality').value = Q.name;
 
   const scene = game.scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x9cc4dc, 0.0009);
+  scene.fog = new THREE.FogExp2(0x9cc4dc, 0.0009); game._outFog = 0.0009;
   const camera = game.camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.08, 6000);
   camera.position.set(30, 18, 40);
 
@@ -50,11 +52,13 @@ async function boot() {
   const models = ['SM_PearlCove_Clubhouse', 'SM_PalmTree', 'SM_PalmTree_LOD', 'SM_Hibiscus', 'SM_Boulder_Mossy', 'SM_Shells_Cluster', 'SM_PalmSwing', 'SM_TikiTorch', 'SM_Driftwood', 'SM_TreasureChest', 'SM_Clam_Pearl', 'Wren', 'Boy'];
   const optional = ['SM_Coral_Cluster', 'SM_SeaGrass_Rock', 'SM_SeaTurtle', 'SM_ReefFish', 'SM_Dolphin', 'SM_Macaw'];   // reef models (procedural stand-ins if missing)
   const textures = ['T_Sand_Dry', 'T_Sand_Wet', 'T_JungleFloor', 'T_Rock_Coastal', 'T_Bamboo_Woven', 'T_Thatch'];
-  const wrenClips = ['Walk', 'Skip', 'Run', 'Sprint', 'Jump', 'Backflip', 'WaterCast', 'LoveHeart', 'SwimIdle', 'Swim', 'Sit'];
+  const wrenClips = ['Walk', 'Skip', 'Run', 'Sprint', 'Jump', 'Backflip', 'WaterCast', 'LoveHeart', 'SwimIdle', 'Swim', 'Sit', 'PickUp', 'OpenDoor', 'Cheer'];
   const boyClips = ['Walk', 'Run', 'Jump', 'Backflip', 'Wave', 'SwimIdle', 'Swim', 'Sit'];
   await Promise.all([
     ...models.map(m => A.model(m)),
     ...optional.map(m => A.model(m).catch(() => null)),
+    ...HOUSE_MODELS.map(m => A.model(m)),
+    ...HOUSE_TEXTURES.map(t => A.texture(t)),
     ...textures.map(t => A.texture(t)),
     ...wrenClips.map(c => A.clip('Wren', c)),
     ...boyClips.map(c => A.clip('Boy', c)),
@@ -107,6 +111,12 @@ async function boot() {
   for (const m of game.under.coral) { m.updateMatrixWorld(true); physics.addCollider({ type: 'hullInstances', mesh: m, shrink: 0.85 }); }   // solid reef
   game.blooms = new Blooms(scene);
   game.ride = new SlideRide(scene);
+  // the Enchanted Island House (inside the clubhouse) and the shared interaction system
+  game.interact = new InteractionSystem(game, scene);
+  game.house = new House(game, scene, A, physics);
+  game.interact.load();
+  input.onUse = () => game.started && !game.photo && !game.ride.riding && game.interact.use();
+  input.onDrop = () => game.started && game.interact.drop();
   game.dolphins = new Dolphins(scene, A, game.fxWater, { level: zone.seaLevel });
   game.parrots = new Parrots(scene, A, zone);
   game.creatures = new Creatures(scene, zone);
@@ -242,7 +252,7 @@ function updateCamera(dt, t) {
   }
   C.yaw -= I.look.dx * 0.005; C.pitch = THREE.MathUtils.clamp(C.pitch + I.look.dy * 0.004, -0.35, 1.25);
   I.look.dx = I.look.dy = 0;
-  C.dist = THREE.MathUtils.clamp(C.dist + I.zoom, 2.5, 16); I.zoom = 0;
+  C.dist = THREE.MathUtils.clamp(C.dist + I.zoom, game.indoors ? 1.6 : 2.5, game.indoors ? 4.2 : 16); I.zoom = 0;
   const feet = game.wren.root.position;
   if (game.view === 'first') {
     const eye = feet.clone().add(new THREE.Vector3(0, 1.42, 0)).add(new THREE.Vector3(Math.sin(P.face), 0, Math.cos(P.face)).multiplyScalar(0.12));
@@ -260,7 +270,8 @@ function updateCamera(dt, t) {
   if (hit) dist = Math.max(0.6, hit.timeOfImpact - 0.25);
   const want = C.target.clone().addScaledVector(dir, dist);
   const wl = game.player.waterLevelAt(want);
-  if (P.underwater) want.y = Math.min(Math.max(want.y, G(want.x, want.z) + 0.4), wl - 0.3);   // stay under with her
+  if (game.indoors) { /* walls and ceiling are handled by the ray above */ }
+  else if (P.underwater) want.y = Math.min(Math.max(want.y, G(want.x, want.z) + 0.4), wl - 0.3);   // stay under with her
   else want.y = Math.max(want.y, G(want.x, want.z) + 0.4, wl + 0.25);
   cam.position.lerp(want, Math.min(1, dt * 12));
   const fovT = P.sprinting ? 64 : 52; cam.fov += (fovT - cam.fov) * Math.min(1, dt * 4); cam.updateProjectionMatrix();
@@ -354,6 +365,10 @@ function tick(dt) {
   D.torchLights.forEach((l, i) => { const f = near[i]; if (!f) return; l.position.copy(f.base); l.intensity = (6 + night * 30) * (1 + Math.sin(t * 11 + f.ph) * 0.12); });
 
   if (!game.ride.riding) updateCamera(dt, t);
+  game.interact.enabled = game.started && !game.ride.riding && !game.onSwing && !game.photo;
+  game.interact.update(dt);
+  game.house.update(dt);
+  $('map').style.visibility = game.indoors ? 'hidden' : '';
   game.under.update(dt, game.camera, P, game.friend);
   if (game.friend) game.speech.update(dt, game.camera, game.friend.pos.clone().add(new THREE.Vector3(0, 2.05, 0)), game.renderer.domElement);
   const diveBtn = $('b-dive'), upBtn = $('b-surface'); const canDive = game.started && (P.c.swimming || P.underwater), canUp = game.started && (P.diving || P.underwater); if (diveBtn.hidden === canDive) diveBtn.hidden = !canDive; if (upBtn.hidden === canUp) upBtn.hidden = !canUp;

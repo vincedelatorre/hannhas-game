@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - Tools/asset_manifest.json
+      - Design/House/asset-manifest.json
       - Tools/web/**
       - .github/workflows/web-assets.yml
   workflow_dispatch:

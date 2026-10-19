@@ -10,4 +10,4 @@ Saved/
 DerivedDataCache/
 # web asset build workspace (Tools/web)
 build/
-Tools/web/node_modules/
+Tools/web/node_modules

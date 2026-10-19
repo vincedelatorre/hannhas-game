@@ -272,6 +272,7 @@ export class Player {
   }
 
   waterLevelAt(p) {
+    if (this.indoors) return -1e9;          // inside the house: no sea to swim in
     const L = this.lagoon;
     if (L && Math.hypot((p.x - L.center[0]) / (L.radius[0] + 0.4), (-p.z - L.center[1]) / (L.radius[1] + 0.4)) < 1) return L.level;
     return this.waterLevel;

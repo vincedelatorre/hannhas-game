@@ -1,0 +1,1038 @@
+{
+  "_readme": "Source of truth for the Enchanted Island House assets. Models and textures are generated with Higgsfield; moving parts are parametric assemblies in code (AI meshes cannot be hinged). Tools/house/house_assets.mjs lists what is missing, validates the built files, and writes production-status.md. The web build (Tools/web) reads this file.",
+  "updated": "2026-10-19",
+  "assets": [
+    {
+      "id": "kitchen_cupcake",
+      "name": "SM_Kitchen_Cupcake",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "95c1ca41-d140-47a6-a535-a3d554c6165e",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_141527_95c1ca41-d140-47a6-a535-a3d554c6165e.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "3d5dd94d-dafa-4867-8ece-1bf873f21cbd",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140208_3d5dd94d-dafa-4867-8ece-1bf873f21cbd.png"
+      },
+      "prompt": "Stylized premium 3D game asset: a single decorated cupcake with pink swirl frosting, sprinkles, cherry, turquoise liner",
+      "size_m": {
+        "height": 0.09
+      },
+      "budget": {
+        "tris": 4000,
+        "tex": 512
+      },
+      "interaction": "pickup + eat (made by the cupcake recipe)",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      },
+      "history": [
+        "sam_3_3d (1 credit) failed for this prop on 2026-10-19; regenerated with Tripo H3.1"
+      ]
+    },
+    {
+      "id": "kitchen_milk",
+      "name": "SM_Kitchen_MilkBottle",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "021885f2-e02b-4019-a984-90c09d1e1d9a",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_141532_021885f2-e02b-4019-a984-90c09d1e1d9a.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "0d34b816-a5e7-4ffe-8d13-459266992af9",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140212_0d34b816-a5e7-4ffe-8d13-459266992af9.png"
+      },
+      "prompt": "Stylized premium 3D game asset: glass milk bottle with turquoise cap",
+      "size_m": {
+        "height": 0.24
+      },
+      "budget": {
+        "tris": 3000,
+        "tex": 512
+      },
+      "interaction": "pickup, recipe ingredient (milk)",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      },
+      "history": [
+        "sam_3_3d (1 credit) failed for this prop on 2026-10-19; regenerated with Tripo H3.1"
+      ]
+    },
+    {
+      "id": "kitchen_juice",
+      "name": "SM_Kitchen_JuiceJug",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "6aca36e1-5e6a-4af8-a04a-295498f182ed",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_141538_6aca36e1-5e6a-4af8-a04a-295498f182ed.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "0f18ceb0-3340-4585-8427-533986b785d1",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140210_0f18ceb0-3340-4585-8427-533986b785d1.png"
+      },
+      "prompt": "Stylized premium 3D game asset: glass jug of orange juice with cork",
+      "size_m": {
+        "height": 0.23
+      },
+      "budget": {
+        "tris": 3000,
+        "tex": 512
+      },
+      "interaction": "pickup",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      },
+      "history": [
+        "sam_3_3d (1 credit) failed for this prop on 2026-10-19; regenerated with Tripo H3.1"
+      ]
+    },
+    {
+      "id": "kitchen_apple",
+      "name": "SM_Kitchen_Apple",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "8111d63a-2e04-41c6-901c-c7a9a48bd564",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_141543_8111d63a-2e04-41c6-901c-c7a9a48bd564.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "f9e6e24b-46b2-4606-b23c-4424bc8ec489",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140208_f9e6e24b-46b2-4606-b23c-4424bc8ec489.png"
+      },
+      "prompt": "Stylized premium 3D game asset: shiny red apple with leaf",
+      "size_m": {
+        "height": 0.08
+      },
+      "budget": {
+        "tris": 2000,
+        "tex": 512
+      },
+      "interaction": "pickup + eat",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      },
+      "history": [
+        "sam_3_3d (1 credit) failed for this prop on 2026-10-19; regenerated with Tripo H3.1"
+      ]
+    },
+    {
+      "id": "kitchen_cheese",
+      "name": "SM_Kitchen_Cheese",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "18a1bb83-cc53-4850-ba11-5a14b53a67d4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_141548_18a1bb83-cc53-4850-ba11-5a14b53a67d4.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "18235068-f9e2-4afd-be2a-aeba50f608b8",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140210_18235068-f9e2-4afd-be2a-aeba50f608b8.png"
+      },
+      "prompt": "Stylized premium 3D game asset: wedge of Swiss cheese",
+      "size_m": {
+        "height": 0.07
+      },
+      "budget": {
+        "tris": 2000,
+        "tex": 512
+      },
+      "interaction": "pickup",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      },
+      "history": [
+        "sam_3_3d (1 credit) failed for this prop on 2026-10-19; regenerated with Tripo H3.1"
+      ]
+    },
+    {
+      "id": "kitchen_strawberries",
+      "name": "SM_Kitchen_Strawberries",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "1514b34a-30fc-4b31-922b-c733e951f3dd",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_141553_1514b34a-30fc-4b31-922b-c733e951f3dd.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "39dfca0a-e90c-4551-a92b-d6f3a3e17ece",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140209_39dfca0a-e90c-4551-a92b-d6f3a3e17ece.png"
+      },
+      "prompt": "Stylized premium 3D game asset: basket of strawberries",
+      "size_m": {
+        "height": 0.11
+      },
+      "budget": {
+        "tris": 4000,
+        "tex": 512
+      },
+      "interaction": "pickup",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      },
+      "history": [
+        "sam_3_3d (1 credit) failed for this prop on 2026-10-19; regenerated with Tripo H3.1"
+      ]
+    },
+    {
+      "id": "kitchen_mug",
+      "name": "SM_Kitchen_Mug",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "1799a5ac-00cb-4ad7-ac00-92e09af577d4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_141557_1799a5ac-00cb-4ad7-ac00-92e09af577d4.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "3cec42b9-cacf-45c3-9c08-be24853e626f",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140212_3cec42b9-cacf-45c3-9c08-be24853e626f.png"
+      },
+      "prompt": "Stylized premium 3D game asset: turquoise ceramic mug with hibiscus",
+      "size_m": {
+        "height": 0.11
+      },
+      "budget": {
+        "tris": 3000,
+        "tex": 512
+      },
+      "interaction": "pickup, fills under the tap, drink",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      },
+      "history": [
+        "sam_3_3d (1 credit) failed for this prop on 2026-10-19; regenerated with Tripo H3.1"
+      ]
+    },
+    {
+      "id": "kitchen_bowl",
+      "name": "SM_Kitchen_MixingBowl",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "92edb2a4-fb5e-484f-b4c2-ad268a485007",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_141604_92edb2a4-fb5e-484f-b4c2-ad268a485007.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "29a56f25-c00d-45ef-8986-0b1cf4d8fb26",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140211_29a56f25-c00d-45ef-8986-0b1cf4d8fb26.png"
+      },
+      "prompt": "Stylized premium 3D game asset: coral ceramic mixing bowl",
+      "size_m": {
+        "height": 0.13
+      },
+      "budget": {
+        "tris": 3000,
+        "tex": 512
+      },
+      "interaction": "pickup, recipe container, bakes in oven",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      },
+      "history": [
+        "sam_3_3d (1 credit) failed for this prop on 2026-10-19; regenerated with Tripo H3.1"
+      ]
+    },
+    {
+      "id": "kitchen_cookiejar",
+      "name": "SM_Kitchen_CookieJar",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "b8b7b822-f811-4f65-a5aa-bbeddd032d58",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_141610_b8b7b822-f811-4f65-a5aa-bbeddd032d58.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "085887b9-afff-4e99-aa04-2fe4fda1ca5a",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140208_085887b9-afff-4e99-aa04-2fe4fda1ca5a.png"
+      },
+      "prompt": "Stylized premium 3D game asset: glass cookie jar with honey-wood lid",
+      "size_m": {
+        "height": 0.22
+      },
+      "budget": {
+        "tris": 4000,
+        "tex": 512
+      },
+      "interaction": "pickup",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      },
+      "history": [
+        "sam_3_3d (1 credit) failed for this prop on 2026-10-19; regenerated with Tripo H3.1"
+      ]
+    },
+    {
+      "id": "kitchen_teapot",
+      "name": "SM_Kitchen_Teapot",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "a889116d-568b-418a-b14d-dee7d592e0ea",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_141614_a889116d-568b-418a-b14d-dee7d592e0ea.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "4f3c94bd-ee9c-4ce6-8286-9e8dc3384efe",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140209_4f3c94bd-ee9c-4ce6-8286-9e8dc3384efe.png"
+      },
+      "prompt": "Stylized premium 3D game asset: turquoise enamel teapot with brass handle",
+      "size_m": {
+        "height": 0.19
+      },
+      "budget": {
+        "tris": 4000,
+        "tex": 512
+      },
+      "interaction": "pickup",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      },
+      "history": [
+        "sam_3_3d (1 credit) failed for this prop on 2026-10-19; regenerated with Tripo H3.1"
+      ]
+    },
+    {
+      "id": "kitchen_fruitbowl",
+      "name": "SM_Kitchen_FruitBowl",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "2e100db6-5275-433a-9677-c2246176674c",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_141619_2e100db6-5275-433a-9677-c2246176674c.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "31ffd2d7-2b87-4a43-bd70-0db8c9e61df3",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140209_31ffd2d7-2b87-4a43-bd70-0db8c9e61df3.png"
+      },
+      "prompt": "Stylized premium 3D game asset: honey-wood bowl of tropical fruit",
+      "size_m": {
+        "height": 0.2
+      },
+      "budget": {
+        "tris": 6000,
+        "tex": 512
+      },
+      "interaction": "pickup",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      },
+      "history": [
+        "sam_3_3d (1 credit) failed for this prop on 2026-10-19; regenerated with Tripo H3.1"
+      ]
+    },
+    {
+      "id": "kitchen_flour",
+      "name": "SM_Kitchen_FlourSack",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "acfceaf6-4e47-4e25-9bdb-84ce8cb5880c",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_141623_acfceaf6-4e47-4e25-9bdb-84ce8cb5880c.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "235f4251-6f9b-437c-9a6e-03d016a152ed",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140211_235f4251-6f9b-437c-9a6e-03d016a152ed.png"
+      },
+      "prompt": "Stylized premium 3D game asset: cloth sack of flour with turquoise ribbon",
+      "size_m": {
+        "height": 0.2
+      },
+      "budget": {
+        "tris": 3000,
+        "tex": 512
+      },
+      "interaction": "pickup, recipe ingredient (flour)",
+      "collision": "none (small prop)",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      },
+      "history": [
+        "sam_3_3d (1 credit) failed for this prop on 2026-10-19; regenerated with Tripo H3.1"
+      ]
+    },
+    {
+      "id": "house_table",
+      "name": "SM_House_Table",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "a8c47b0c-c2e6-418d-97e6-4dc584e7067b",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140524_a8c47b0c-c2e6-418d-97e6-4dc584e7067b.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "8e7e3055-119f-42f9-8ab9-02388d2b7cc4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140219_8e7e3055-119f-42f9-8ab9-02388d2b7cc4.png"
+      },
+      "prompt": "Stylized premium 3D game asset: round honey-wood table with root-and-leaf pedestal",
+      "size_m": {
+        "height": 0.76
+      },
+      "budget": {
+        "tris": 12000,
+        "tex": 1024
+      },
+      "interaction": "static, 5 placement slots, collider",
+      "collision": "box/cylinder from layout",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "house_chair",
+      "name": "SM_House_Chair",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "fa6d96e0-d980-43a8-b8d6-cdd174f1e563",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140529_fa6d96e0-d980-43a8-b8d6-cdd174f1e563.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "671b0321-5845-4171-b2c0-c60caa77f5c9",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140218_671b0321-5845-4171-b2c0-c60caa77f5c9.png"
+      },
+      "prompt": "Stylized premium 3D game asset: honey-wood chair with palm-leaf back, turquoise cushion",
+      "size_m": {
+        "height": 0.98
+      },
+      "budget": {
+        "tris": 10000,
+        "tex": 1024
+      },
+      "interaction": "static, collider (seat interaction: next batch)",
+      "collision": "box/cylinder from layout",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "house_monstera",
+      "name": "SM_House_Monstera",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "ad24fdd7-da73-4bcf-a6f8-0dce815d185b",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140534_ad24fdd7-da73-4bcf-a6f8-0dce815d185b.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "43ca82e1-9100-4c22-a391-71531561c0f6",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140218_43ca82e1-9100-4c22-a391-71531561c0f6.png"
+      },
+      "prompt": "Stylized premium 3D game asset: monstera in coral pot",
+      "size_m": {
+        "height": 1.35
+      },
+      "budget": {
+        "tris": 16000,
+        "tex": 1024
+      },
+      "interaction": "static, collider",
+      "collision": "box/cylinder from layout",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "house_pendant",
+      "name": "SM_House_PendantLamp",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "4dee107c-3c49-47b8-b2b5-f027f2254065",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140539_4dee107c-3c49-47b8-b2b5-f027f2254065.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "efedd5bb-e232-43f5-9c98-b49cbe59f2c3",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140220_efedd5bb-e232-43f5-9c98-b49cbe59f2c3.png"
+      },
+      "prompt": "Stylized premium 3D game asset: rattan seed-pod pendant lamp",
+      "size_m": {
+        "height": 0.55
+      },
+      "budget": {
+        "tris": 8000,
+        "tex": 1024
+      },
+      "interaction": "static + point light (day/night)",
+      "collision": "box/cylinder from layout",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen_pots",
+      "name": "SM_Kitchen_CopperPots",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "6f511357-2dd3-4155-9e1b-e972dd01794b",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140548_6f511357-2dd3-4155-9e1b-e972dd01794b.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "a3dcfc0a-3dcd-4b81-9c91-553050497616",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140219_a3dcfc0a-3dcd-4b81-9c91-553050497616.png"
+      },
+      "prompt": "Stylized premium 3D game asset: copper pots and pan",
+      "size_m": {
+        "height": 0.32
+      },
+      "budget": {
+        "tris": 10000,
+        "tex": 1024
+      },
+      "interaction": "static decor",
+      "collision": "box/cylinder from layout",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "house_barstool",
+      "name": "SM_House_BarStool",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "982fc0da-05ef-499a-bdbc-bdb96b8b353a",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140555_982fc0da-05ef-499a-bdbc-bdb96b8b353a.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "cdff29dc-a9e2-4b83-84d8-f3f10f321636",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140220_cdff29dc-a9e2-4b83-84d8-f3f10f321636.png"
+      },
+      "prompt": "Stylized premium 3D game asset: honey-wood bar stool with turquoise seat",
+      "size_m": {
+        "height": 0.75
+      },
+      "budget": {
+        "tris": 8000,
+        "tex": 1024
+      },
+      "interaction": "static, collider",
+      "collision": "box/cylinder from layout",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen_pantry",
+      "name": "SM_Kitchen_Pantry",
+      "kind": "model",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "tripo_h3_1_image_to_3d",
+        "job": "9efd4cde-ea14-4720-908c-2299757ec1e5",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140559_9efd4cde-ea14-4720-908c-2299757ec1e5.glb"
+      },
+      "reference": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "2facbbe1-fb01-4a2b-92ca-0af1da2febc3",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140218_2facbbe1-fb01-4a2b-92ca-0af1da2febc3.png"
+      },
+      "prompt": "Stylized premium 3D game asset: honey-wood pantry shelf with jars",
+      "size_m": {
+        "height": 1.7
+      },
+      "budget": {
+        "tris": 16000,
+        "tex": 1024
+      },
+      "interaction": "static, collider",
+      "collision": "box/cylinder from layout",
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_kitchen_floor",
+      "name": "T_Kitchen_Floor",
+      "kind": "texture",
+      "room": "house",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "c4fdca2d-07f4-4c6e-8532-fcc2d51af4ab",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140226_c4fdca2d-07f4-4c6e-8532-fcc2d51af4ab.png"
+      },
+      "prompt": "hexagonal terracotta and turquoise floor tiles",
+      "use": "kitchen floor",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_wall_plaster",
+      "name": "T_Wall_Plaster",
+      "kind": "texture",
+      "room": "house",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "6e203e6d-7732-4c26-bcbb-18af3093281e",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140226_6e203e6d-7732-4c26-bcbb-18af3093281e.png"
+      },
+      "prompt": "cream plaster with golden leaf stencil",
+      "use": "walls",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_cabinet_turquoise",
+      "name": "T_Cabinet_Turquoise",
+      "kind": "texture",
+      "room": "house",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "983a91b9-fb7b-47cc-a98a-5e78757ead85",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140225_983a91b9-fb7b-47cc-a98a-5e78757ead85.png"
+      },
+      "prompt": "turquoise painted wood",
+      "use": "cabinets",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_countertop_marble",
+      "name": "T_Countertop_Marble",
+      "kind": "texture",
+      "room": "house",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "c22af4be-a8f6-42d0-a1bc-1f1af623fac6",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140226_c22af4be-a8f6-42d0-a1bc-1f1af623fac6.png"
+      },
+      "prompt": "white and honey-gold marble",
+      "use": "countertops",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_honey_wood",
+      "name": "T_Honey_Wood",
+      "kind": "texture",
+      "room": "house",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "7415bf8c-bfaa-43de-8de3-e180e9466bad",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140226_7415bf8c-bfaa-43de-8de3-e180e9466bad.png"
+      },
+      "prompt": "golden honey wood planks",
+      "use": "floors, beams, doors",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_backsplash",
+      "name": "T_Backsplash",
+      "kind": "texture",
+      "room": "house",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "61d6cbec-18c6-437e-812c-77193002b17a",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140227_61d6cbec-18c6-437e-812c-77193002b17a.png"
+      },
+      "prompt": "coral/turquoise/yellow mosaic tiles",
+      "use": "backsplash",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_window_view",
+      "name": "T_Window_View",
+      "kind": "texture",
+      "room": "house",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "b40b815c-5ee8-428c-a533-5acc955cd8c4",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140726_b40b815c-5ee8-428c-a533-5acc955cd8c4.png"
+      },
+      "prompt": "view out of the window: palms, beach, lagoon",
+      "use": "window backdrops",
+      "tileable": false,
+      "max_size": 2048,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_art_fruit",
+      "name": "T_Art_Fruit",
+      "kind": "texture",
+      "room": "house",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "533263d4-bb12-4df4-9c30-b04ad2a0fe4f",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140725_533263d4-bb12-4df4-9c30-b04ad2a0fe4f.png"
+      },
+      "prompt": "tropical fruit painting",
+      "use": "foyer painting",
+      "tileable": false,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_art_turtle",
+      "name": "T_Art_Turtle",
+      "kind": "texture",
+      "room": "house",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "f3c91771-de86-4f2b-bed3-1e51b9fc4b0d",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140726_f3c91771-de86-4f2b-bed3-1e51b9fc4b0d.png"
+      },
+      "prompt": "child crayon drawing of a sea turtle",
+      "use": "fridge drawing",
+      "tileable": false,
+      "max_size": 512,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_rug_tropical",
+      "name": "T_Rug_Tropical",
+      "kind": "texture",
+      "room": "house",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "a948c9b7-8edd-4dcf-bbd8-34ad41b13a3d",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140219_a948c9b7-8edd-4dcf-bbd8-34ad41b13a3d.png"
+      },
+      "prompt": "round jute rug with tropical leaf pattern",
+      "use": "kitchen rug",
+      "tileable": false,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "wren_pickup",
+      "name": "Wren_PickUp",
+      "kind": "clip",
+      "character": "Wren",
+      "clip": "PickUp",
+      "source": {
+        "tool": "higgsfield",
+        "model": "3d_rigging",
+        "animation_action_id": 284,
+        "action": "Collect_Object",
+        "job": "8a734af5-4ad2-4e3a-9c62-e7b615d09c6d",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140235_8a734af5-4ad2-4e3a-9c62-e7b615d09c6d.glb"
+      },
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      },
+      "notes": "rigged on the Wren base model; retargeted onto the game skeleton by the asset build"
+    },
+    {
+      "id": "wren_opendoor",
+      "name": "Wren_OpenDoor",
+      "kind": "clip",
+      "character": "Wren",
+      "clip": "OpenDoor",
+      "source": {
+        "tool": "higgsfield",
+        "model": "3d_rigging",
+        "animation_action_id": 285,
+        "action": "open_door",
+        "job": "99184c02-edb1-4053-96e0-2037987cc4e1",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140238_99184c02-edb1-4053-96e0-2037987cc4e1.glb"
+      },
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      },
+      "notes": "rigged on the Wren base model; retargeted onto the game skeleton by the asset build"
+    },
+    {
+      "id": "wren_cheer",
+      "name": "Wren_Cheer",
+      "kind": "clip",
+      "character": "Wren",
+      "clip": "Cheer",
+      "source": {
+        "tool": "higgsfield",
+        "model": "3d_rigging",
+        "animation_action_id": 298,
+        "action": "Cheer_with_Both_Hands_Up",
+        "job": "08af51ee-e53d-404d-94d5-c75e3d7fa965",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_140241_08af51ee-e53d-404d-94d5-c75e3d7fa965.glb"
+      },
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      },
+      "notes": "rigged on the Wren base model; retargeted onto the game skeleton by the asset build"
+    },
+    {
+      "id": "kitchen_fridge_01",
+      "name": "Fridge",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/parts.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "parametric assembly: shell, 2 hinged doors (left hinge, 105 deg, 0.6 s), glass shelves, crisper, door shelf, interior light; 6 shelf + 2 door + 2 freezer slots",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen_counterN",
+      "name": "North counter run",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/parts.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "drawers | cupboard | sink | cupboard | drawers; marble top with sink cut-out; hinged doors, sliding drawer, slots",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen_counterE",
+      "name": "East counter run",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/parts.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "cupboard | oven | drawers; oven door hinged at the bottom, knob toggle, tray slot, glow",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen_sink",
+      "name": "Sink + faucet",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/parts.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "steel basin, brass spout, lever handle (90 deg), water stream shader, splash particles, basin slot that fills containers",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen_upper",
+      "name": "Upper cupboards",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/parts.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "4 glass-front cupboards, hinged, 2 slots each",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen_door_01",
+      "name": "Kitchen door",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/parts.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "hinged door with a collider that is only active while shut",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "house_shell_floor1",
+      "name": "Floor 1 shell",
+      "kind": "assembly",
+      "room": "house",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/kit.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "foyer + kitchen walls with door and window openings, honey-wood frames, beams, ceiling, window backdrops",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen_spoon",
+      "name": "Wooden spoon",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/parts.js"
+      },
+      "materials": "generated textures (T_*)",
+      "description": "simple parametric spoon used for stirring",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    }
+  ]
+}

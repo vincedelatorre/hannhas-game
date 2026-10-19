@@ -47,6 +47,11 @@ const PROPS = {
 const CHAR_TRIS = 60000, CHAR_TEX = 2048;
 const TEXTURES = ['T_Sand_Dry', 'T_Sand_Wet', 'T_JungleFloor', 'T_Rock_Coastal', 'T_TidePool_Floor', 'T_Bamboo_Woven', 'T_Thatch'];
 
+// house assets come from Design/House/asset-manifest.json (budgets per asset)
+const houseManifest = (() => { const f = path.join(path.dirname(new URL(import.meta.url).pathname), '..', '..', 'Design', 'House', 'asset-manifest.json'); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : { assets: [] }; })();
+for (const a of houseManifest.assets) if (a.kind === 'model' && a.source?.url) PROPS[a.name] = { tris: a.budget?.tris || 8000, tex: a.budget?.tex || 1024 };
+const HOUSE_TEXTURES = houseManifest.assets.filter(a => a.kind === 'texture' && a.source?.url);
+
 const find = (...cands) => cands.map(c => path.join(SRC, c)).find(p => fs.existsSync(p));
 const triCount = doc => doc.getRoot().listMeshes().reduce((n, m) => n + m.listPrimitives().reduce((k, p) => k + (p.getIndices() ? p.getIndices().getCount() : p.getAttribute('POSITION').getCount()) / 3, 0), 0);
 const kb = f => `${(fs.statSync(f).size / 1024).toFixed(0)} KB`;
@@ -215,6 +220,15 @@ function retarget(doc, A) {
   }
   // give the clip's bones the base rig's rest pose so the file is self-consistent
   for (const j of doc.getRoot().listSkins()[0].listJoints()) { const n = j.getName(); if (A.R[n]) { j.setRotation(A.R[n]); j.setTranslation(A.T[n]); } }
+}
+
+// house textures: keep the aspect ratio, cap the long side at the manifest's max_size
+for (const t of HOUSE_TEXTURES) {
+  const src = find(`tex/${t.name}_BaseColor.png`); if (!src) { console.warn('missing house texture', t.name); continue; }
+  const out = path.join(OUT, 'textures', `${t.name}.webp`);
+  await sharp(src).resize(t.max_size || 1024, t.max_size || 1024, { fit: 'inside' }).webp({ quality: 82 }).toFile(out);
+  report.textures[t.name] = fs.statSync(out).size;
+  console.log(`  ${t.name}: ${kb(out)}`);
 }
 
 // tileable ground / building textures

@@ -68,6 +68,9 @@ export default {
 
   companion: { start: [3, 6] },
 
+  // the house: the clubhouse's front door on the beach (blockout x, y)
+  house: { door: [0, 16.6] },
+
   // what Wren's friend says. Each key is an event; one line is picked at random.
   // hint_* lines play when nothing has happened for a while and that quest is still open.
   dialogue: {
@@ -82,6 +85,8 @@ export default {
     flowers: ['Flowers! Your love power makes everything bloom.'],
     ready: ['I think the treasure chest just opened. Look for the light on the east cliff!'],
     win: ['We did it! Pearl Cove is the best.'],
+    house: ['Our house! Want to bake cupcakes in the kitchen?', 'Press E to open things. The fridge is full of snacks!'],
+    cupcakes: ['Cupcakes! You are the best baker on the island!'],
     hint_shells: ['I saw a glowing shell down by the water.', 'Shells like the edge of the sand. Keep looking!'],
     hint_slide: ['See the mint ring by the slide tower? Stand in it!'],
     hint_pools: ['The tide pools on the east beach are empty. Use your water power on them!'],

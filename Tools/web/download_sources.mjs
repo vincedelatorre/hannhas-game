@@ -17,6 +17,16 @@ for (const [who, c] of Object.entries(manifest.characters_hires || {}))
   for (const [clip, url] of Object.entries(c.clips)) jobs.push([path.join(out, 'chars', who, `${clip}.glb`), url]);
 for (const t of manifest.materials || []) jobs.push([path.join(out, 'tex', t.name), t.url]);
 for (const a of manifest.audio || []) jobs.push([path.join(out, 'audio', a.name + path.extname(new URL(a.url).pathname)), a.url]);
+// the Enchanted Island House manifest (models, textures, extra character clips)
+const houseFile = path.join(here, '..', '..', 'Design', 'House', 'asset-manifest.json');
+if (fs.existsSync(houseFile)) {
+  for (const a of JSON.parse(fs.readFileSync(houseFile, 'utf8')).assets) {
+    const url = a.source?.url; if (!url) continue;
+    if (a.kind === 'model') jobs.push([path.join(out, 'hires', `${a.name}.glb`), url]);
+    else if (a.kind === 'texture') jobs.push([path.join(out, 'tex', `${a.name}_BaseColor.png`), url]);
+    else if (a.kind === 'clip') jobs.push([path.join(out, 'chars', a.character, `${a.clip}.glb`), url]);
+  }
+}
 
 async function get([dest, url], tries = 3) {
   if (fs.existsSync(dest) && fs.statSync(dest).size > 0) return;
