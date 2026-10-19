@@ -25,6 +25,8 @@ ladder-back chairs). Wide-plank oak floors throughout.
 | Walk-in pantry | **Done** | Sage door with collider, light switch, oak shelves floor to ceiling, 8 jars and 6 cereal boxes to pick up, drawers, toaster that pops, stand mixer |
 | Save and load | **Done** | Mug position, clean plate, moved jar, pantry light, hood light and pendants restored after reload (save key `hg.save.house.v2`) |
 
+| Arched sink niche (rev. 2) | **Done** | West wall: plaster arch with zellige tile, cream cabinets, white stone top; sink moved here; coffee machine and grinder face out; soda fridge (take and drink sodas) and dishwasher below; oak shelves with spices, books, cake stand, herbs |
+
 ### Created this batch
 
 - **Higgsfield images:** 11 kitchen mockups (Option A hero, reverse, isometric, range detail, pantry,
@@ -122,7 +124,7 @@ hand-play check on the live site.
    from the top floor.
 
 <!-- validation:start -->
-Automated check (2026-10-19): 68/68 valid.
+Automated check (2026-10-19): 71/71 valid.
 
 | Asset | Kind | Valid | Notes |
 | --- | --- | --- | --- |
@@ -194,4 +196,7 @@ Automated check (2026-10-19): 68/68 valid.
 | Coffee station | assembly | yes | built in code |
 | Walk-in pantry | assembly | yes | built in code |
 | Arched windows | assembly | yes | built in code |
+| T_Zellige_Tile | texture | yes | 35 KB |
+| Arched sink niche | assembly | yes | built in code |
+| Soda fridge | assembly | yes | built in code |
 <!-- validation:end -->
