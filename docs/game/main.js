@@ -18,6 +18,7 @@ import { buildGrass, buildBeachDetail } from './grass.js';
 import { H, G, V } from './world.js';
 import { Underwater, causticStrength } from './underwater.js';
 import { Blooms, clock as bloomClock } from './flowers.js';
+import { Dolphins, Parrots } from './wildlife.js';
 window.__H = H;
 
 const $ = id => document.getElementById(id);
@@ -46,7 +47,7 @@ async function boot() {
   const A = game.assets = new Assets('assets/');
   A.onProgress = (k, name) => { $('load-fill').style.width = `${Math.round(k * 100)}%`; $('load-label').textContent = `Loading the cove… ${Math.round(k * 100)}%`; };
   const models = ['SM_PearlCove_Clubhouse', 'SM_PalmTree', 'SM_PalmTree_LOD', 'SM_Hibiscus', 'SM_Boulder_Mossy', 'SM_Shells_Cluster', 'SM_PalmSwing', 'SM_TikiTorch', 'SM_Driftwood', 'SM_TreasureChest', 'SM_Clam_Pearl', 'Wren', 'Boy'];
-  const optional = ['SM_Coral_Cluster', 'SM_SeaGrass_Rock', 'SM_SeaTurtle', 'SM_ReefFish'];   // reef models (procedural stand-ins if missing)
+  const optional = ['SM_Coral_Cluster', 'SM_SeaGrass_Rock', 'SM_SeaTurtle', 'SM_ReefFish', 'SM_Dolphin', 'SM_Macaw'];   // reef models (procedural stand-ins if missing)
   const textures = ['T_Sand_Dry', 'T_Sand_Wet', 'T_JungleFloor', 'T_Rock_Coastal', 'T_Bamboo_Woven', 'T_Thatch'];
   const wrenClips = ['Walk', 'Skip', 'Run', 'Sprint', 'Jump', 'Backflip', 'WaterCast', 'LoveHeart', 'SwimIdle', 'Swim', 'Sit'];
   const boyClips = ['Walk', 'Run', 'Jump', 'Backflip', 'Wave', 'SwimIdle', 'Swim', 'Sit'];
@@ -103,6 +104,8 @@ async function boot() {
   game.decals = new Decals(scene);
   game.under = new Underwater(scene, zone, A, Q, game.fxGlow);
   game.blooms = new Blooms(scene);
+  game.dolphins = new Dolphins(scene, A, game.fxWater, { level: zone.seaLevel });
+  game.parrots = new Parrots(scene, A, zone);
   game.creatures = new Creatures(scene, zone);
   game.quests = new Quests(game, zone);
   game.powers = new Powers(game);
@@ -332,6 +335,7 @@ function tick(dt) {
   game.decals.update(dt);
   game.physics.step(dt);
   game.creatures.update(dt, t, P.pos);
+  game.dolphins.update(dt); game.parrots.update(dt, t);
   game.water.update(dt, t);
   causticStrength.value = THREE.MathUtils.smoothstep(game.sky.elevation, -4, 20);
   for (const fx of [game.fxWater, game.fxGlow, game.fxHeart, game.fxFoam]) fx.update(dt);

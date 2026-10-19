@@ -163,6 +163,18 @@
       "job": "74afca2b-d1f1-4fcd-a65b-c6117a75b187",
       "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_030237_74afca2b-d1f1-4fcd-a65b-c6117a75b187.glb",
       "note": "Meshy image-to-3D, low poly yellow reef fish"
+    },
+    {
+      "name": "SM_Dolphin.glb",
+      "job": "b7a3f45f-0bc6-45bc-95d4-036e3cdd0383",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_040617_b7a3f45f-0bc6-45bc-95d4-036e3cdd0383.glb",
+      "note": "Meshy image-to-3D, PBR, bottlenose dolphin"
+    },
+    {
+      "name": "SM_Macaw.glb",
+      "job": "8ade8ea0-f28e-4f42-b85e-342cde1ff96f",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_040620_8ade8ea0-f28e-4f42-b85e-342cde1ff96f.glb",
+      "note": "Meshy image-to-3D, PBR, scarlet macaw in flight"
     }
   ],
   "materials": [

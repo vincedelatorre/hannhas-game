@@ -41,6 +41,8 @@ const PROPS = {
   SM_SeaGrass_Rock:       { tris: 16000,  tex: 1024 },
   SM_SeaTurtle:           { tris: 14000,  tex: 1024 },
   SM_ReefFish:            { tris: 1500,   tex: 512 },
+  SM_Dolphin:             { tris: 8000,   tex: 1024 },
+  SM_Macaw:               { tris: 8000,   tex: 1024 },
 };
 const CHAR_TRIS = 60000, CHAR_TEX = 2048;
 const TEXTURES = ['T_Sand_Dry', 'T_Sand_Wet', 'T_JungleFloor', 'T_Rock_Coastal', 'T_TidePool_Floor', 'T_Bamboo_Woven', 'T_Thatch'];
