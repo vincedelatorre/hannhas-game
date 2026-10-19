@@ -169,6 +169,196 @@
         1.317
       ],
       "bytes": 539620
+    },
+    "SM_Kitchen_Cupcake": {
+      "tris_before": 3758,
+      "tris": 3758,
+      "size": [
+        0.727,
+        1,
+        0.724
+      ],
+      "bytes": 125592
+    },
+    "SM_Kitchen_MilkBottle": {
+      "tris_before": 2728,
+      "tris": 2728,
+      "size": [
+        0.419,
+        1,
+        0.406
+      ],
+      "bytes": 63060
+    },
+    "SM_Kitchen_JuiceJug": {
+      "tris_before": 2880,
+      "tris": 2880,
+      "size": [
+        0.623,
+        1,
+        0.709
+      ],
+      "bytes": 68740
+    },
+    "SM_Kitchen_Apple": {
+      "tris_before": 1852,
+      "tris": 1852,
+      "size": [
+        0.78,
+        1,
+        0.783
+      ],
+      "bytes": 37048
+    },
+    "SM_Kitchen_Cheese": {
+      "tris_before": 1863,
+      "tris": 1863,
+      "size": [
+        0.608,
+        0.694,
+        1
+      ],
+      "bytes": 38216
+    },
+    "SM_Kitchen_Strawberries": {
+      "tris_before": 3832,
+      "tris": 3832,
+      "size": [
+        0.928,
+        1,
+        0.914
+      ],
+      "bytes": 111056
+    },
+    "SM_Kitchen_Mug": {
+      "tris_before": 2923,
+      "tris": 2923,
+      "size": [
+        0.751,
+        0.883,
+        1
+      ],
+      "bytes": 62788
+    },
+    "SM_Kitchen_MixingBowl": {
+      "tris_before": 2870,
+      "tris": 2870,
+      "size": [
+        1,
+        0.577,
+        1
+      ],
+      "bytes": 50624
+    },
+    "SM_Kitchen_CookieJar": {
+      "tris_before": 3792,
+      "tris": 3792,
+      "size": [
+        0.852,
+        1,
+        0.857
+      ],
+      "bytes": 94308
+    },
+    "SM_Kitchen_Teapot": {
+      "tris_before": 3726,
+      "tris": 3726,
+      "size": [
+        0.663,
+        0.825,
+        1
+      ],
+      "bytes": 98744
+    },
+    "SM_Kitchen_FruitBowl": {
+      "tris_before": 5690,
+      "tris": 5690,
+      "size": [
+        0.992,
+        1,
+        0.993
+      ],
+      "bytes": 122296
+    },
+    "SM_Kitchen_FlourSack": {
+      "tris_before": 2838,
+      "tris": 2838,
+      "size": [
+        0.739,
+        1,
+        0.81
+      ],
+      "bytes": 65828
+    },
+    "SM_House_Table": {
+      "tris_before": 11908,
+      "tris": 11908,
+      "size": [
+        0.997,
+        0.786,
+        1
+      ],
+      "bytes": 208616
+    },
+    "SM_House_Chair": {
+      "tris_before": 9714,
+      "tris": 9714,
+      "size": [
+        0.568,
+        1,
+        0.557
+      ],
+      "bytes": 228996
+    },
+    "SM_House_Monstera": {
+      "tris_before": 19824,
+      "tris": 15997,
+      "size": [
+        0.889,
+        1,
+        0.916
+      ],
+      "bytes": 263968
+    },
+    "SM_House_PendantLamp": {
+      "tris_before": 7354,
+      "tris": 7354,
+      "size": [
+        0.964,
+        1,
+        0.815
+      ],
+      "bytes": 242668
+    },
+    "SM_Kitchen_CopperPots": {
+      "tris_before": 11724,
+      "tris": 10000,
+      "size": [
+        0.751,
+        0.86,
+        1
+      ],
+      "bytes": 207936
+    },
+    "SM_House_BarStool": {
+      "tris_before": 7723,
+      "tris": 7723,
+      "size": [
+        0.641,
+        1,
+        0.643
+      ],
+      "bytes": 215928
+    },
+    "SM_Kitchen_Pantry": {
+      "tris_before": 13390,
+      "tris": 13390,
+      "size": [
+        0.386,
+        1,
+        0.71
+      ],
+      "bytes": 301376
     }
   },
   "characters": {
@@ -179,8 +369,11 @@
       "clips": [
         "Idle",
         "Backflip",
+        "Cheer",
         "Jump",
         "LoveHeart",
+        "OpenDoor",
+        "PickUp",
         "Run",
         "Sit",
         "Skip",
@@ -209,6 +402,16 @@
     }
   },
   "textures": {
+    "T_Kitchen_Floor": 126112,
+    "T_Wall_Plaster": 136454,
+    "T_Cabinet_Turquoise": 152252,
+    "T_Countertop_Marble": 101346,
+    "T_Honey_Wood": 154038,
+    "T_Backsplash": 85304,
+    "T_Window_View": 410108,
+    "T_Art_Fruit": 173216,
+    "T_Art_Turtle": 88066,
+    "T_Rug_Tropical": 269082,
     "T_Sand_Dry": 401198,
     "T_Sand_Wet": 352276,
     "T_JungleFloor": 421936,
