@@ -109,6 +109,46 @@
         0.79
       ],
       "bytes": 258348
+    },
+    "SM_Coral_Cluster": {
+      "tris_before": 61918,
+      "tris": 56708,
+      "size": [
+        1.896,
+        1.486,
+        1.641
+      ],
+      "bytes": 1991664
+    },
+    "SM_SeaGrass_Rock": {
+      "tris_before": 39613,
+      "tris": 38596,
+      "size": [
+        1.68,
+        1.478,
+        1.895
+      ],
+      "bytes": 1552692
+    },
+    "SM_SeaTurtle": {
+      "tris_before": 31219,
+      "tris": 14835,
+      "size": [
+        1.897,
+        0.446,
+        1.603
+      ],
+      "bytes": 705480
+    },
+    "SM_ReefFish": {
+      "tris_before": 3095,
+      "tris": 2779,
+      "size": [
+        0.701,
+        1.277,
+        1.893
+      ],
+      "bytes": 99312
     }
   },
   "characters": {
