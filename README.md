@@ -60,3 +60,7 @@ Then in Unreal 5.8 (Third Person template, C++):
 
 Blockout frame: metres, +X east, +Y inland (jungle), -Y out to sea, Z up.
 Unreal: centimetres, and Y is flipped (`UE = (x*100, -y*100, z*100)`); the build script does this for you.
+
+## The Enchanted Island House
+
+Walk up to the clubhouse door on the beach and press **E** to go inside. Docs, art bible, asset manifest and production status live in `Design/House/`; code in `docs/game/house/`. `node Tools/house/house_assets.mjs report` validates every house asset.

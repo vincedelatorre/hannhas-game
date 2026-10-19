@@ -36,7 +36,8 @@ from several angles and fix what looks wrong before telling me it's done.
 | 7 Companion | Started | Follows with physics, catches up, waves, cheers, swims, talks in speech bubbles (event lines and hints from the zone's dialogue data). Not yet: navmesh, commands, co-op |
 | 8 Life | Started | Seagull, crabs, butterflies, four schools of reef fish (boids that scatter from swimmers, one species from a generated model), a sea turtle, a pod of leaping dolphins with splashes, scarlet macaws circling over the jungle (all generated models). Not yet: hermit crabs, jumping fish, night creatures |
 | 10 UI | Started | Photo mode (P): free camera, five filters, saves a picture. Dialogue lines and quest data in the zone file, bonus sea turtle quest. Progress saves in the browser, with a "Start the island again" button. Not yet: journal |
-| 9, 12, 13 | Not started | Clubhouse interior, world streaming, zone 2, polish passes |
+| 9 House | Started | Enchanted Island House (inside the clubhouse): floor 1 foyer + fully working kitchen (fridge, cupboards, drawers, sink and tap water, oven, cupcake recipe, mug filling, chairs to sit on, 19 Higgsfield models, 10 textures), reusable interaction system, house save. See Design/House/. Not yet: floors 2-3, living room, bathroom, bedrooms, theatre, telescope |
+| 12, 13 | Not started | World streaming, zone 2, polish passes |
 | 11 Audio | Started | Generated recorded-style ambience, music, footsteps, splashes, powers, pickups |
 
 ## Phase 1 — Foundations

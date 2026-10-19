@@ -16,7 +16,7 @@ import * as THREE from 'three/webgpu';
 import { texture, uv, vec3, float, time, sin, mix, color } from 'three/tsl';
 import { Builder, makeMaterials, C } from './kit.js';
 import { buildFridge, buildCounterRun, buildUpperCabinets, buildDoor } from './parts.js';
-import { InteractionSystem, Interactable, Item, Slot, CLIP_RANGES } from './interact.js';
+import { InteractionSystem, Interactable, Item, Slot, Seat, CLIP_RANGES } from './interact.js';
 import { extractMesh } from '../assets.js';
 import { toNodeMaterial } from '../dressing.js';
 import { V, H } from '../world.js';
@@ -80,9 +80,12 @@ export class House {
     b.ceiling(3, -1, 11, 6, 3.2, M.plaster);
     const W = (x0, z0, x1, z1, openings, mat = M.plaster) => b.wall(x0, z0, x1, z1, { mat, openings });
     // foyer
-    W(-3, 6, 3, 6, [{ at: 3, w: 1.2, h: 2.35 }, { at: 1.0, w: 0.9, h: 1.25, y0: 1.0 }, { at: 5.0, w: 0.9, h: 1.25, y0: 1.0 }], M.wood);   // south, front door
-    W(-3, 0, -3, 6, [{ at: 3, w: 1.1, h: 2.25 }], M.wood);        // west (living room: next milestone)
-    W(-3, 0, 3, 0, [], M.wood);                                  // north (stairs)
+    W(-3, 6, 3, 6, [{ at: 3, w: 1.2, h: 2.35 }, { at: 1.0, w: 0.9, h: 1.25, y0: 1.0 }, { at: 5.0, w: 0.9, h: 1.25, y0: 1.0 }]);   // south, front door
+    W(-3, 0, -3, 6, [{ at: 3, w: 1.1, h: 2.25 }]);        // west (living room: next milestone)
+    W(-3, 0, 3, 0, []);                                  // north (stairs)
+    // honey-wood wainscoting around the foyer
+    const wains = [[-1.825, 5.86, 2.35, 0.03], [1.825, 5.86, 2.35, 0.03], [0, 0.14, 6, 0.03], [-2.86, 1.2, 0.03, 2.4], [-2.86, 4.8, 0.03, 2.4], [2.86, 1.42, 0.03, 2.84], [2.86, 4.97, 0.03, 2.06]];
+    for (const [x, z, w, d] of wains) b.box(M.wood, [x, 0.5, z], [w, 1.0, d], { collide: false, cast: false });
     W(3, 0, 3, 6, [{ at: 3.4, w: 1.05, h: 2.25 }]);              // shared with kitchen
     // kitchen
     W(3, -1, 11, -1, [{ at: 4.31, w: 1.2, h: 1.0, y0: 1.25 }]);   // north, window over the sink
@@ -133,8 +136,10 @@ export class House {
     { const c = new THREE.Mesh(); c.position.set(7.4, 0.38, 3.3); R.add(c); b.solid(c, 1.0, 0.76, 1.0); }
     this.chairs = [];
     for (const [x, z, ry] of [[6.45, 3.3, Math.PI / 2], [8.35, 3.3, -Math.PI / 2], [7.4, 4.3, Math.PI]]) {
-      const ch = place('SM_House_Chair', 0.98, x, z, ry, 0, simple(new THREE.BoxGeometry(0.45, 0.98, 0.45), C.honey));
+      const ch = place('SM_House_Chair', 0.98, x, z, ry + Math.PI, 0,   // the generated chair faces -z
+        simple(new THREE.BoxGeometry(0.45, 0.98, 0.45), C.honey));
       this.chairs.push(ch);
+      sys.add(new Seat({ id: `kitchen_chair_${this.chairs.length}`, name: 'chair', object: ch, anchor: [0, 0.5, 0], seatY: 0.4, facing: ry, back: -0.72, radius: 1.6 }));
       const c = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.9, 0.42)); c.position.set(x, 0.45, z); c.visible = false; R.add(c); b.solid(c, 0.42, 0.9, 0.42);
     }
     const plant = place('SM_House_Monstera', 1.35, 10.35, 5.35, 0.6, 0, cyl(0.3, 1.2, 0x2f7d32));

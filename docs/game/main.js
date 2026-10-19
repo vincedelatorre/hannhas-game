@@ -308,7 +308,8 @@ function tick(dt) {
   game._rideCool = (game._rideCool || 0) - dt;
 
   if (game.started) {
-    if (game.ride.riding) rideStep(dt);
+    if (game.seated) seatStep(dt);
+    else if (game.ride.riding) rideStep(dt);
     else if (game.sliding >= 0) slideStep(dt);
     else if (game.onSwing) swingStep(dt, t);
     else {
@@ -389,6 +390,17 @@ function swingStep(dt, t) {
     game.input.jumpPressed = false; game.onSwing = null; game.wren.sitting = false; game.wren.root.rotation.set(0, 0, 0);
     P.body.teleport(sw.x, sw.y, sw.z + 1.2); P.vy = 5;
   }
+}
+
+// ------------------------------------------------------------------ sitting on chairs and stools
+function seatStep(dt) {
+  const S = game.seated, I = game.input;
+  S.t += dt;
+  const p = S.seat.seatPose();
+  game.wren.root.position.lerp(p, Math.min(1, dt * 10));
+  game.wren.root.rotation.set(0, S.seat.facing, 0); game.player.face = S.seat.facing;
+  game.wren.sitting = true; game.wren.update(dt, 0);
+  if (S.t > 0.5 && (Math.abs(I.x) > 0.3 || Math.abs(I.y) > 0.3 || I.jumpPressed)) { I.jumpPressed = false; game.interact.stand(); }
 }
 
 // ------------------------------------------------------------------ the big slide (first person)

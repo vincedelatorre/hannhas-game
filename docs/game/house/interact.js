@@ -105,6 +105,14 @@ export class Toggle extends Interactable {
   load(s) { if (s === 'on') this.set(true, null); }
 }
 
+// ------------------------------------------------------------------ seats (chairs, stools, sofa)
+export class Seat extends Interactable {
+  /** object: the chair; seatY: seat height; facing: yaw (radians) a seated person faces */
+  constructor(opts) { super({ ...opts, save: false }); this.seatY = opts.seatY ?? 0.46; this.facing = opts.facing ?? 0; this.back = opts.back ?? 0.05; }
+  verb(sys) { return sys.game.seated ? null : { label: `Sit on the ${this.name}`, run: () => sys.sit(this) }; }
+  seatPose() { this.object.updateWorldMatrix(true, false); const p = new THREE.Vector3().setFromMatrixPosition(this.object.matrixWorld); p.y += this.seatY - 0.42; p.x -= Math.sin(this.facing) * this.back; p.z -= Math.cos(this.facing) * this.back; return p; }
+}
+
 // ------------------------------------------------------------------ slots (where things go)
 export class Slot {
   /** parent: Object3D the item sits on (moves with drawers/doors); pos: local position */
@@ -203,6 +211,19 @@ export class InteractionSystem {
     this.sfx('place');
   }
 
+  /** sit down on a seat; any move key or E stands up again */
+  sit(seat) {
+    const g = this.game; g.seated = { seat, t: 0 };
+    g.wren.sitting = true; this.sfx('place');
+  }
+  stand() {
+    const g = this.game, s = g.seated; if (!s) return;
+    g.seated = null; g.wren.sitting = false;
+    const p = s.seat.seatPose(); const f = s.seat.facing;
+    g.player.body.teleport(p.x + Math.sin(f) * 0.55, p.y - (s.seat.seatY - 0.42) - 0.42 + 0.05, p.z + Math.cos(f) * 0.55);
+    g.player.face = f; g.wren.root.rotation.set(0, f, 0);
+  }
+
   /** Q: put the held item in the closest free slot that takes it */
   drop() {
     const item = this.held; if (!item) return false;
@@ -244,17 +265,17 @@ export class InteractionSystem {
       const to = anchor.clone().sub(chest); to.y = 0; const len = to.length() || 1e-3; to.divideScalar(len);
       const ang = Math.acos(THREE.MathUtils.clamp(Math.max(to.dot(fwd), to.dot(camFwd) * 0.9), -1, 1));
       if (ang > 1.35 && len > 0.6) return;
-      const score = d + ang * 0.9 - bonus;
+      const score = d * 0.7 + ang * 1.6 - bonus;   // what's straight in front matters most
       if (score < bs) { const v = verbFn(); if (v) { bs = score; best = { ...v, anchor }; } }
     };
     for (const x of this.list) {
       if (x === this.held) continue;
-      consider(x.anchor(new THREE.Vector3()), x.radius, () => x.verb(this), x instanceof Item ? 0.35 : 0);
+      consider(x.anchor(new THREE.Vector3()), x.radius, () => x.verb(this), x instanceof Item ? 0.15 : 0);
     }
     if (this.held) {
       for (const s of this.slots.values()) {
         if (s.item || !s.enabled() || !s.accepts(this.held)) continue;
-        consider(s.world(new THREE.Vector3()), s.radius, () => ({ label: `Put ${this.held.name} ${s.name}`, clip: 'PickUp', run: () => this.putIn(s) }), 0.7);
+        consider(s.world(new THREE.Vector3()), s.radius, () => ({ label: `Put ${this.held.name} ${s.name}`, clip: 'PickUp', run: () => this.putIn(s) }), 0.5);
       }
       if (!best && this.held.useVerb) { const u = this.held.useVerb(this, this.held); if (u) best = { ...u, anchor: this.handPos() }; }
     }
@@ -279,6 +300,7 @@ export class InteractionSystem {
 
   /** E / Use button */
   use() {
+    if (this.game.seated) { this.stand(); return true; }
     if (this.cool > 0 || !this.enabled) return false;
     const v = this.best; if (!v) return false;
     this.cool = 0.3;

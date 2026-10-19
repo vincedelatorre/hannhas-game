@@ -26,7 +26,8 @@ export function makeMaterials(T) {
   const std = (opts, colorNode) => { const m = new THREE.MeshStandardNodeMaterial(opts); if (colorNode) m.colorNode = colorNode; return m; };
   M.floor = std({ roughness: 0.32 }, T.T_Kitchen_Floor ? worldTiled(T.T_Kitchen_Floor, 0.55) : color(C.coral));
   M.wood = std({ roughness: 0.45 }, T.T_Honey_Wood ? worldTiled(T.T_Honey_Wood, 0.6, 0.95) : color(C.honey));
-  M.plaster = std({ roughness: 0.85 }, T.T_Wall_Plaster ? worldTiled(T.T_Wall_Plaster, 0.42, 0.95) : color(C.cream));
+  // the generated stencil is bold: smaller repeat, blended toward cream so it reads as a subtle pattern
+  M.plaster = std({ roughness: 0.85 }, T.T_Wall_Plaster ? mix(worldTiled(T.T_Wall_Plaster, 0.95), color(C.cream), float(0.55)) : color(C.cream));
   M.cabinet = std({ roughness: 0.5 }, T.T_Cabinet_Turquoise ? worldTiled(T.T_Cabinet_Turquoise, 1.1) : color(C.turquoise));
   M.marble = std({ roughness: 0.18 }, T.T_Countertop_Marble ? worldTiled(T.T_Countertop_Marble, 0.7) : color(C.cream));
   M.backsplash = std({ roughness: 0.25 }, T.T_Backsplash ? worldTiled(T.T_Backsplash, 1.4) : color(C.sun));
