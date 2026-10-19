@@ -1,0 +1,154 @@
+{
+  "models": {
+    "SM_PearlCove_Clubhouse": {
+      "tris_before": 787621,
+      "tris": 219998,
+      "size": [
+        0.954,
+        0.664,
+        0.98
+      ],
+      "bytes": 3509552
+    },
+    "SM_PalmTree": {
+      "tris_before": 284162,
+      "tris": 31996,
+      "size": [
+        0.473,
+        0.979,
+        0.539
+      ],
+      "bytes": 790856
+    },
+    "SM_PalmTree_LOD": {
+      "tris_before": 284162,
+      "tris": 6242,
+      "size": [
+        0.47,
+        0.971,
+        0.532
+      ],
+      "bytes": 249612
+    },
+    "SM_Hibiscus": {
+      "tris_before": 192272,
+      "tris": 25967,
+      "size": [
+        0.963,
+        0.976,
+        0.963
+      ],
+      "bytes": 647452
+    },
+    "SM_Boulder_Mossy": {
+      "tris_before": 470558,
+      "tris": 21996,
+      "size": [
+        0.979,
+        0.655,
+        0.98
+      ],
+      "bytes": 881412
+    },
+    "SM_Shells_Cluster": {
+      "tris_before": 145551,
+      "tris": 22515,
+      "size": [
+        0.978,
+        0.352,
+        0.979
+      ],
+      "bytes": 652996
+    },
+    "SM_PalmSwing": {
+      "tris_before": 194840,
+      "tris": 33998,
+      "size": [
+        0.285,
+        0.981,
+        0.843
+      ],
+      "bytes": 872136
+    },
+    "SM_TikiTorch": {
+      "tris_before": 97238,
+      "tris": 9192,
+      "size": [
+        0.151,
+        0.982,
+        0.143
+      ],
+      "bytes": 512192
+    },
+    "SM_Driftwood": {
+      "tris_before": 292244,
+      "tris": 16000,
+      "size": [
+        0.41,
+        0.229,
+        0.977
+      ],
+      "bytes": 658648
+    },
+    "SM_TreasureChest": {
+      "tris_before": 142641,
+      "tris": 29987,
+      "size": [
+        0.651,
+        0.75,
+        0.979
+      ],
+      "bytes": 946084
+    },
+    "SM_Clam_Pearl": {
+      "tris_before": 98761,
+      "tris": 13999,
+      "size": [
+        0.903,
+        0.981,
+        0.79
+      ],
+      "bytes": 287448
+    }
+  },
+  "characters": {
+    "Wren": {
+      "tris_before": 193935,
+      "tris": 60000,
+      "bytes": 3440552,
+      "clips": [
+        "Idle",
+        "Backflip",
+        "Jump",
+        "LoveHeart",
+        "Run",
+        "Skip",
+        "Sprint",
+        "Walk",
+        "WaterCast"
+      ]
+    },
+    "Boy": {
+      "tris_before": 196563,
+      "tris": 60000,
+      "bytes": 3098696,
+      "clips": [
+        "Idle",
+        "Backflip",
+        "Jump",
+        "Run",
+        "Walk",
+        "Wave"
+      ]
+    }
+  },
+  "textures": {
+    "T_Sand_Dry": 401198,
+    "T_Sand_Wet": 352276,
+    "T_JungleFloor": 421936,
+    "T_Rock_Coastal": 499990,
+    "T_TidePool_Floor": 413000,
+    "T_Bamboo_Woven": 159632,
+    "T_Thatch": 281394
+  }
+}
