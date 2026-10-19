@@ -22,7 +22,7 @@ export const KITCHEN = { x0: 3, x1: 12.5, z0: -3, z1: 6, ceil: 3.8 };
 export function buildShell(H) {
   const b = H.b, M = H.M, R = H.root;
   // ---- foyer (x -3..3, z 0..6), unchanged
-  b.floor(-3, 0, 3, 6, M.wood);
+  b.floor(-3, 0, 3, 6, M.oakFloor);
   b.ceiling(-3, 0, 3, 6, 3.2, M.plaster);
   const W = (x0, z0, x1, z1, openings) => b.wall(x0, z0, x1, z1, { mat: M.plaster, openings });
   W(-3, 6, 3, 6, [{ at: 3, w: 1.2, h: 2.35 }, { at: 1.0, w: 0.9, h: 1.25, y0: 1.0 }, { at: 5.0, w: 0.9, h: 1.25, y0: 1.0 }]);

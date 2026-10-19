@@ -1683,6 +1683,26 @@
         "production": "built",
         "validation": "pending"
       }
+    },
+    {
+      "id": "t_hickory_floor",
+      "name": "T_Hickory_Floor",
+      "kind": "texture",
+      "room": "house",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "97174bae-cf4e-47b9-b646-4fc45004caed",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_182353_97174bae-cf4e-47b9-b646-4fc45004caed.png"
+      },
+      "prompt": "hand-scraped hickory random-width planks, warm medium brown (matches the family reference photo)",
+      "use": "floor 1: foyer, kitchen, pantry",
+      "tileable": true,
+      "max_size": 1024,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
     }
   ]
 }

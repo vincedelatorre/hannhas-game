@@ -27,7 +27,7 @@ export const HOUSE_MODELS = ['SM_Kitchen_Cupcake', 'SM_Kitchen_MilkBottle', 'SM_
   'SM_House_Monstera', 'SM_Kitchen_CopperPots',
   'SM_Kitchen_EspressoMachine', 'SM_Kitchen_Grinder', 'SM_Kitchen_Skillet', 'SM_Kitchen_DutchOven', 'SM_Kitchen_Herbs', 'SM_Kitchen_StandMixer'];
 export const HOUSE_TEXTURES = ['T_Wall_Plaster', 'T_Cabinet_Turquoise', 'T_Honey_Wood', 'T_Window_View', 'T_Art_Fruit', 'T_Art_Turtle',
-  'T_Oak_Floor', 'T_Sage_Cabinet', 'T_Limestone_Tile', 'T_Soapstone', 'T_Limewash', 'T_Aged_Copper', 'T_White_Oak', 'T_Cereal_Boxes', 'T_Cookbook', 'T_Countertop_Marble', 'T_Zellige_Tile'];
+  'T_Oak_Floor', 'T_Sage_Cabinet', 'T_Limestone_Tile', 'T_Soapstone', 'T_Limewash', 'T_Aged_Copper', 'T_White_Oak', 'T_Cereal_Boxes', 'T_Cookbook', 'T_Countertop_Marble', 'T_Zellige_Tile', 'T_Hickory_Floor'];
 
 export class House {
   constructor(game, scene, A, physics) {
