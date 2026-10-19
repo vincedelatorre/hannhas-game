@@ -428,7 +428,7 @@ export function buildHood(b, M, sys, { id, at, w = 1.5, d = 0.62, bottom = 1.62,
 }
 
 // ------------------------------------------------------------------ built-in column fridge / freezer
-export function buildColumn(b, M, sys, { id, name, at, rotY = 0, w = 0.9, d = 0.72, h = 2.15, hingeRight = false, freezer = false, game }) {
+export function buildColumn(b, M, sys, { id, name, at, rotY = 0, w = 0.9, d = 0.72, h = 2.15, hingeRight = false, freezer = false, openAngle = 110, game }) {
   const root = new THREE.Group(); root.position.copy(at); root.rotation.y = rotY; b.root.add(root);
   const t = 0.04;
   // case (hidden behind the sage panels) and the bright interior
@@ -459,7 +459,7 @@ export function buildColumn(b, M, sys, { id, name, at, rotY = 0, w = 0.9, d = 0.
     b.box(M.clearGlass, [sgn * w / 2, y, -0.075], [w - 0.18, 0.012, 0.1], { parent: hinge, collide: false, cast: false });
     b.box(M.clearGlass, [sgn * w / 2, y + 0.05, -0.125], [w - 0.18, 0.1, 0.008], { parent: hinge, collide: false, cast: false });
   }
-  const door = sys.add(new Hinge({ id: `${id}.door`, name, object: hinge, anchor: [sgn * w * 0.8, 1.1, 0.12], pivot: hinge, axis: 'y', angle: sgn * -110, duration: 0.65, sound: 'fridge', radius: 2.0,
+  const door = sys.add(new Hinge({ id: `${id}.door`, name, object: hinge, anchor: [sgn * w * 0.8, 1.1, 0.12], pivot: hinge, axis: 'y', angle: sgn * -openAngle, duration: 0.65, sound: 'fridge', radius: 2.0,
     onChange: open => { lamp.visible = open; light.intensity = open ? 1.8 : 0; } }));
   const open = () => door.openAmount > 0.6;
   const slots = [];

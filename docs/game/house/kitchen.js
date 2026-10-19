@@ -154,10 +154,10 @@ export function buildKitchen(H) {
 
   // ---- east: built-in freezer + fridge columns, coffee station
   // the columns sit 1 m clear of the north corner so the freezer door (hinged on its north
-  // side) can swing past 90 degrees without hitting the range-wall counter; the corner they
+  // side) can swing to 100 degrees without hitting the range-wall counter; the corner they
   // freed holds the Bird of Paradise
   const zF = -1.4, zR = -0.5;                    // freezer z -1.85..-0.95, fridge z -0.95..-0.05
-  H.freezer = buildColumn(b, M, sys, { id: 'kitchen_freezer', name: 'freezer', at: L(12.02, 0, zF), rotY: -Math.PI / 2, freezer: true, hingeRight: false, game });
+  H.freezer = buildColumn(b, M, sys, { id: 'kitchen_freezer', name: 'freezer', at: L(12.02, 0, zF), rotY: -Math.PI / 2, freezer: true, hingeRight: false, openAngle: 100, game });
   H.fridge = buildColumn(b, M, sys, { id: 'kitchen_fridge', name: 'fridge', at: L(12.02, 0, zR), rotY: -Math.PI / 2, hingeRight: true, game });
   b.box(M.sage, [12.02, 2.975, (zF + zR) / 2], [0.72, 1.65, 1.8], { collide: false });            // panel above
   for (const z of [-1.875, -0.025]) b.box(M.sage, [12.02, 1.9, z], [0.74, 3.8, 0.05], { collide: false });   // end panels
@@ -447,10 +447,10 @@ function birdOfParadise(H, at, { height = 2.15, seed = 7 } = {}) {
     g.computeVertexNormals(); return g;
   };
   root.leaves = [];
-  const N = 10;
+  const N = 11;
   for (let i = 0; i < N; i++) {
     const a = (i / N) * Math.PI * 2 + rnd() * 0.5, lean = 0.05 + rnd() * 0.1;
-    const stemH = height * (0.38 + rnd() * 0.36), L = 0.5 + rnd() * 0.3, W = 0.15 + rnd() * 0.06;
+    const stemH = height * (0.3 + rnd() * 0.36), L = 0.7 + rnd() * 0.32, W = 0.27 + rnd() * 0.09;
     const g = new THREE.Group(); g.position.set(Math.cos(a) * 0.04, 0.4, Math.sin(a) * 0.04); g.rotation.y = -a + Math.PI / 2; g.rotation.z = 0; root.add(g);
     const tilt = new THREE.Group(); tilt.rotation.x = lean; g.add(tilt);
     const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.014, stemH, 6), stemMat); stem.position.y = stemH / 2; tilt.add(stem);
