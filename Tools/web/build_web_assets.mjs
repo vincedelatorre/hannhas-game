@@ -157,12 +157,28 @@ function retarget(doc, A) {
   const B = restPose(doc);
   const anim = doc.getRoot().listAnimations()[0];
   const chans = anim.listChannels();
-  const times = chans[0].getSampler().getInput().getArray();
+  // channels can have different key counts (end bones often hold just 2 keys), so use the
+  // longest channel's timeline and sample every channel by time
+  const timeCh = chans.reduce((a, c) => c.getSampler().getInput().getCount() > a.getSampler().getInput().getCount() ? c : a);
+  const timeAcc = timeCh.getSampler().getInput();
+  const times = timeAcc.getArray();
   const N = times.length;
   const track = (name, pathName) => chans.find(c => c.getTargetNode().getName() === name && c.getTargetPath() === pathName);
+  const sampleAt = (c, t, size) => {
+    const tin = c.getSampler().getInput().getArray(), out = c.getSampler().getOutput().getArray();
+    const n = Math.min(tin.length, Math.floor(out.length / size));
+    if (n === 0) return null;
+    let i = 0; while (i < n - 1 && tin[i + 1] <= t) i++;
+    const j = Math.min(i + 1, n - 1);
+    const u = j === i || tin[j] === tin[i] ? 0 : Math.min(1, Math.max(0, (t - tin[i]) / (tin[j] - tin[i])));
+    const a = Array.from(out.slice(i * size, i * size + size)), b = Array.from(out.slice(j * size, j * size + size));
+    if (size === 4) { let d = 0; for (let x = 0; x < 4; x++) d += a[x] * b[x]; if (d < 0) b.forEach((v, x) => b[x] = -v); }
+    const r = a.map((v, x) => v + (b[x] - v) * u);
+    return r.every(Number.isFinite) ? (size === 4 ? qnorm(r) : r) : null;
+  };
   const sampleLocal = (k) => {
     const L = {};
-    for (const n of B.names) { const c = track(n, 'rotation'); L[n] = c ? Array.from(c.getSampler().getOutput().getArray().slice(k * 4, k * 4 + 4)) : B.R[n]; }
+    for (const n of B.names) { const c = track(n, 'rotation'); L[n] = (c && sampleAt(c, times[k], 4)) || B.R[n]; }
     return L;
   };
   const outR = Object.fromEntries(A.names.map(n => [n, new Float32Array(N * 4)]));
@@ -173,8 +189,8 @@ function retarget(doc, A) {
     const GB = B.world(sampleLocal(f));
     const GA = {};
     for (const n of A.order) GA[n] = B.GR[n] ? qnorm(qmul(qmul(GB[n], qinv(B.GR[n])), A.GR[n])) : A.GR[n];
-    for (const n of A.order) { const p = A.parent[n]; const L = p ? qnorm(qmul(qinv(GA[p]), GA[n])) : GA[n]; outR[n].set(L, f * 4); }
-    const tb = hipsB ? hipsB.getSampler().getOutput().getArray().slice(f * 3, f * 3 + 3) : B.T.Hips;
+    for (const n of A.order) { const p = A.parent[n]; let L = p ? qnorm(qmul(qinv(GA[p]), GA[n])) : GA[n]; if (!L.every(Number.isFinite)) L = A.R[n]; outR[n].set(L, f * 4); }
+    const tb = (hipsB && sampleAt(hipsB, times[f], 3)) || B.T.Hips;
     for (let i = 0; i < 3; i++) hipsT[f * 3 + i] = A.T.Hips[i] + (tb[i] - B.T.Hips[i]) * k;
   }
   // the game moves the character itself: remove forward/sideways drift (root motion) from the
@@ -187,8 +203,8 @@ function retarget(doc, A) {
   for (const n of A.names) { const a = outR[n]; for (let f = 1; f < N; f++) { let d = 0; for (let i = 0; i < 4; i++) d += a[f * 4 + i] * a[(f - 1) * 4 + i]; if (d < 0) for (let i = 0; i < 4; i++) a[f * 4 + i] *= -1; } }
   for (const c of chans) {
     const n = c.getTargetNode().getName(), p = c.getTargetPath();
-    if (p === 'rotation' && outR[n]) c.getSampler().getOutput().setArray(outR[n]);
-    else if (p === 'translation' && n === 'Hips') c.getSampler().getOutput().setArray(hipsT);
+    if (p === 'rotation' && outR[n]) { c.getSampler().setInput(timeAcc); c.getSampler().getOutput().setArray(outR[n]); }
+    else if (p === 'translation' && n === 'Hips') { c.getSampler().setInput(timeAcc); c.getSampler().getOutput().setArray(hipsT); }
     else { const s = c.getSampler(); c.dispose(); s.dispose(); }
   }
   // give the clip's bones the base rig's rest pose so the file is self-consistent

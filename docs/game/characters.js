@@ -45,6 +45,8 @@ export class Character {
     const all = { Idle: gltf.animations[0], ...clips };
     for (const [n, clip] of Object.entries(all)) {
       if (!clip) continue;
+      sanitizeClip(clip);
+      if (!(clip.duration > 0) || !clip.tracks.length) { console.warn('skipping empty clip', n); continue; }
       const c = (n === 'Jump' || n === 'Backflip') ? flattenHips(clip) : clip;
       c.name = n;
       const a = this.mixer.clipAction(c);
@@ -293,4 +295,15 @@ export class Companion {
     this.vy = flip ? 7.8 : 7.2;
     this.c.play(flip ? 'Backflip' : 'Jump', flip ? { from: 0.58, to: 1.55, timeScale: 1.05 } : { from: 0.5, to: 1.3, timeScale: 1.05 });
   }
+}
+
+/** drop tracks with missing or non-finite keys (a NaN pose locks the mixer and the frame) */
+function sanitizeClip(clip) {
+  clip.tracks = clip.tracks.filter(t => {
+    const ok = t.times.length > 0 && t.values.length >= t.times.length && t.times.every(Number.isFinite) && t.values.every(Number.isFinite);
+    if (!ok) console.warn(`dropped broken track ${clip.name}:${t.name}`);
+    return ok;
+  });
+  clip.resetDuration();
+  return clip;
 }
