@@ -118,7 +118,7 @@ export function createWaterSystem(scene, zone, heightTex, Q) {
       const sceneZ = perspectiveDepthToViewZ(viewportDepthTexture(screenUV), cameraNear, cameraFar);
       thickness = max(positionView.z.sub(sceneZ), float(0));
     } else {
-      thickness = max(lvl.sub(terrainAt(pw, false)), float(0)).mul(1.25);
+      thickness = max(positionWorld.y.sub(terrainAt(pw, false)), float(0)).mul(1.25);
     }
     const thick = thickness;
 

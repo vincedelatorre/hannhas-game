@@ -49,8 +49,11 @@ fs.mkdirSync(path.join(OUT, 'textures'), { recursive: true });
 const report = { models: {}, characters: {}, textures: {} };
 
 async function finish(doc, tex, file) {
+  // colour keeps full size; normal / roughness / occlusion / emissive go one size down
+  const other = Math.max(256, tex / 2);
   await doc.transform(
-    textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [tex, tex], quality: 82 }),
+    textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [tex, tex], quality: 82, slots: /^baseColorTexture$/ }),
+    textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [other, other], quality: 80, slots: /^(?!baseColorTexture$).*/ }),
     reorder({ encoder: MeshoptEncoder }),
     quantize({ quantizePosition: 14, quantizeNormal: 10, quantizeTexcoord: 12 }),
     prune(),

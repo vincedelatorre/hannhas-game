@@ -39,8 +39,8 @@ export function buildTerrain(zone, T, Q) {
       return mix(a.rgb, b.rgb, 0.4);
     };
     // the generated textures are bright; bring them to real-world albedo (sand ~0.45, rock ~0.25)
-    const sand = sample(T.T_Sand_Dry, 0.28).mul(vec3(0.78, 0.72, 0.62));
-    const wet = sample(T.T_Sand_Wet, 0.22).mul(vec3(0.85, 0.8, 0.72));
+    const sand = sample(T.T_Sand_Dry, 0.28).mul(vec3(0.98, 0.9, 0.74));
+    const wet = sample(T.T_Sand_Wet, 0.22).mul(vec3(0.9, 0.82, 0.7));
     const jungle = sample(T.T_JungleFloor, 0.18).mul(vec3(0.85, 0.95, 0.7));
     const rock = sample(T.T_Rock_Coastal, 0.12).mul(vec3(0.55, 0.52, 0.47));
 

@@ -15,7 +15,7 @@ export class Powers {
 
   water(dt = 0) {
     const g = this.g, P = g.player;
-    if (this.waterCd > 0 || g.sliding) return;
+    if (this.waterCd > 0 || g.sliding >= 0) return;
     this.waterCd = 0.07;
     const fwd = new THREE.Vector3(Math.sin(P.face), 0, Math.cos(P.face));
     const o = this.clamPos().addScaledVector(fwd, 0.15);
@@ -34,7 +34,8 @@ export class Powers {
   splash(p, onWater) {
     const g = this.g;
     for (let i = 0; i < 3; i++) g.fxWater.emit(p.clone().add(new THREE.Vector3(0, 0.05, 0)), new THREE.Vector3((Math.random() - 0.5) * 2.2, 1.4 + Math.random() * 1.6, (Math.random() - 0.5) * 2.2), { life: 0.45, size: 0.07, color: [0.9, 0.98, 1], gravity: 12 });
-    g.fxFoam.emit(p.clone().add(new THREE.Vector3(0, 0.04, 0)), new THREE.Vector3(), { life: 0.8, size: onWater ? 0.6 : 0.35, grow: 0.8, color: onWater ? [1, 1, 1] : [0.75, 0.68, 0.55], alpha: onWater ? 0.6 : 0.35 });
+    if (onWater) g.decals?.splashRing(p, 0.35 + Math.random() * 0.2);
+    else g.fxFoam.emit(p.clone().add(new THREE.Vector3(0, 0.04, 0)), new THREE.Vector3(), { life: 0.6, size: 0.3, grow: 0.8, color: [0.75, 0.68, 0.55], alpha: 0.3 });
   }
 
   love() {

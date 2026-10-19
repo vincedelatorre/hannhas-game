@@ -151,10 +151,10 @@ export class Player {
     else this.jumpBuffer -= dt;
     let jumped = null;
     if (this.jumpBuffer > 0 && this.coyote > 0 && this.mode === 'walk') {
-      this.vy = 8.6; this.coyote = 0; this.jumpBuffer = 0; this.canFlip = true; jumped = 'jump';
+      this.vy = 7.2; this.coyote = 0; this.jumpBuffer = 0; this.canFlip = true; jumped = 'jump';
       this.c.play('Jump', { from: 0.5, to: 1.3, timeScale: 1.05, fadeIn: 0.06 });
     } else if (this.jumpBuffer > 0 && !this.body.grounded && this.canFlip && this.airTime > 0.12) {
-      this.vy = 9.4; this.canFlip = false; this.jumpBuffer = 0; jumped = 'flip';
+      this.vy = 7.8; this.canFlip = false; this.jumpBuffer = 0; jumped = 'flip';
       this.c.play('Backflip', { from: 0.58, to: 1.55, timeScale: 1.05, fadeIn: 0.05 });
     }
 
@@ -166,9 +166,8 @@ export class Player {
 
     const moved = this.body.move(new THREE.Vector3(this.vel.x * dt, this.vy * dt, this.vel.z * dt));
     if (this.body.grounded && this.vy < 0) this.vy = -2;
-    // bumped into something: lose that part of the velocity
-    if (dt > 0) { const ax = moved.x / dt, az = moved.z / dt; if (Math.abs(ax) < Math.abs(this.vel.x) * 0.5) this.vel.x = ax; if (Math.abs(az) < Math.abs(this.vel.z) * 0.5) this.vel.z = az; }
-
+    // walked into a wall: drop only the part of the velocity that pushes into it
+    for (const n of this.body.walls || []) { const d = this.vel.x * n.x + this.vel.z * n.z; if (d < 0) { this.vel.x -= n.x * d; this.vel.z -= n.z * d; } }
     // face the direction of travel
     const hs = Math.hypot(this.vel.x, this.vel.z);
     if (hs > 0.3) {
@@ -237,9 +236,9 @@ export class Companion {
   }
 
   cheer() {
-    if (this.c.busy || !this.body.grounded) return;
+    if (this.c.busy || !this.body.grounded || this.leader.waterDepth(this.pos) > 0.15) return;
     const flip = Math.random() < 0.5;
-    this.vy = flip ? 9.4 : 8.6;
+    this.vy = flip ? 7.8 : 7.2;
     this.c.play(flip ? 'Backflip' : 'Jump', flip ? { from: 0.58, to: 1.55, timeScale: 1.05 } : { from: 0.5, to: 1.3, timeScale: 1.05 });
   }
 }

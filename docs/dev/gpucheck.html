@@ -1,0 +1,11 @@
+<!doctype html><html><body style="margin:0;background:#888"><canvas id=c style="width:400px;height:300px"></canvas>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.webgpu.js","three/webgpu":"https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.webgpu.js","three/tsl":"https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.tsl.js"}}</script>
+<script type="module">
+import * as THREE from 'three/webgpu';
+const r = new THREE.WebGPURenderer({ canvas: c }); await r.init(); r.setSize(400, 300, false);
+const s = new THREE.Scene(); s.background = new THREE.Color(0x3366cc);
+const m = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicNodeMaterial({ color: 0xff2200 })); s.add(m);
+const cam = new THREE.PerspectiveCamera(50, 4/3, 0.1, 10); cam.position.z = 3;
+let n = 0; r.setAnimationLoop(() => { m.rotation.y += 0.02; r.render(s, cam); if (++n === 5) window.__shot = c.toDataURL('image/png'); });
+document.title = 'done:' + (r.backend.isWebGPUBackend ? 'webgpu' : 'webgl');
+</script></body></html>

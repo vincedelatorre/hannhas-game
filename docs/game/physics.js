@@ -73,6 +73,12 @@ export class Physics {
         const t = body.translation();
         body.setNextKinematicTranslation({ x: t.x + m.x, y: t.y + m.y, z: t.z + m.z });
         this.grounded = cc.computedGrounded();
+        // wall normals (mostly horizontal) so callers can stop pushing into walls
+        this.walls = [];
+        for (let i = 0; i < cc.numComputedCollisions(); i++) {
+          const c = cc.computedCollision(i); const n = c?.normal1;
+          if (n && Math.abs(n.y) < 0.55) this.walls.push(new THREE.Vector3(n.x, 0, n.z).normalize());
+        }
         return new THREE.Vector3(m.x, m.y, m.z);
       },
       teleport(x, y, z) { body.setTranslation({ x, y: y + height / 2, z }, true); body.setNextKinematicTranslation({ x, y: y + height / 2, z }); },

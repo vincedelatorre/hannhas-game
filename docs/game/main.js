@@ -13,7 +13,9 @@ import { Character, Player, Companion } from './characters.js';
 import { Particles, TEX } from './fx.js';
 import { Powers, Creatures, Quests } from './gameplay.js';
 import { Input, Hud, Audio } from './ui.js';
+import { Decals } from './decals.js';
 import { H, G, V } from './world.js';
+window.__H = H;
 
 const $ = id => document.getElementById(id);
 const Q = pickQuality();
@@ -90,6 +92,7 @@ async function boot() {
   game.fxGlow = new Particles(scene, TEX.glow(), { max: 700, additive: true });
   game.fxHeart = new Particles(scene, TEX.heart(), { max: 260 });
   game.fxFoam = new Particles(scene, TEX.foam(), { max: 300 });
+  game.decals = new Decals(scene);
   game.creatures = new Creatures(scene, zone);
   game.quests = new Quests(game, zone);
   game.powers = new Powers(game);
@@ -189,10 +192,28 @@ function updateCamera(dt, t) {
 
 // ------------------------------------------------------------------ loop
 const clock = new THREE.Clock();
-let mapT = 0;
+let mapT = 0, gameTime = 0;
 function loop() {
-  const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime;
+  const dt = Math.min(0.05, clock.getDelta());
   if (!game.ready) return;
+  if (!game.frozen) tick(dt);
+  game.pipeline.render();
+  // test hook: grab the frame right after it is drawn (works for WebGPU canvases too)
+  if (game.captureRequest) { game.captureRequest = false; game.captured = game.renderer.domElement.toDataURL('image/jpeg', 0.88); }
+}
+
+/** run the game forward by exact steps without rendering (used by automated tests) */
+game.sim = (seconds, keys = [], { jump = false, look = 0 } = {}) => {
+  const I = game.input;
+  keys.forEach(k => I.keys.add(k));
+  if (jump) I.jumpPressed = true;
+  const n = Math.round(seconds * 60);
+  for (let i = 0; i < n; i++) { if (look) game.cam.yaw += look / n; tick(1 / 60); }
+  keys.forEach(k => I.keys.delete(k));
+};
+
+function tick(dt) {
+  gameTime += dt; const t = gameTime;
   const P = game.player, I = game.input;
   I.poll();
 
@@ -219,6 +240,14 @@ function loop() {
     if (game.friend) { game.friend.c.root.position.copy(game.friend.pos); game.friend.c.root.rotation.y = game.friend.face; }
   }
 
+  // footprints in the sand, ripples where anyone wades
+  for (const [id, who] of [['wren', game.player], ['friend', game.friend]]) {
+    if (!who || game.sliding >= 0 && id === 'wren') continue;
+    const p = who.pos, gy = G(p.x, p.z), wl = game.player.waterLevelAt(p);
+    const onGround = Math.abs(p.y - gy) < 0.25;
+    game.decals.track(id, p, who.face, { onSand: onGround && gy > -0.1 && gy < 2.4, inWater: wl - p.y > 0.05, waterLevel: wl, speed: Math.hypot(who.vel.x, who.vel.z) });
+  }
+  game.decals.update(dt);
   game.physics.step(dt);
   game.creatures.update(dt, t, P.pos);
   game.water.update(dt, t);
@@ -235,7 +264,6 @@ function loop() {
   game.sky.follow(game.started ? pp : new THREE.Vector3(0, 0, -6));
   mapT -= dt; if (mapT <= 0) { game.hud.map(game.quests.S, game.quests, P, game.friend); mapT = 0.1; }
   game.hud.tick(dt, () => `${game.renderer.info.render.drawCalls ?? '?'} draws · ${(game.renderer.info.render.triangles / 1e6).toFixed(2)}M tris · ${Q.name} · ${game.renderer.backend.isWebGPUBackend ? 'WebGPU' : 'WebGL2'}`);
-  game.pipeline.render();
 }
 
 function slideStep(dt) {

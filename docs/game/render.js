@@ -1,7 +1,7 @@
 // Renderer, sky, sun, environment lighting and the post-processing chain
 // (ambient occlusion, god rays, bloom, ACES filmic tone mapping, vignette, anti-aliasing).
 import * as THREE from 'three/webgpu';
-import { pass, mrt, output, normalView, directionToColor, colorToDirection, vec4, vec3, float, renderOutput, uv, smoothstep, length, uniform } from 'three/tsl';
+import { pass, mrt, output, normalView, directionToColor, colorToDirection, vec4, vec3, float, renderOutput, uv, smoothstep, length, uniform, saturation, mix, dot } from 'three/tsl';
 import { SkyMesh } from 'three/addons/objects/SkyMesh.js';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
 import { bloom } from 'three/addons/tsl/display/BloomNode.js';
@@ -132,6 +132,9 @@ export function createPipeline(renderer, scene, camera, sun, Q) {
     col = col.add(b);
     fx.bloom = b;
   }
+
+  // colour grade: a touch more saturation for the tropical palette
+  col = vec4(saturation(col.rgb, float(1.12)), col.a);
 
   // gentle vignette
   const vig = smoothstep(float(0.45), float(0.95), length(uv().sub(0.5)).mul(1.25));

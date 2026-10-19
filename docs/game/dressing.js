@@ -102,7 +102,8 @@ export function dressWorld(scene, zone, A, Q) {
   scatter(scene, M.SM_Hibiscus, bushes, { windOpts: { bend: 0.025, flutter: 0.012, speed: 1.6 } });
 
   // ---- boulders (tide pool rocks, cliffs, sea stacks) ----
-  const rocks = zone.boulders.map(([x, y, s]) => ({ x, z: -y, h: H(x, y), yaw: R() * 6.28, scale: s * 1.7 / 0.98, scaleY: s * 1.7 / 0.98 * (0.75 + R() * 0.35) }));
+  // sink rocks deeper on slopes so no side floats
+  const rocks = zone.boulders.map(([x, y, s]) => { const sc = s * 1.7 / 0.98, sl = Math.min(1.2, slope(x, y)); const deep = H(x, y) < -1.5; return { x, z: -y, h: H(x, y) - sl * sc * 0.32, yaw: R() * 6.28, scale: sc, scaleY: sc * (0.75 + R() * 0.35) * (deep ? 2.1 : 1) }; });
   const rockSet = scatter(scene, M.SM_Boulder_Mossy, rocks, { sink: 0.12 });
   for (const r of rocks) out.colliders.push({ type: 'ball', x: r.x, z: r.z, h: r.h + r.scale * 0.2, r: r.scale * 0.46 });
   out.rockSet = rockSet;
