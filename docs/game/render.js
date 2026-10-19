@@ -1,6 +1,7 @@
 // Renderer, sky, sun, environment lighting and the post-processing chain
 // (ambient occlusion, god rays, bloom, ACES filmic tone mapping, vignette, anti-aliasing).
 import * as THREE from 'three/webgpu';
+import { underwater } from './underwater.js';
 import { pass, mrt, output, normalView, directionToColor, colorToDirection, vec4, vec3, float, renderOutput, uv, smoothstep, length, uniform, saturation, mix, dot } from 'three/tsl';
 import { SkyMesh } from 'three/addons/objects/SkyMesh.js';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
@@ -166,9 +167,13 @@ export function createPipeline(renderer, scene, camera, sun, Q) {
   // colour grade: a touch more saturation for the tropical palette
   col = vec4(saturation(col.rgb, float(1.12)), col.a);
 
+  // under water: light loses red first, everything turns blue-green and darker toward the edges
+  const uw = underwater;
+  const tinted = col.rgb.mul(vec3(0.42, 0.86, 0.95)).add(vec3(0.0, 0.035, 0.05));
+  col = vec4(mix(col.rgb, tinted, uw), col.a);
   // gentle vignette
   const vig = smoothstep(float(0.45), float(0.95), length(uv().sub(0.5)).mul(1.25));
-  col = vec4(col.rgb.mul(float(1).sub(vig.mul(0.28))), col.a);
+  col = vec4(col.rgb.mul(float(1).sub(vig.mul(mix(float(0.28), float(0.55), uw)))), col.a);
 
   pipeline.outputColorTransform = false;
   const displayed = renderOutput(col);

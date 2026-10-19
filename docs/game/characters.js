@@ -162,6 +162,7 @@ export class Player {
     this.vel = new THREE.Vector3(); this.face = 0; this.vy = 0;
     this.coyote = 0; this.jumpBuffer = 0; this.canFlip = true; this.airTime = 0;
     this.energy = 1; this.mode = 'walk'; this.sprinting = false;
+    this.c.root.rotation.order = 'YXZ';   // yaw first, then pitch (diving) in the body's own frame
   }
 
   get pos() { return this.body.feet; }
@@ -177,7 +178,7 @@ export class Player {
     const feet = this.pos;
     const depth = this.waterDepth(feet);
     this.sprinting = I.sprint && this.energy > 0.03 && mag > 0.2;
-    const swimming = depth > 1.05;
+    const swimming = depth > 1.05 || this.underwater;
     this.c.swimming = swimming;
     let max = this.sprinting ? 13 : (mag < 0.55 ? 1.6 : 4.4);
     if (swimming) max = this.sprinting ? 4.2 : 2.2;
@@ -197,7 +198,7 @@ export class Player {
     if (I.jumpPressed) { this.jumpBuffer = 0.14; I.jumpPressed = false; }
     else this.jumpBuffer -= dt;
     let jumped = null;
-    if (this.jumpBuffer > 0 && this.coyote > 0 && this.mode === 'walk') {
+    if (this.jumpBuffer > 0 && this.coyote > 0 && this.mode === 'walk' && !this.underwater) {
       this.vy = 7.2; this.coyote = 0; this.jumpBuffer = 0; this.canFlip = true; jumped = 'jump';
       this.c.play('Jump', { from: 0.5, to: 1.3, timeScale: 1.05, fadeIn: 0.06 });
     } else if (this.jumpBuffer > 0 && !this.body.grounded && this.canFlip && this.airTime > 0.12) {
@@ -205,10 +206,26 @@ export class Player {
       this.c.play('Backflip', { from: 0.58, to: 1.55, timeScale: 1.05, fadeIn: 0.05 });
     }
 
-    // gravity, with lighter fall in water
-    if (this.body.grounded && this.vy <= 0) this.vy = -2;
+    // diving: hold Q (or the Dive button) while swimming to go under; let go to float back up.
+    // Jump while under water kicks toward the surface. Wren never runs out of air; after a long
+    // dive she drifts up on her own.
+    const surfaceY = this.waterLevelAt(feet) - 1.12;     // feet height while floating at the top
+    const under = feet.y < surfaceY - 0.35;
+    this.underwater = under;
+    this.diveTime = under ? (this.diveTime || 0) + dt : 0;
+    const wantDive = I.dive && (swimming || under) && this.diveTime < 20;
+    this.diving = wantDive;
+    if (swimming || under) {
+      const floor = this.body.grounded;
+      let target;
+      if (wantDive) target = -2.4 * (0.6 + 0.4 * mag);            // sink
+      else if (under) target = I.jumpHeld ? 3.2 : 1.4;              // swim / drift up
+      else target = (surfaceY - feet.y) * 4;                         // bob at the surface
+      this.vy += (target - this.vy) * Math.min(1, dt * (wantDive || under ? 3 : 8));
+      if (floor && this.vy < 0) this.vy = 0;
+      if (jumped && under) jumped = null;
+    } else if (this.body.grounded && this.vy <= 0) this.vy = -2;
     else this.vy -= (depth > 0.9 ? 6 : 22) * dt;
-    if (depth > 1.15) this.vy = Math.max(this.vy, (this.waterLevelAt(feet) - 1.12 - feet.y) * 4);   // float
     this.airTime = this.body.grounded ? 0 : this.airTime + dt;
 
     const moved = this.body.move(new THREE.Vector3(this.vel.x * dt, this.vy * dt, this.vel.z * dt));
@@ -230,6 +247,9 @@ export class Player {
     this.c.root.rotation.y = this.face;
     // lean into turns and fast runs
     this.c.root.rotation.z = THREE.MathUtils.lerp(this.c.root.rotation.z, 0, Math.min(1, dt * 6));
+    // tip head-down while diving, head-up while rising
+    const pitchT = (swimming && (this.diving || this.underwater)) ? THREE.MathUtils.clamp(-this.vy * 0.28, -0.6, 0.7) : 0;
+    this.c.root.rotation.x = THREE.MathUtils.lerp(this.c.root.rotation.x, pitchT, Math.min(1, dt * 4));
     return { jumped, depth, speed: hs };
   }
 

@@ -16,6 +16,7 @@ import { Input, Hud, Audio } from './ui.js';
 import { Decals } from './decals.js';
 import { buildGrass, buildBeachDetail } from './grass.js';
 import { H, G, V } from './world.js';
+import { Underwater, causticStrength } from './underwater.js';
 window.__H = H;
 
 const $ = id => document.getElementById(id);
@@ -44,11 +45,13 @@ async function boot() {
   const A = game.assets = new Assets('assets/');
   A.onProgress = (k, name) => { $('load-fill').style.width = `${Math.round(k * 100)}%`; $('load-label').textContent = `Loading the cove… ${Math.round(k * 100)}%`; };
   const models = ['SM_PearlCove_Clubhouse', 'SM_PalmTree', 'SM_PalmTree_LOD', 'SM_Hibiscus', 'SM_Boulder_Mossy', 'SM_Shells_Cluster', 'SM_PalmSwing', 'SM_TikiTorch', 'SM_Driftwood', 'SM_TreasureChest', 'SM_Clam_Pearl', 'Wren', 'Boy'];
+  const optional = ['SM_Coral_Cluster', 'SM_SeaGrass_Rock', 'SM_SeaTurtle'];   // reef models (procedural stand-ins if missing)
   const textures = ['T_Sand_Dry', 'T_Sand_Wet', 'T_JungleFloor', 'T_Rock_Coastal', 'T_Bamboo_Woven', 'T_Thatch'];
   const wrenClips = ['Walk', 'Skip', 'Run', 'Sprint', 'Jump', 'Backflip', 'WaterCast', 'LoveHeart', 'SwimIdle', 'Swim', 'Sit'];
   const boyClips = ['Walk', 'Run', 'Jump', 'Backflip', 'Wave', 'SwimIdle', 'Swim', 'Sit'];
   await Promise.all([
     ...models.map(m => A.model(m)),
+    ...optional.map(m => A.model(m).catch(() => null)),
     ...textures.map(t => A.texture(t)),
     ...wrenClips.map(c => A.clip('Wren', c)),
     ...boyClips.map(c => A.clip('Boy', c)),
@@ -97,6 +100,7 @@ async function boot() {
   game.fxHeart = new Particles(scene, TEX.heart(), { max: 260 });
   game.fxFoam = new Particles(scene, TEX.foam(), { max: 300 });
   game.decals = new Decals(scene);
+  game.under = new Underwater(scene, zone, A, Q, game.fxGlow);
   game.creatures = new Creatures(scene, zone);
   game.quests = new Quests(game, zone);
   game.powers = new Powers(game);
@@ -200,7 +204,9 @@ function updateCamera(dt, t) {
   const hit = game.physics.world.castRay(new RAPIER.Ray(C.target, dir), dist, true, undefined, (0x0001 << 16) | 0x0001);
   if (hit) dist = Math.max(0.6, hit.timeOfImpact - 0.25);
   const want = C.target.clone().addScaledVector(dir, dist);
-  want.y = Math.max(want.y, G(want.x, want.z) + 0.4, (game.player.waterLevelAt(want)) + 0.25);
+  const wl = game.player.waterLevelAt(want);
+  if (P.underwater) want.y = Math.min(Math.max(want.y, G(want.x, want.z) + 0.4), wl - 0.3);   // stay under with her
+  else want.y = Math.max(want.y, G(want.x, want.z) + 0.4, wl + 0.25);
   cam.position.lerp(want, Math.min(1, dt * 12));
   const fovT = P.sprinting ? 64 : 52; cam.fov += (fovT - cam.fov) * Math.min(1, dt * 4); cam.updateProjectionMatrix();
   cam.lookAt(C.target);
@@ -278,6 +284,7 @@ function tick(dt) {
   game.physics.step(dt);
   game.creatures.update(dt, t, P.pos);
   game.water.update(dt, t);
+  causticStrength.value = THREE.MathUtils.smoothstep(game.sky.elevation, -4, 20);
   for (const fx of [game.fxWater, game.fxGlow, game.fxHeart, game.fxFoam]) fx.update(dt);
 
   // flames flicker; the three torches nearest the player get real lights
@@ -288,6 +295,8 @@ function tick(dt) {
   D.torchLights.forEach((l, i) => { const f = near[i]; if (!f) return; l.position.copy(f.base); l.intensity = (6 + night * 30) * (1 + Math.sin(t * 11 + f.ph) * 0.12); });
 
   updateCamera(dt, t);
+  game.under.update(dt, game.camera, P, game.friend);
+  const diveBtn = $('b-dive'); const canDive = game.started && (P.c.swimming || P.underwater); if (diveBtn.hidden === canDive) diveBtn.hidden = !canDive;
   game.sky.follow(game.started ? pp : new THREE.Vector3(0, 0, -6));
   mapT -= dt; if (mapT <= 0) { game.hud.map(game.quests.S, game.quests, P, game.friend); mapT = 0.1; }
   game.hud.tick(dt, () => `${game.renderer.info.render.drawCalls ?? '?'} draws · ${(game.renderer.info.render.triangles / 1e6).toFixed(2)}M tris · ${Q.name} · ${game.renderer.backend.isWebGPUBackend ? 'WebGPU' : 'WebGL2'}`);

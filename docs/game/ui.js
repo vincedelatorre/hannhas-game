@@ -31,7 +31,11 @@ export class Input {
     addEventListener('pointerdown', e => { if (e.pointerType === 'touch') document.body.classList.add('touch'); }, { capture: true });
     const bs = document.getElementById('b-speed');
     bs.addEventListener('pointerdown', () => this.speedHeld = true); bs.addEventListener('pointerup', () => this.speedHeld = false); bs.addEventListener('pointerleave', () => this.speedHeld = false);
-    document.getElementById('b-jump').addEventListener('click', () => this.jumpPressed = true);
+    const bj = document.getElementById('b-jump');
+    bj.addEventListener('click', () => this.jumpPressed = true);
+    bj.addEventListener('pointerdown', () => this.jumpHeldBtn = true); bj.addEventListener('pointerup', () => this.jumpHeldBtn = false); bj.addEventListener('pointerleave', () => this.jumpHeldBtn = false);
+    const bd = document.getElementById('b-dive');
+    if (bd) { bd.addEventListener('pointerdown', () => this.diveHeld = true); bd.addEventListener('pointerup', () => this.diveHeld = false); bd.addEventListener('pointerleave', () => this.diveHeld = false); }
     const bw = document.getElementById('b-water');
     bw.addEventListener('pointerdown', () => this.waterHeld = true); bw.addEventListener('pointerup', () => this.waterHeld = false); bw.addEventListener('pointerleave', () => this.waterHeld = false);
     document.getElementById('b-love').addEventListener('click', () => this.onLove());
@@ -45,6 +49,7 @@ export class Input {
     let water = k.has('KeyF') || this.waterHeld;
     // walk modifier: hold Alt or C to walk/skip
     const walk = k.has('KeyC') || k.has('AltLeft');
+    let dive = k.has('KeyQ') || this.diveHeld, jumpHeld = k.has('Space') || this.jumpHeldBtn;
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     for (const p of pads) {
       if (!p) continue;
@@ -55,10 +60,12 @@ export class Input {
       if (p.buttons[2]?.pressed || p.buttons[7]?.pressed) water = true;
       if (p.buttons[3]?.pressed && !this._padLove) this.onLove(); this._padLove = p.buttons[3]?.pressed;
       if (p.buttons[1]?.pressed || p.buttons[10]?.pressed || p.buttons[6]?.pressed) sprint = true;
+      if (p.buttons[4]?.pressed) dive = true;
+      if (p.buttons[0]?.pressed) jumpHeld = true;
     }
     const l = Math.hypot(x, y); if (l > 1) { x /= l; y /= l; }
     const scale = walk ? 0.45 : 1;
-    this.x = x * scale; this.y = y * scale; this.sprint = sprint; this.water = water;
+    this.x = x * scale; this.y = y * scale; this.sprint = sprint; this.water = water; this.dive = dive; this.jumpHeld = jumpHeld;
   }
 }
 

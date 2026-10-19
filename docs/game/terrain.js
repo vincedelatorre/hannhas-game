@@ -4,6 +4,7 @@
 import * as THREE from 'three/webgpu';
 import { texture, attribute, positionWorld, vec2, vec3, vec4, float, mix, smoothstep, uniform, mx_noise_float, rotate, max, pow, dot, clamp } from 'three/tsl';
 import { H, smooth, slope } from './world.js';
+import { causticsNode, submerged } from './underwater.js';
 
 export const swashLevel = uniform(0.05);    // how far up the beach the water reaches right now
 
@@ -62,6 +63,9 @@ export function buildTerrain(zone, T, Q) {
     const wetLine = smoothstep(float(0.55), float(0.0), positionWorld.y.sub(swashLevel));
     const wetness = clamp(max(ww.div(sum), wetLine), 0, 1);
     col = col.mul(mix(float(1), float(0.62), wetLine.mul(w.x.add(w.y))));
+    // sunlight focused by the waves dances over everything under water
+    if (Q.caustics) col = col.mul(float(1).add(causticsNode(zone).mul(1.6)));
+    col = submerged(col, zone);
     mat.colorNode = col;
     mat.roughnessNode = mix(float(0.93), float(0.32), wetness).mul(mix(float(1), float(0.85), w.w));
   } else {
