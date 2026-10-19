@@ -4,7 +4,7 @@ import { H } from './world.js';
 export class Input {
   constructor(canvas) {
     this.keys = new Set(); this.x = 0; this.y = 0; this.sprint = false; this.jumpPressed = false;
-    this.look = { dx: 0, dy: 0 }; this.zoom = 0; this.onWater = () => {}; this.onLove = () => {}; this.onToggleView = () => {}; this.onStats = () => {};
+    this.look = { dx: 0, dy: 0 }; this.zoom = 0; this.onWater = () => {}; this.onLove = () => {}; this.onToggleView = () => {}; this.onStats = () => {}; this.onPhoto = () => {};
     this.waterHeld = false; this.joy = { x: 0, y: 0 }; this.speedHeld = false; this.enabled = false;
     addEventListener('keydown', e => {
       if (!this.enabled) return;
@@ -13,6 +13,7 @@ export class Input {
       if (e.code === 'Space') { this.jumpPressed = true; e.preventDefault(); }
       if (e.code === 'KeyE') this.onLove();
       if (e.code === 'KeyV') this.onToggleView();
+      if (e.code === 'KeyP') this.onPhoto();
       if (e.code === 'F3') { this.onStats(); e.preventDefault(); }
     });
     addEventListener('keyup', e => this.keys.delete(e.code));

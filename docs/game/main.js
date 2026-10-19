@@ -3,7 +3,7 @@ import * as THREE from 'three/webgpu';
 import RAPIER from '@dimforge/rapier3d-compat';
 import zone from '../zones/pearl_cove.js';
 import { pickQuality, saveQuality, TIERS } from './quality.js';
-import { createRenderer, SkyAndSun, createPipeline } from './render.js';
+import { createRenderer, SkyAndSun, createPipeline, photoFilter } from './render.js';
 import { Assets } from './assets.js';
 import { buildTerrain, heightTexture } from './terrain.js';
 import { createWaterSystem, seaState } from './water.js';
@@ -46,7 +46,7 @@ async function boot() {
   const A = game.assets = new Assets('assets/');
   A.onProgress = (k, name) => { $('load-fill').style.width = `${Math.round(k * 100)}%`; $('load-label').textContent = `Loading the cove… ${Math.round(k * 100)}%`; };
   const models = ['SM_PearlCove_Clubhouse', 'SM_PalmTree', 'SM_PalmTree_LOD', 'SM_Hibiscus', 'SM_Boulder_Mossy', 'SM_Shells_Cluster', 'SM_PalmSwing', 'SM_TikiTorch', 'SM_Driftwood', 'SM_TreasureChest', 'SM_Clam_Pearl', 'Wren', 'Boy'];
-  const optional = ['SM_Coral_Cluster', 'SM_SeaGrass_Rock', 'SM_SeaTurtle'];   // reef models (procedural stand-ins if missing)
+  const optional = ['SM_Coral_Cluster', 'SM_SeaGrass_Rock', 'SM_SeaTurtle', 'SM_ReefFish'];   // reef models (procedural stand-ins if missing)
   const textures = ['T_Sand_Dry', 'T_Sand_Wet', 'T_JungleFloor', 'T_Rock_Coastal', 'T_Bamboo_Woven', 'T_Thatch'];
   const wrenClips = ['Walk', 'Skip', 'Run', 'Sprint', 'Jump', 'Backflip', 'WaterCast', 'LoveHeart', 'SwimIdle', 'Swim', 'Sit'];
   const boyClips = ['Walk', 'Run', 'Jump', 'Backflip', 'Wave', 'SwimIdle', 'Swim', 'Sit'];
@@ -114,6 +114,11 @@ async function boot() {
   input.onLove = () => game.started && game.powers.love();
   input.onToggleView = () => { game.view = game.view === 'third' ? 'first' : 'third'; };
   input.onStats = () => { hud.fps.visible = !hud.fps.visible; };
+  input.onPhoto = () => game.started && togglePhoto();
+  $('photo-btn').addEventListener('click', () => game.started && togglePhoto());
+  $('p-exit').addEventListener('click', () => togglePhoto(false));
+  $('p-filter').addEventListener('change', e => { photoFilter.value = +e.target.value; });
+  $('p-snap').addEventListener('click', snapPhoto);
   hud.quests(game.quests.S, false);
 
   // ---- render pipeline ----
@@ -145,6 +150,44 @@ async function boot() {
   $('gear').addEventListener('click', () => { const p = $('settings'); p.hidden = !p.hidden; $('gear').setAttribute('aria-expanded', String(!p.hidden)); });
 
   renderer.setAnimationLoop(loop);
+}
+
+// ------------------------------------------------------------------ photo mode
+function togglePhoto(on = !game.photo) {
+  if (on) {
+    game.photo = { yaw: game.cam.yaw, pitch: game.cam.pitch, dist: game.cam.dist, target: game.cam.target.clone() };
+    document.body.classList.add('photo'); $('photo-bar').hidden = false;
+  } else {
+    game.photo = null; photoFilter.value = 0; $('p-filter').value = '0';
+    document.body.classList.remove('photo'); $('photo-bar').hidden = true;
+  }
+}
+
+function snapPhoto() {
+  game.onCaptured = url => {
+    const a = document.createElement('a'); a.href = url; a.download = `pearl-cove-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.jpg`;
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+  game.captureRequest = true;
+  const f = $('flash'); f.style.transition = 'none'; f.style.opacity = '0.85'; requestAnimationFrame(() => { f.style.transition = ''; f.style.opacity = '0'; });
+  game.audio.sfx?.(1200, 0.08, 'square', 0.05);
+}
+
+/** free camera: time stands still, drag to look, WASD to fly, Space/C up and down */
+function photoStep(dt) {
+  const I = game.input, C = game.photo, cam = game.camera;
+  C.yaw -= I.look.dx * 0.005; C.pitch = THREE.MathUtils.clamp(C.pitch + I.look.dy * 0.004, -1.2, 1.45); I.look.dx = I.look.dy = 0;
+  C.dist = THREE.MathUtils.clamp(C.dist + I.zoom, 0.6, 30); I.zoom = 0;
+  const k = I.keys, sp = (k.has('ShiftLeft') ? 14 : 5) * dt;
+  const fwd = new THREE.Vector3(-Math.sin(C.yaw), 0, -Math.cos(C.yaw)), right = new THREE.Vector3(Math.cos(C.yaw), 0, -Math.sin(C.yaw));
+  C.target.addScaledVector(fwd, I.y * sp).addScaledVector(right, I.x * sp);
+  if (k.has('Space')) C.target.y += sp; if (k.has('KeyC')) C.target.y -= sp;
+  C.target.y = Math.max(C.target.y, G(C.target.x, C.target.z) + 0.2);
+  const dir = new THREE.Vector3(Math.sin(C.yaw) * Math.cos(C.pitch), Math.sin(C.pitch), Math.cos(C.yaw) * Math.cos(C.pitch));
+  const pos = C.target.clone().addScaledVector(dir, C.dist);
+  pos.y = Math.max(pos.y, G(pos.x, pos.z) + 0.2);
+  cam.position.copy(pos); cam.lookAt(C.target);
+  game.wren.root.visible = true;
 }
 
 function standIn(scene, color) {
@@ -223,7 +266,7 @@ function loop() {
   if (!game.frozen) tick(dt);
   game.pipeline.render();
   // test hook: grab the frame right after it is drawn (works for WebGPU canvases too)
-  if (game.captureRequest) { game.captureRequest = false; game.captured = game.renderer.domElement.toDataURL('image/jpeg', 0.88); }
+  if (game.captureRequest) { game.captureRequest = false; game.captured = game.renderer.domElement.toDataURL('image/jpeg', 0.92); if (game.onCaptured) { game.onCaptured(game.captured); game.onCaptured = null; } }
 }
 
 /** run the game forward by exact steps without rendering (used by automated tests) */
@@ -237,9 +280,10 @@ game.sim = (seconds, keys = [], { jump = false, look = 0 } = {}) => {
 };
 
 function tick(dt) {
-  gameTime += dt; const t = gameTime; game.time = t; bloomClock.value = t;
   const P = game.player, I = game.input;
   I.poll();
+  if (game.photo) { photoStep(dt); game.under.update(0, game.camera, P, game.friend); return; }
+  gameTime += dt; const t = gameTime; game.time = t; bloomClock.value = t;
 
   if (game.started) {
     if (game.sliding >= 0) slideStep(dt);

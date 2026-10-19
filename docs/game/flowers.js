@@ -1,7 +1,7 @@
 // Love power blooms: flowers spring up from the ground around Wren, with a little bounce,
 // sway in the wind, and slowly fade after a while so the island stays tidy.
 import * as THREE from 'three/webgpu';
-import { positionLocal, vec3, float, sin, time, uniform, attribute, instancedBufferAttribute, smoothstep, mix, clamp, exp, cos, step } from 'three/tsl';
+import { positionLocal, positionGeometry, vec3, float, sin, time, uniform, attribute, instancedBufferAttribute, smoothstep, mix, clamp, exp, cos, step, varying } from 'three/tsl';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { G } from './world.js';
 
@@ -26,7 +26,7 @@ function flowerGeometry() {
   return mergeGeometries(parts);
 }
 
-const PALETTE = [[1, 0.42, 0.62], [1, 0.82, 0.25], [0.98, 0.95, 0.92], [0.78, 0.48, 1], [1, 0.55, 0.3]];
+const PALETTE = [[0.95, 0.18, 0.42], [1, 0.68, 0.06], [0.92, 0.9, 0.86], [0.55, 0.22, 0.9], [1, 0.36, 0.12]];
 
 export class Blooms {
   constructor(scene, max = 220) {
@@ -46,10 +46,11 @@ export class Blooms {
     const sway2 = cos(time.mul(1.3).add(b.x.mul(7.1))).mul(positionLocal.y).mul(0.25);
     const mat = new THREE.MeshStandardNodeMaterial({ side: THREE.DoubleSide, roughness: 0.55 });
     mat.positionNode = positionLocal.add(vec3(sway, 0, sway2)).mul(s);
-    const petal = col.mul(mix(float(0.75), float(1.05), clamp(positionLocal.y.mul(5), 0, 1)));
-    const isCentre = step(0.5, part).mul(float(1).sub(step(1.5, part))), isGreen = step(1.5, part);
-    mat.colorNode = mix(mix(petal, vec3(1, 0.78, 0.12), isCentre), vec3(0.18, 0.5, 0.14), isGreen);
-    mat.emissiveNode = col.mul(0.12).mul(float(1).sub(step(0.5, part)));
+    const colv = varying(col), partv = varying(part);
+    const petal = colv.mul(mix(float(0.75), float(1.05), clamp(positionGeometry.y.mul(5), 0, 1)));
+    const isCentre = step(0.5, partv).mul(float(1).sub(step(1.5, partv))), isGreen = step(1.5, partv);
+    mat.colorNode = mix(mix(petal, vec3(1, 0.56, 0.01), isCentre), vec3(0.03, 0.2, 0.02), isGreen);
+    mat.emissiveNode = colv.mul(0.12).mul(float(1).sub(step(0.5, partv)));
     this.mesh = new THREE.InstancedMesh(g, mat, max);
     this.mesh.frustumCulled = false; this.mesh.castShadow = true; this.mesh.name = 'blooms';
     const m = new THREE.Matrix4().makeScale(0, 0, 0);
@@ -67,11 +68,11 @@ export class Blooms {
       if (waterLevelAt && waterLevelAt(x, z) > y - 0.05) continue;
       if (Math.abs(G(x + 0.3, z) - y) > 0.25 || Math.abs(G(x, z + 0.3) - y) > 0.25) continue;
       const i = this.next; this.next = (this.next + 1) % this.max;
-      this.p.set(x, y - 0.01, z); this.q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.random() * 6.28); this.s.setScalar(0.8 + Math.random() * 0.7);
+      this.p.set(x, y - 0.01, z); this.q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.random() * 6.28); this.s.setScalar(1.9 + Math.random() * 1.3);
       this.mesh.setMatrixAt(i, this.m.compose(this.p, this.q, this.s));
       this.born.setXY(i, now + r * 0.12 + Math.random() * 0.1, life + Math.random() * 10);   // ripple outward
       const c = PALETTE[Math.floor(Math.random() * PALETTE.length)];
-      this.col.setXYZ(i, ...c);
+      this.col.setXYZ(i, ...c.map(v => v ** 2.2));
       placed++;
     }
     this.mesh.instanceMatrix.needsUpdate = true; this.born.needsUpdate = true; this.col.needsUpdate = true;

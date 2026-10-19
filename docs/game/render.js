@@ -2,6 +2,7 @@
 // (ambient occlusion, god rays, bloom, ACES filmic tone mapping, vignette, anti-aliasing).
 import * as THREE from 'three/webgpu';
 import { underwater } from './underwater.js';
+export const photoFilter = uniform(0);
 import { pass, mrt, output, normalView, directionToColor, colorToDirection, vec4, vec3, float, renderOutput, uv, smoothstep, length, uniform, saturation, mix, dot } from 'three/tsl';
 import { SkyMesh } from 'three/addons/objects/SkyMesh.js';
 import { ao } from 'three/addons/tsl/display/GTAONode.js';
@@ -171,6 +172,16 @@ export function createPipeline(renderer, scene, camera, sun, Q) {
   const uw = underwater;
   const tinted = col.rgb.mul(vec3(0.42, 0.86, 0.95)).add(vec3(0.0, 0.035, 0.05));
   col = vec4(mix(col.rgb, tinted, uw), col.a);
+  // photo mode filters: 0 natural, 1 golden, 2 dreamy, 3 black and white, 4 ocean
+  const f = photoFilter;
+  const lum = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));
+  const golden = saturation(col.rgb.mul(vec3(1.12, 1.0, 0.82)), float(1.15));
+  const dreamy = saturation(col.rgb.mul(0.92).add(vec3(0.06, 0.04, 0.07)), float(1.3));
+  const mono = vec3(lum.mul(1.05));
+  const ocean = saturation(col.rgb.mul(vec3(0.86, 1.02, 1.1)), float(1.2));
+  const pick = (k, c) => smoothstep(float(k - 0.5), float(k), f).mul(float(1).sub(smoothstep(float(k), float(k + 0.5), f))).mul(c);
+  const graded = col.rgb.mul(float(1).sub(smoothstep(0.0, 0.5, f))).add(pick(1, golden)).add(pick(2, dreamy)).add(pick(3, mono)).add(pick(4, ocean));
+  col = vec4(graded, col.a);
   // gentle vignette
   const vig = smoothstep(float(0.45), float(0.95), length(uv().sub(0.5)).mul(1.25));
   col = vec4(col.rgb.mul(float(1).sub(vig.mul(mix(float(0.28), float(0.55), uw)))), col.a);

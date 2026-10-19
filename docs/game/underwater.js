@@ -3,12 +3,16 @@
 // (surface seen from below, dense blue fog, colour grade) when the camera dives.
 import * as THREE from 'three/webgpu';
 import {
-  positionWorld, positionLocal, vec2, vec3, float, time, mx_worley_noise_float, mx_noise_float, smoothstep, exp, pow, clamp,
-  uniform, length, mix, sin, cos, max, instancedBufferAttribute, uv, abs, texture,
+  positionWorld, positionLocal, positionGeometry, vec2, vec3, float, time, mx_worley_noise_float, mx_noise_float, smoothstep, exp, pow, clamp,
+  uniform, length, mix, sin, cos, max, instancedBufferAttribute, uv, abs, texture, varying,
 } from 'three/tsl';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { H, G, rng } from './world.js';
 import { toNodeMaterial } from './dressing.js';
+
+/** colours below are written as on-screen (sRGB) values; shaders need linear light */
+const L = (r, g, b) => vec3(r ** 2.2, g ** 2.2, b ** 2.2);
+const Lc = c => c.map(v => v ** 2.2);
 
 export const causticStrength = uniform(1);     // follows the sun (0 at night)
 export const underwater = uniform(0);          // 0 above water, 1 with the camera under it
@@ -48,13 +52,17 @@ function seaGrass(scene, zone, Q) {
   const g = new THREE.PlaneGeometry(0.09, 1, 1, 6); g.translate(0, 0.5, 0);
   const data = new Float32Array(n * 4);
   const mat = new THREE.MeshStandardNodeMaterial({ side: THREE.DoubleSide, roughness: 0.6, metalness: 0 });
-  const d = instancedBufferAttribute(new THREE.InstancedBufferAttribute(data, 4));
+  const dAttr = new THREE.InstancedBufferAttribute(data, 4);
+  const d = instancedBufferAttribute(dAttr);
   const h = positionLocal.y;
   const sway = sin(time.mul(0.9).add(d.x).add(h.mul(1.7))).mul(pow(h, 1.4)).mul(0.28);
   const sway2 = cos(time.mul(0.63).add(d.x.mul(1.3))).mul(pow(h, 1.6)).mul(0.16);
   mat.positionNode = positionLocal.add(vec3(sway, 0, sway2));
-  const base = mix(vec3(0.2, 0.42, 0.14), vec3(0.5, 0.42, 0.14), d.z);
-  mat.colorNode = submerged(base.mul(mix(float(0.7), float(1.25), h)).mul(float(0.85).add(mx_noise_float(vec3(uv().mul(vec2(2, 14)), d.x)).mul(0.15))), zone);
+  const base = mix(L(0.3, 0.52, 0.2), L(0.62, 0.52, 0.22), d.z);
+  // per-instance values must be passed to the fragment stage explicitly
+  const hue = varying(d.z), seed = varying(d.x), hv = uv().y;   // (positionLocal is not the raw vertex in the fragment stage)
+  const base2 = mix(L(0.3, 0.52, 0.2), L(0.62, 0.52, 0.22), hue);
+  mat.colorNode = submerged(base2.mul(mix(float(0.7), float(1.25), hv)).mul(float(0.85).add(mx_noise_float(vec3(uv().mul(vec2(2, 14)), seed)).mul(0.15))), zone);
   // thin blades let light through: a little of their colour glows when lit from behind
   mat.emissiveNode = mat.colorNode.mul(0.35).mul(causticStrength);
   const mesh = new THREE.InstancedMesh(g, mat, n);
@@ -76,7 +84,7 @@ function seaGrass(scene, zone, Q) {
       k++;
     }
   }
-  mesh.count = k; mesh.receiveShadow = true; mesh.name = 'seagrass';
+  mesh.count = k; mesh.receiveShadow = true; mesh.name = 'seagrass'; mesh.userData.dattr = dAttr;
   scene.add(mesh);
   return mesh;
 }
@@ -89,7 +97,7 @@ function proceduralCoral(zone) {
   const brain = new THREE.SphereGeometry(0.32, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2); brain.translate(0.45, 0, 0.1); parts.push(brain);
   const g = mergeGeometries(parts.map(p => p.toNonIndexed()));
   const mat = new THREE.MeshStandardNodeMaterial({ roughness: 0.75 });
-  mat.colorNode = submerged(mix(vec3(0.62, 0.26, 0.24), vec3(0.6, 0.42, 0.25), mx_noise_float(positionLocal.mul(6)).mul(0.5).add(0.5)), zone);
+  mat.colorNode = submerged(mix(L(0.85, 0.45, 0.42), L(0.85, 0.62, 0.42), mx_noise_float(positionGeometry.mul(6)).mul(0.5).add(0.5)), zone);
   return { geometry: g, material: mat, size: 1.2 };
 }
 
@@ -159,6 +167,20 @@ function fishModel(A) {
   if (!mesh) return null;
   const g = mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);
   g.computeBoundingBox(); const bb = g.boundingBox, c = new THREE.Vector3(), sz = new THREE.Vector3(); bb.getCenter(c); bb.getSize(sz);
+  // the generated fish stands on a little display block: drop the triangles of that block
+  {
+    const pos = g.attributes.position, cut = bb.min.y + sz.y * 0.44;
+    const idx = g.index ? g.index.array : [...Array(pos.count).keys()];
+    const keep = [];
+    for (let t = 0; t < idx.length; t += 3) {
+      const ymin = Math.min(pos.getY(idx[t]), pos.getY(idx[t + 1]), pos.getY(idx[t + 2]));
+      if (ymin > cut) keep.push(idx[t], idx[t + 1], idx[t + 2]);
+    }
+    g.setIndex(keep);
+    // bounds of the kept triangles only
+    const kb = new THREE.Box3(), v = new THREE.Vector3(); for (const i of keep) kb.expandByPoint(v.fromBufferAttribute(pos, i));
+    kb.getCenter(c); kb.getSize(sz);
+  }
   g.translate(-c.x, -c.y, -c.z);
   if (sz.x > sz.z) g.rotateY(Math.PI / 2 * (A.fishNose || 1));     // side-view source: body lies along x
   g.scale(1 / Math.max(sz.x, sz.z), 1 / Math.max(sz.x, sz.z), 1 / Math.max(sz.x, sz.z));
@@ -182,9 +204,10 @@ class Fish {
     const z = positionLocal.z;
     const bend = sin(time.mul(d.y).add(d.x).sub(z.mul(4.5))).mul(pow(max(float(0), float(0.35).sub(z)), float(1.6))).mul(0.22);
     mat.positionNode = positionLocal.add(vec3(bend, 0, 0));
-    const stripe = smoothstep(0.55, 0.75, abs(sin(z.mul(d.z.mul(3.1)).add(0.6)))).mul(smoothstep(0.5, 1.5, d.z));
-    const belly = smoothstep(0.1, -0.25, positionLocal.y);
-    mat.colorNode = submerged(mix(mix(ca, cb, stripe), vec3(0.8, 0.8, 0.76), belly.mul(0.45)).mul(0.62), zone);
+    const sf = varying(d.z), zv = positionGeometry.z, cav = varying(ca), cbv = varying(cb);
+    const stripe = smoothstep(0.55, 0.75, abs(sin(zv.mul(sf.mul(3.1)).add(0.6)))).mul(smoothstep(0.5, 1.5, sf));
+    const belly = smoothstep(0.1, -0.25, positionGeometry.y);
+    mat.colorNode = submerged(mix(mix(cav, cbv, stripe), L(0.85, 0.85, 0.8), belly.mul(0.45)), zone);
     this.mesh = new THREE.InstancedMesh(g, mat, total);
     this.mesh.frustumCulled = false; this.mesh.name = 'fish';
     scene.add(this.mesh);
@@ -198,7 +221,7 @@ class Fish {
       const mm = new THREE.MeshStandardNodeMaterial({ roughness: 0.35, metalness: 0.1, side: THREE.DoubleSide });
       const mz = positionLocal.z;
       mm.positionNode = positionLocal.add(vec3(sin(time.mul(pd.y).add(pd.x).sub(mz.mul(4.5))).mul(pow(max(float(0), float(0.25).sub(mz)), float(1.6))).mul(0.22), 0, 0));
-      mm.colorNode = submerged((fm.map ? texture(fm.map, uv()).rgb : vec3(0.9, 0.75, 0.1)).mul(0.75), zone);
+      mm.colorNode = submerged((fm.map ? texture(fm.map, uv()).rgb.mul(0.8) : L(0.95, 0.8, 0.1)), zone);
       this.modelMesh = new THREE.InstancedMesh(fm.geometry, mm, n);
       this.modelMesh.frustumCulled = false; this.modelMesh.name = 'fish-model';
       scene.add(this.modelMesh);
@@ -220,7 +243,7 @@ class Fish {
         if (mi >= 0) this.mph.setXY(mi, r() * 6.28, 10);
         this.attr.setXYZW(i, r() * 6.28, 9 + r() * 4, S.stripes, si);
         const j = 0.9 + r() * 0.2;
-        this.ca.setXYZ(i, S.a[0] * j, S.a[1] * j, S.a[2] * j); this.cb.setXYZ(i, ...S.b);
+        const a = Lc(S.a), b = Lc(S.b); this.ca.setXYZ(i, a[0] * j, a[1] * j, a[2] * j); this.cb.setXYZ(i, ...b);
       }
     }
     this.m = new THREE.Matrix4(); this.q = new THREE.Quaternion(); this.s = new THREE.Vector3(); this.up = new THREE.Vector3(0, 1, 0);
@@ -285,10 +308,9 @@ class Turtle {
     if (gltf) {
       const m = gltf.scene.clone(true);
       const bb = new THREE.Box3().setFromObject(m), sz = new THREE.Vector3(), c = new THREE.Vector3(); bb.getSize(sz); bb.getCenter(c);
-      m.position.sub(c); const s = 1.1 / Math.max(sz.x, sz.z); this.root.scale.setScalar(s);
+      m.position.sub(c); const s = 1.15 / sz.z; this.root.scale.setScalar(s);
       m.traverse(o => { if (o.isMesh) { o.material = toNodeMaterial(o.material); o.castShadow = true; } });
-      // the model faces whichever way it was generated; turn the longest axis along +z
-      if (sz.x > sz.z) m.rotation.y = Math.PI / 2;
+      // the generated turtle already faces +z (flippers span x)
       this.root.add(m);
     } else {
       const shell = new THREE.Mesh(new THREE.SphereGeometry(0.5, 20, 12), new THREE.MeshStandardNodeMaterial({ color: 0x5b6b3a, roughness: 0.6 }));
@@ -325,7 +347,7 @@ export class Underwater {
     const mat = new THREE.MeshBasicNodeMaterial({ side: THREE.BackSide, transparent: true, depthWrite: false, fog: true });
     const pw = positionWorld.xz;
     const rip = mx_noise_float(vec3(pw.mul(0.6), time.mul(0.5))).mul(0.5).add(0.5);
-    mat.colorNode = mix(vec3(0.16, 0.55, 0.62), vec3(0.75, 0.95, 0.95), pow(rip, float(3)));
+    mat.colorNode = mix(L(0.2, 0.62, 0.68), L(0.8, 0.96, 0.96), pow(rip, float(3)));
     mat.opacityNode = float(0.94);
     this.surface = new THREE.Mesh(g, mat); this.surface.position.y = zone.seaLevel - 0.03; this.surface.name = 'surface-under';
     this.surface.visible = false; this.surface.renderOrder = 2;
