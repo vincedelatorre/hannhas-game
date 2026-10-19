@@ -150,7 +150,7 @@ export function createPipeline(renderer, scene, camera, sun, Q) {
 
   if (Q.ao) {
     const aoPass = ao(depth, scenePass.getTextureNode('normal'), camera);
-    aoPass.resolutionScale = 0.5;
+    aoPass.resolutionScale = 1;      // half resolution leaves stripe artefacts on some GPUs
     aoPass.radius.value = 0.6;
     aoPass.thickness.value = 0.8;
     aoPass.distanceExponent.value = 1.6;
