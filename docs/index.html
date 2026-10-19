@@ -113,6 +113,66 @@ body.riding .hud:not(#toast), body.riding #gear, body.riding #mute, body.riding 
   #buttons { grid-template-columns: repeat(2, 58px); } #buttons button { width: 58px; height: 58px; }
 }
 @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+
+/* ---- kitchen: first-person close-ups, recipe book, cooking checklist ---- */
+#focus-bar { position: fixed; z-index: 6; top: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; align-items: center; padding: 8px 10px 8px 18px; border-radius: 999px; background: rgba(255, 252, 245, 0.86); backdrop-filter: blur(10px); box-shadow: 0 6px 22px rgba(20, 40, 50, 0.18); font-size: 0.9rem; }
+#focus-bar b { font-family: var(--display); font-weight: 600; color: var(--lagoon-deep); }
+#focus-bar span { color: #5b6b6e; }
+#focus-bar button, .rb-panel button, #recipe-tracker button, #cook-done button { font: inherit; border: 0; border-radius: 999px; padding: 7px 14px; background: #0F8C8C; color: #fff; cursor: pointer; font-weight: 600; }
+#focus-label { position: fixed; z-index: 7; pointer-events: none; padding: 6px 11px; border-radius: 10px; background: rgba(27, 20, 16, 0.84); color: #fff8ec; font-size: 0.84rem; white-space: nowrap; }
+#focus-label b { font-family: var(--display); font-weight: 600; color: #FFE08A; }
+#focus-label i { opacity: 0.65; font-style: normal; font-size: 0.75rem; margin-left: 6px; }
+#focus-label.disabled { background: rgba(80, 70, 60, 0.82); }
+body.focus #prompt, body.focus #help, body.focus #buttons, body.focus #map { display: none; }
+#inspect-card { position: fixed; z-index: 7; right: 24px; top: 50%; transform: translateY(-50%); width: min(300px, 80vw); padding: 16px 18px; border-radius: 18px; background: rgba(255, 252, 245, 0.92); backdrop-filter: blur(10px); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); }
+#inspect-card h3 { font-family: var(--display); margin: 0 0 8px; color: var(--lagoon-deep); text-transform: capitalize; }
+#inspect-card p { margin: 4px 0; font-size: 0.9rem; } #inspect-card b { display: inline-block; min-width: 56px; color: #6b5a44; } #inspect-card small { color: #8a8a8a; }
+#recipebook { position: fixed; inset: 0; z-index: 20; background: rgba(20, 30, 35, 0.45); display: grid; place-items: center; }
+.rb-panel { width: min(1080px, 94vw); height: min(760px, 92vh); display: grid; grid-template-rows: auto auto 1fr; border-radius: 26px; overflow: hidden; background: #FFFBF3; box-shadow: 0 20px 70px rgba(0, 0, 0, 0.35); }
+.rb-panel header { display: flex; gap: 12px; align-items: center; padding: 16px 20px 8px; }
+.rb-panel h2 { font-family: var(--display); margin: 0; color: var(--lagoon-deep); font-size: 1.5rem; }
+.rb-panel input[type=search] { flex: 1; font: inherit; padding: 9px 14px; border-radius: 999px; border: 1px solid #e5dccb; background: #fff; }
+.rb-panel .rb-x { background: #f1e7d6; color: #3a3026; }
+.rb-cats { display: flex; gap: 6px; padding: 4px 20px 10px; overflow-x: auto; }
+.rb-cats button { background: #f3ead9; color: #4a3d2e; white-space: nowrap; } .rb-cats button.on { background: #0F8C8C; color: #fff; }
+.rb-body { overflow-y: auto; padding: 4px 20px 20px; }
+.rb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.rb-card { position: relative; display: grid; gap: 3px; text-align: left; padding: 0 0 10px; border: 0; border-radius: 18px; overflow: hidden; background: #fff; box-shadow: 0 3px 12px rgba(60, 40, 20, 0.1); cursor: pointer; font: inherit; color: inherit; }
+.rb-card .img { display: block; aspect-ratio: 4/3; background-color: #eee; }
+.rb-card b { font-family: var(--display); font-weight: 600; padding: 4px 12px 0; font-size: 1.02rem; } .rb-card small { padding: 0 12px; color: #7a6c5a; font-size: 0.78rem; }
+.rb-card small.miss { color: #C0392B; } .rb-card small.ok { color: #2E7D32; } .rb-card.soon { opacity: 0.86; }
+.rb-card .badge { position: absolute; top: 8px; right: 8px; padding: 3px 9px; border-radius: 999px; background: rgba(27, 20, 16, 0.7); color: #fff; font-size: 0.72rem; } .rb-card .badge.done { background: #F2B521; color: #1B1410; left: 8px; right: auto; }
+.rb-detail .rb-back { background: #f3ead9; color: #4a3d2e; margin-bottom: 10px; }
+.rb-detail .hero { height: 220px; border-radius: 20px; }
+.rb-detail h3 { font-family: var(--display); font-size: 1.6rem; margin: 12px 0 2px; color: var(--lagoon-deep); }
+.rb-detail .fav { background: none; color: #d8c9b0; font-size: 1.3rem; padding: 0 6px; } .rb-detail .fav.on { color: #F2B521; }
+.rb-detail .meta span, .rb-detail .equip span { display: inline-block; margin: 2px 6px 2px 0; padding: 3px 10px; border-radius: 999px; background: #f3ead9; font-size: 0.82rem; }
+.rb-detail h4 { font-family: var(--display); margin: 16px 0 6px; color: #6b5a44; }
+.rb-detail .stages { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 10px 0; } .rb-detail .stages span { aspect-ratio: 1; border-radius: 12px; }
+.ing { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.ing li { display: grid; grid-template-columns: 54px 1fr auto auto; gap: 10px; align-items: center; padding: 6px 10px; border-radius: 14px; background: #fff; }
+.ing .thumb, .need .thumb { width: 50px; height: 50px; border-radius: 12px; background: #f3ead9 center/cover no-repeat; display: grid; place-items: center; font-size: 1.5rem; }
+.ing b { font-weight: 700; } .ing em { color: #8a7a64; font-style: normal; font-size: 0.85rem; margin-left: 4px; } .ing small { display: block; color: #6b7c80; font-size: 0.8rem; }
+.chip { font-size: 0.75rem; } .ing .chip { padding: 3px 9px; border-radius: 999px; background: #eee6d6; } .ing .chip.ok { background: #d8f0dc; color: #1e6b2a; } .ing .chip.miss { background: #f9dada; color: #a12a2a; }
+.ing button { padding: 6px 10px; font-size: 0.8rem; }
+.steps li { margin: 4px 0; } .steps li.done { color: #2E7D32; text-decoration: line-through; }
+.rb-detail .go { display: flex; gap: 12px; align-items: center; margin-top: 18px; flex-wrap: wrap; } .rb-detail .cook { font-size: 1.05rem; padding: 11px 26px; background: #E8574A; }
+.rb-detail select { font: inherit; padding: 6px 10px; border-radius: 10px; border: 1px solid #e5dccb; }
+#recipe-tracker { position: fixed; z-index: 5; left: 14px; top: 64px; width: min(290px, 70vw); padding: 10px 12px; border-radius: 18px; background: rgba(255, 252, 245, 0.88); backdrop-filter: blur(10px); box-shadow: 0 6px 22px rgba(20, 40, 50, 0.16); font-size: 0.86rem; }
+#recipe-tracker header { display: flex; gap: 8px; align-items: center; cursor: pointer; } #recipe-tracker header b { flex: 1; font-family: var(--display); color: var(--lagoon-deep); }
+#recipe-tracker .bar { height: 6px; border-radius: 6px; background: #eee3cf; margin: 6px 0; overflow: hidden; } #recipe-tracker .bar span { display: block; height: 100%; background: linear-gradient(90deg, #0F8C8C, #F2B521); transition: width 0.4s; }
+#recipe-tracker ol { margin: 4px 0; padding-left: 20px; } #recipe-tracker li { margin: 2px 0; } #recipe-tracker li.done { color: #6c8a6f; text-decoration: line-through; } #recipe-tracker li.next { font-weight: 700; color: #1B1410; }
+#recipe-tracker .need { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0; } #recipe-tracker .need button { background: #FFF1C9; color: #5a4300; padding: 4px 9px; font-size: 0.78rem; }
+#recipe-tracker footer { display: flex; gap: 6px; } #recipe-tracker footer button { padding: 5px 11px; font-size: 0.8rem; } #recipe-tracker footer button:last-child { background: #e9dfcd; color: #4a3d2e; }
+#recipe-tracker.collapsed ol, #recipe-tracker.collapsed .need, #recipe-tracker.collapsed footer { display: none; }
+#cook-done { position: fixed; inset: 0; z-index: 21; display: grid; place-items: center; background: rgba(20, 30, 35, 0.35); }
+#cook-done > div { width: min(420px, 90vw); text-align: center; padding: 20px; border-radius: 26px; background: #FFFBF3; box-shadow: 0 20px 70px rgba(0, 0, 0, 0.35); animation: pop 0.4s ease-out; }
+#cook-done .img { display: block; aspect-ratio: 4/3; border-radius: 18px; } #cook-done h3 { font-family: var(--display); font-size: 1.6rem; color: var(--lagoon-deep); margin: 12px 0 4px; }
+#cook-done .stars { font-size: 2rem; color: #F2B521; margin: 0; letter-spacing: 4px; }
+@keyframes pop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+#waypoint-edge { position: fixed; z-index: 6; width: 0; height: 0; border-top: 14px solid transparent; border-bottom: 14px solid transparent; border-left: 24px solid #FFC83D; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35)); pointer-events: none; }
+#b-book { position: fixed; z-index: 5; left: 14px; bottom: 64px; font: 600 0.9rem var(--display); border: 0; border-radius: 999px; padding: 9px 16px; background: rgba(255, 252, 245, 0.88); color: var(--lagoon-deep); box-shadow: 0 4px 16px rgba(20,40,50,0.18); cursor: pointer; }
+body.focus #b-book, body.book #b-book { display: none; }
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;700&display=swap">
 </head>
@@ -168,6 +228,15 @@ body.riding .hud:not(#toast), body.riding #gear, body.riding #mute, body.riding 
   <button type="button" class="love" id="b-love" aria-label="Love power">Love</button>
   <button type="button" class="use" id="b-use" aria-label="Use (E)" hidden>Use</button>
 </div>
+
+<div id="focus-bar" hidden><b id="focus-title"></b><span id="focus-hint"></span><button type="button" id="focus-done">Done</button></div>
+<div id="focus-label" hidden></div>
+<div id="inspect-card" hidden></div>
+<div id="recipebook" hidden></div>
+<div id="recipe-tracker" hidden></div>
+<div id="cook-done" hidden></div>
+<div id="waypoint-edge" hidden></div>
+<button type="button" id="b-book" class="hud" hidden aria-label="Recipe book (X)">📖 Recipes</button>
 
 <div id="start">
   <div class="card">

@@ -8,16 +8,33 @@
 //   buildColumn() built-in panel-ready fridge or freezer column
 //   glassUppers(), roundTable(), ladderChair(), counterStool(), pendant()
 import * as THREE from 'three/webgpu';
-import { uv, vec3, float, time, mx_noise_float, smoothstep, mix, uniform, sin, color } from 'three/tsl';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { uv, vec3, float, time, mx_noise_float, smoothstep, mix, uniform, sin, color, positionWorld } from 'three/tsl';
 import { Hinge, Slide, Toggle, Dial, Slot, Seat, Interactable } from './interact.js';
 
 const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
 
 /** a straight bar pull (cabinet hardware) */
-export function pull(M, parent, [x, y, z], len = 0.16, vertical = false, mat = M.bronze) {
+export function pull(M, parent, [x, y, z], len = 0.16, vertical = false, mat = M.brass) {
   const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g);
   const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, len, 8), mat); if (!vertical) bar.rotation.z = Math.PI / 2; bar.position.z = 0.028; g.add(bar);
   for (const s of [-1, 1]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.028, 6), mat); p.rotation.x = Math.PI / 2; p.position.set(vertical ? 0 : s * len * 0.42, vertical ? s * len * 0.42 : 0, 0.014); g.add(p); }
+  return g;
+}
+
+/** brass cup (bin) pull for drawers, like the reference kitchen */
+export function cupPull(M, parent, [x, y, z], w = 0.09) {
+  const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g);
+  const cup = new THREE.Mesh(new THREE.CylinderGeometry(w / 2, w / 2, 0.022, 20, 1, true, Math.PI / 2, Math.PI), M.brass);
+  cup.material.side = THREE.DoubleSide; cup.rotation.x = Math.PI / 2; cup.rotation.z = Math.PI; cup.scale.set(1, 1, 0.5); cup.position.set(0, 0, 0.014); g.add(cup);
+  const plate = new THREE.Mesh(new THREE.BoxGeometry(w + 0.016, 0.012, 0.006), M.brass); plate.position.set(0, w * 0.25, 0.004); g.add(plate);
+  return g;
+}
+/** small round brass knob for doors */
+export function knob(M, parent, [x, y, z]) {
+  const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g);
+  const st = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.008, 0.022, 10), M.brass); st.rotation.x = Math.PI / 2; st.position.z = 0.011; g.add(st);
+  const k = new THREE.Mesh(new THREE.SphereGeometry(0.016, 14, 10), M.brass); k.scale.z = 0.75; k.position.z = 0.026; g.add(k);
   return g;
 }
 
@@ -62,7 +79,7 @@ export function cabinetRun(b, M, sys, { id, at, rotY = 0, modules, d = 0.64, h =
         const hinge = new THREE.Group(); hinge.position.set(left ? x0 + k * dw + 0.003 : x0 + (k + 1) * dw - 0.003, 0, fz); root.add(hinge);
         const sgn = left ? 1 : -1;
         shaker(b, M, hinge, [sgn * (dw / 2 - 0.003), 0.12 + (h - 0.2) / 2, 0.011], dw - 0.008, h - 0.21);
-        pull(M, hinge, [sgn * (dw - 0.06), h - 0.22, 0.022], 0.12, true);
+        if (M.cupPulls === false) pull(M, hinge, [sgn * (dw - 0.06), h - 0.22, 0.022], 0.12, true); else knob(M, hinge, [sgn * (dw - 0.06), h - 0.24, 0.02]);
         m.doors.push(sys.add(new Hinge({ id: `${id}_${i}_d${k}`, name: 'cupboard', object: hinge, anchor: [sgn * dw * 0.6, 0.5, 0.1], pivot: hinge, axis: 'y', angle: sgn * -100, duration: 0.45, sound: 'cupboard' })));
       }
       const open = () => m.doors.some(dd => dd.openAmount > 0.6);
@@ -75,7 +92,7 @@ export function cabinetRun(b, M, sys, { id, at, rotY = 0, modules, d = 0.64, h =
         const yc = y - fh / 2; y -= fh + 0.005;
         const part = new THREE.Group(); part.position.set(xc, yc, fz); root.add(part);
         shaker(b, M, part, [0, 0, 0.011], w - 0.008, fh - 0.006, M.sage, 0.045);
-        pull(M, part, [0, fh * 0.25, 0.022], Math.min(0.2, w * 0.4));
+        if (M.cupPulls === false) pull(M, part, [0, fh * 0.25, 0.022], Math.min(0.2, w * 0.4)); else cupPull(M, part, [0, fh * 0.12, 0.02], Math.min(0.1, w * 0.18));
         if (k === 0 || mod.kind === 'trash') {
           const depth = d - 0.08, bh = Math.min(fh - 0.04, 0.18);
           b.box(M.whiteOak, [0, -fh / 2 + 0.02, -depth / 2], [w - 0.06, 0.012, depth], { parent: part, collide: false, cast: false });
@@ -286,7 +303,7 @@ function microwaveDrawer(b, M, sys, { id, root, xc, fz, w, d, h, game }) {
       if (S.running > 4) {
         S.running = 0; start.set(false, sys); game.audio?.houseLoop?.('microwave', false); sys.sfx('ding');
         const it = slot.item;
-        if (it?.tags.has('fillable') && (it.state.fill || 0) > 0.1) { it.state.cocoa = true; it.onState?.(); sys.toast('Mmm, hot cocoa!'); }
+        if (it?.tags.has('fillable') && (it.state.fill || 0) > 0.1) { it.state.cocoa = true; it.onState?.(); sys.toast('Mmm, hot cocoa!'); game.house?.cooking?.flag('cocoa'); }
         else if (it) { it.state.warm = true; sys.toast(`Warm ${it.name}!`); }
         else sys.toast('The microwave hummed, but nothing was inside.');
         sys.changed();
@@ -380,7 +397,7 @@ export function buildRange(b, M, sys, { id, at, rotY = 0, game }) {
     const door = sys.add(new Hinge({ id: `${id}.${key}_door`, name, object: hinge, anchor: [0, oh * 0.55, 0.14], pivot: hinge, axis: 'x', angle: 85, duration: 0.55, sound: 'oven' }));
     const rack = sys.add(new Slide({ id: `${id}.${key}_rack`, name: `${name} rack`, object: rk, anchor: [0, 0.02, (D - 0.16) / 2], part: rk, dir: [0, 0, 1], distance: 0.3, sound: 'drawer', radius: 1.4 }));
     const rv = rack.verb.bind(rack); rack.verb = s => door.openAmount > 0.8 ? rv(s) : null;
-    const slot = sys.addSlot(new Slot({ id: `${id}_${key}_rack`, name: `in the ${name}`, parent: rk, pos: [0, 0.006, 0], enabled: () => door.openAmount > 0.7, accepts: it => it.tags.has('bakeable') || it.tags.has('cookware') }));
+    const slot = sys.addSlot(new Slot({ id: `${id}_${key}_rack`, name: `in the ${name}`, parent: rk, pos: [0, 0.006, 0], enabled: () => door.openAmount > 0.7, accepts: it => it.tags.has('bakeable') || it.tags.has('cookware') || it.tags.has('bakeware') }));
     const state = { baking: 0, total: 6 };
     const kn = sys.add(new Toggle({ id: `${id}.${key}_knob`, name, object: root, anchor: [knobX[knob], H - 0.08, D / 2 + 0.06], part: knobs[knob], partAxis: 'z', partAngle: -120, persist: false, radius: 1.4,
       verbOn: 'Bake in the', verbOff: 'Turn off the', sound: 'knob',
@@ -444,7 +461,21 @@ export function buildColumn(b, M, sys, { id, name, at, rotY = 0, w = 0.9, d = 0.
   const col = new THREE.Mesh(new THREE.BoxGeometry(w, h, d)); col.position.set(0, h / 2, 0); col.visible = false; root.add(col); b.solid(col, w, h, d);
   const shelfY = freezer ? [0.5, 0.95, 1.4] : [0.42, 0.82, 1.22, 1.62];
   for (const y of shelfY) b.box(M.clearGlass, [0, y, -0.02], [w - 2 * t - 0.02, 0.012, d - 0.14], { parent: root, collide: false, cast: false });
-  if (!freezer) b.box(M.clearGlass, [0, 0.24, 0.0], [w - 2 * t - 0.04, 0.18, d - 0.16], { parent: root, collide: false, cast: false });   // crisper
+  // produce drawers (fridge) / a deep basket (freezer) at the bottom that slide out
+  const crispers = [];
+  const cw = freezer ? w - 2 * t - 0.02 : (w - 2 * t - 0.03) / 2;
+  for (let k = 0; k < (freezer ? 1 : 2); k++) {
+    const part = new THREE.Group(); part.position.set(freezer ? 0 : (k ? 1 : -1) * (cw / 2 + 0.005), 0.14, -0.02); root.add(part);
+    const dd = d - 0.16;
+    b.box(M.clearGlass, [0, 0.0, 0], [cw, 0.01, dd], { parent: part, collide: false, cast: false });
+    for (const sx of [-1, 1]) b.box(M.clearGlass, [sx * (cw / 2 - 0.005), 0.08, 0], [0.008, 0.16, dd], { parent: part, collide: false, cast: false });
+    b.box(M.clearGlass, [0, 0.08, -dd / 2], [cw, 0.16, 0.008], { parent: part, collide: false, cast: false });
+    b.box(freezer ? lm : M.clearGlass, [0, 0.08, dd / 2], [cw, 0.16, 0.012], { parent: part, collide: false, cast: false });
+    const lip = new THREE.Mesh(new THREE.BoxGeometry(cw * 0.5, 0.018, 0.02), M.stainless); lip.position.set(0, 0.15, dd / 2 + 0.012); part.add(lip);
+    const sl = sys.add(new Slide({ id: `${id}.crisper${k}`, name: freezer ? 'freezer basket' : 'produce drawer', object: part, anchor: [0, 0.12, dd / 2], part, dir: [0, 0, 1], distance: 0.3, sound: 'drawer', radius: 1.9 }));
+    const v = sl.verb.bind(sl); sl.verb = s => door.openAmount > 0.8 ? v(s) : null;
+    crispers.push({ part, slide: sl, w: cw, d: dd });
+  }
   const lamp = new THREE.Mesh(new THREE.BoxGeometry(w - 0.2, 0.012, 0.04), M.lamp); lamp.position.set(0, h - 0.08, -0.05); root.add(lamp); lamp.visible = false;
   const light = new THREE.PointLight(freezer ? 0xdff0ff : 0xfff2dc, 0, 2.0, 2); light.position.set(0, h - 0.25, 0.1); root.add(light);
   // full-height sage door with a long bronze pull
@@ -474,7 +505,7 @@ export function buildColumn(b, M, sys, { id, name, at, rotY = 0, w = 0.9, d = 0.
       game.fxFoam.emit(p, v, { life: 1.6, size: 0.18, grow: 1.2, alpha: 0.18, color: [0.9, 0.96, 1] });
     }
   };
-  return { root, door, slots, update };
+  return { root, door, slots, update, shelfY, binYs, hinge, sgn, w, d, t, crispers, open };
 }
 
 // ------------------------------------------------------------------ glass-front upper cabinets with dishes
@@ -539,18 +570,72 @@ export function ladderChair(b, M, { at, rotY = 0 }) {
   return root;
 }
 
-/** counter-height stool: black steel frame, woven seat */
+/**
+ * Counter stool from the family's reference: blonde oak frame (tapered front legs, rear legs that
+ * sweep up into the back, footrest and stretchers), cognac leather sling seat and a wrapped
+ * leather back with a pinched centre tied with leather cords. Front faces local +z.
+ */
+let _leather = null;
+function leatherMat() {
+  if (_leather) return _leather;
+  const m = new THREE.MeshPhysicalNodeMaterial({ roughness: 0.52, sheen: 0.4, sheenRoughness: 0.6 });
+  const grain = mx_noise_float(positionWorld.mul(160)).mul(0.5).add(0.5), blotch = mx_noise_float(positionWorld.mul(7)).mul(0.5).add(0.5);
+  m.colorNode = mix(mix(color(0x86603E), color(0xA57B52), blotch), color(0x5E4028), grain.mul(0.2));     // tan cognac, like the reference
+  m.roughnessNode = float(0.45).add(grain.mul(0.15));
+  return (_leather = m);
+}
 export function counterStool(b, M, { at, rotY = 0 }) {
   const root = new THREE.Group(); root.position.copy(at); root.rotation.y = rotY; b.root.add(root);
-  const sh = 0.66;
-  const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.19, 0.06, 24), M.rattan); seat.position.y = sh; root.add(seat);
-  // low hoop backrest at the back edge (local -z)
-  const back = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.014, 8, 24, Math.PI), M.blackSteel); back.position.set(0, sh + 0.02, -0.16); back.rotation.x = -0.15; root.add(back);
-  const pad = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.06, 0.02), M.rattan); pad.position.set(0, sh + 0.12, -0.17); pad.rotation.x = -0.15; root.add(pad);
-  for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + i * Math.PI / 2; const l = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, sh, 8), M.blackSteel); l.position.set(Math.cos(a) * 0.16, sh / 2, Math.sin(a) * 0.16); l.rotation.z = -Math.cos(a) * 0.06; l.rotation.x = Math.sin(a) * 0.06; root.add(l); }
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.009, 6, 24), M.blackSteel); ring.rotation.x = Math.PI / 2; ring.position.y = 0.24; root.add(ring);
-  root.traverse(o => { if (o.isMesh) o.castShadow = true; });
-  const c = new THREE.Mesh(); c.visible = false; c.position.set(0, sh / 2, 0); root.add(c); b.solid(c, 0.36, sh, 0.36);
+  const oak = M.whiteOak, L = leatherMat();
+  const sh = 0.655, W = 0.46, D = 0.46;
+  const rod = (p0, p1, r0, r1 = r0) => {
+    const a = new THREE.Vector3(...p0), c = new THREE.Vector3(...p1), len = a.distanceTo(c);
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, len, 12), oak);
+    m.position.copy(a).add(c).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), c.clone().sub(a).normalize()); root.add(m); return m;
+  };
+  // front legs: straight, gently tapered and splayed
+  for (const sx of [-1, 1]) rod([sx * (W / 2 - 0.01), 0, D / 2 - 0.0], [sx * (W / 2 - 0.035), sh - 0.03, D / 2 - 0.04], 0.015, 0.019);
+  // rear legs: one smooth curve from the floor up past the seat into the back
+  for (const sx of [-1, 1]) {
+    const x = sx * (W / 2 - 0.03);
+    const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(x, 0, -D / 2 - 0.02), new THREE.Vector3(x, sh * 0.6, -D / 2 + 0.02), new THREE.Vector3(x, sh, -D / 2 + 0.03), new THREE.Vector3(x * 1.02, sh + 0.32, -D / 2 - 0.03)]);
+    const leg = new THREE.Mesh(new THREE.TubeGeometry(curve, 24, 0.017, 10), oak); root.add(leg);
+  }
+  // footrest (front, low), side and back stretchers, seat rails
+  rod([-(W / 2 - 0.012), 0.21, D / 2 - 0.01], [W / 2 - 0.012, 0.21, D / 2 - 0.01], 0.013);
+  for (const sx of [-1, 1]) rod([sx * (W / 2 - 0.02), 0.3, D / 2 - 0.02], [sx * (W / 2 - 0.035), 0.3, -D / 2 + 0.0], 0.011);
+  rod([-(W / 2 - 0.035), 0.34, -D / 2 + 0.0], [W / 2 - 0.035, 0.34, -D / 2 + 0.0], 0.011);
+  rod([-(W / 2 - 0.03), sh - 0.05, D / 2 - 0.04], [W / 2 - 0.03, sh - 0.05, D / 2 - 0.04], 0.012);
+  rod([-(W / 2 - 0.03), sh - 0.05, -D / 2 + 0.03], [W / 2 - 0.03, sh - 0.05, -D / 2 + 0.03], 0.012);
+  for (const sx of [-1, 1]) rod([sx * (W / 2 - 0.032), sh - 0.05, D / 2 - 0.04], [sx * (W / 2 - 0.032), sh - 0.05, -D / 2 + 0.03], 0.012);
+  // leather seat: a softly crowned cushion that sags a touch in the middle, rolled edges
+  {
+    const g = new RoundedBoxGeometry(W - 0.02, 0.05, D - 0.03, 3, 0.02); const p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) { const x = p.getX(i) / (W / 2), z = p.getZ(i) / (D / 2); if (p.getY(i) > 0) p.setY(i, p.getY(i) - 0.008 * (1 - x * x) * (1 - z * z) + 0.004); }
+    g.computeVertexNormals();
+    const seat = new THREE.Mesh(g, L); seat.position.set(0, sh - 0.02, 0); root.add(seat);
+  }
+  // wrapped leather back: a curved band over the rear legs, pinched at the centre
+  {
+    const bw = W + 0.02, bh = 0.2, bt = 0.035;
+    const g = new RoundedBoxGeometry(bw, bh, bt, 3, 0.012); g.translate(0, 0, 0);
+    const pos = g.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+      const pinch = Math.exp(-Math.pow(x / 0.03, 2));
+      pos.setXYZ(i, x * (1 - 0.06 * pinch * (y > -bh / 2 + 0.02 && y < bh / 2 - 0.02 ? 1 : 0)), y, z + x * x * 0.55 - pinch * 0.012 + (Math.sin(x * 40) * 0.0015));
+    }
+    g.computeVertexNormals();
+    const back = new THREE.Mesh(g, L); back.position.set(0, sh + 0.22, -D / 2 - 0.02); back.rotation.x = -0.12; root.add(back);
+    // the tied cords at the pinch
+    const cord = new THREE.MeshStandardNodeMaterial({ color: 0x6B3618, roughness: 0.6 });
+    for (let k = 0; k < 3; k++) {
+      const t = new THREE.Mesh(new THREE.TorusGeometry(0.012, 0.0035, 6, 12), cord); t.position.set(0, -0.055 + k * 0.055, bt / 2 + 0.004); back.add(t);
+      for (const sx of [-1, 1]) { const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.0025, 0.002, 0.04, 5), cord); tail.position.set(sx * 0.014, -0.068 + k * 0.055, bt / 2 + 0.006); tail.rotation.z = sx * 0.5; back.add(tail); }
+    }
+  }
+  root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  const c = new THREE.Mesh(); c.visible = false; c.position.set(0, sh / 2, 0); root.add(c); b.solid(c, W - 0.04, sh, D - 0.04);
   return root;
 }
 

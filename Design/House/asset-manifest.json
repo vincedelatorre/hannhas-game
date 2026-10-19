@@ -1742,6 +1742,230 @@
         "production": "built",
         "validation": "pending"
       }
+    },
+    {
+      "id": "t_recipe_sheet_1",
+      "name": "T_Recipe_Sheet_1",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "a84cb641-b522-4414-9a60-1bb6bfaf73bd",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_192048_a84cb641-b522-4414-9a60-1bb6bfaf73bd.png"
+      },
+      "prompt": "recipe photos: breakfast and lunch",
+      "use": "recipe book (CSS sprite sheet)",
+      "tileable": false,
+      "max_size": 1536,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_recipe_sheet_2",
+      "name": "T_Recipe_Sheet_2",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "c817b939-6821-4f25-9b53-b4fecc049491",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_192049_c817b939-6821-4f25-9b53-b4fecc049491.png"
+      },
+      "prompt": "recipe photos: lunch and dinner",
+      "use": "recipe book (CSS sprite sheet)",
+      "tileable": false,
+      "max_size": 1536,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_recipe_sheet_3",
+      "name": "T_Recipe_Sheet_3",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "00e6b4ec-b52f-4b99-89fd-0f44395b4a88",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_192047_00e6b4ec-b52f-4b99-89fd-0f44395b4a88.png"
+      },
+      "prompt": "recipe photos: dinner and baking",
+      "use": "recipe book (CSS sprite sheet)",
+      "tileable": false,
+      "max_size": 1536,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_recipe_sheet_4",
+      "name": "T_Recipe_Sheet_4",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "f1c5af94-43ba-4a84-8d40-e86d9a1008f3",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_192048_f1c5af94-43ba-4a84-8d40-e86d9a1008f3.png"
+      },
+      "prompt": "recipe photos: desserts, snacks, smoothies",
+      "use": "recipe book (CSS sprite sheet)",
+      "tileable": false,
+      "max_size": 1536,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_recipe_sheet_5",
+      "name": "T_Recipe_Sheet_5",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "4622fc70-2e2a-4248-8463-e69c0621ad48",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_192048_4622fc70-2e2a-4248-8463-e69c0621ad48.png"
+      },
+      "prompt": "recipe photos: drinks and extras",
+      "use": "recipe book (CSS sprite sheet)",
+      "tileable": false,
+      "max_size": 1536,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_steps_pancakes",
+      "name": "T_Steps_Pancakes",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "62697039-a859-4bbf-8d5e-2d65e7d8a77b",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_192047_62697039-a859-4bbf-8d5e-2d65e7d8a77b.png"
+      },
+      "prompt": "pancake steps 3x2",
+      "use": "recipe book (CSS sprite sheet)",
+      "tileable": false,
+      "max_size": 1536,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_steps_cookies",
+      "name": "T_Steps_Cookies",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "68c7fc2e-2319-4b25-a043-423b72a94292",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_192048_68c7fc2e-2319-4b25-a043-423b72a94292.png"
+      },
+      "prompt": "cookie steps 3x2",
+      "use": "recipe book (CSS sprite sheet)",
+      "tileable": false,
+      "max_size": 1536,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "t_steps_spaghetti",
+      "name": "T_Steps_Spaghetti",
+      "kind": "texture",
+      "room": "kitchen",
+      "source": {
+        "tool": "higgsfield",
+        "model": "gpt_image_2_5",
+        "job": "b02129af-42da-4241-91ba-136c8169bd72",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3Ju6vSMgZ2vLvyO3UqCCMvzpyIr/hf_20261019_192046_b02129af-42da-4241-91ba-136c8169bd72.png"
+      },
+      "prompt": "spaghetti steps 3x2",
+      "use": "recipe book (CSS sprite sheet)",
+      "tileable": false,
+      "max_size": 1536,
+      "status": {
+        "production": "generated",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen3_cooking",
+      "name": "Cooking engine",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/cooking.js"
+      },
+      "materials": "procedural",
+      "description": "pots, pans, bowls, trays and plates hold real contents; burners/griddle heat them; pot filler fills; pasta boils, drains, sauces, serves; batters and doughs mix; pancakes flip; cookies bake and cool",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen3_items",
+      "name": "Grocery library and stock",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/items.js"
+      },
+      "materials": "procedural",
+      "description": "170+ procedural pickable groceries, cutlery, dishes and cookware with labels and quantities stocked in the fridge, freezer, pantry, drawers and cupboards",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen3_focus",
+      "name": "First-person focus mode",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/focus.js"
+      },
+      "materials": "procedural",
+      "description": "close-up views of every storage space and station with mouse hover, click, inspect",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
+    },
+    {
+      "id": "kitchen3_recipebook",
+      "name": "Recipe book",
+      "kind": "assembly",
+      "room": "kitchen",
+      "source": {
+        "tool": "code",
+        "file": "docs/game/house/recipebook.js"
+      },
+      "materials": "procedural",
+      "description": "41 recipes, 7 playable end to end, ingredient finder with live locations, guided checklist, celebration",
+      "status": {
+        "production": "built",
+        "validation": "pending"
+      }
     }
   ]
 }

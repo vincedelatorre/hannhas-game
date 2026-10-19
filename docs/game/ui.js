@@ -4,11 +4,15 @@ import { H } from './world.js';
 export class Input {
   constructor(canvas) {
     this.keys = new Set(); this.x = 0; this.y = 0; this.sprint = false; this.jumpPressed = false;
-    this.look = { dx: 0, dy: 0 }; this.zoom = 0; this.onWater = () => {}; this.onLove = () => {}; this.onToggleView = () => {}; this.onStats = () => {}; this.onPhoto = () => {}; this.onUse = () => false; this.onDrop = () => {};
+    this.look = { dx: 0, dy: 0 }; this.zoom = 0; this.onWater = () => {}; this.onLove = () => {}; this.onToggleView = () => {}; this.onStats = () => {}; this.onPhoto = () => {}; this.onUse = () => false; this.onDrop = () => {}; this.onPointer = () => {}; this.onClick = () => false; this.onWheel = () => false; this.onEscape = () => {}; this.onRecipe = () => {};
     this.diveTaps = 0; this.surfaceTaps = 0;   // D dives (again = deeper), S swims back up
     this.waterHeld = false; this.joy = { x: 0, y: 0 }; this.speedHeld = false; this.enabled = false;
     addEventListener('keydown', e => {
+      if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'SELECT' || e.target?.tagName === 'TEXTAREA') return;   // typing in a menu
+      if (e.code === 'Escape') { this.onEscape(); return; }
+      if (e.code === 'KeyX' && !e.repeat) { this.onRecipe(); return; }
       if (!this.enabled) return;
+      if (e.code === 'KeyJ' && !e.repeat) this.diveTaps++;
       if (e.repeat && e.code === 'Space') return;
       this.keys.add(e.code);
       if (e.code === 'Space') { this.jumpPressed = true; e.preventDefault(); }
@@ -26,9 +30,11 @@ export class Input {
     addEventListener('blur', () => this.keys.clear());
     let drag = null;
     canvas.addEventListener('pointerdown', e => { if (!this.enabled) return; drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 }; canvas.setPointerCapture(e.pointerId); });
-    canvas.addEventListener('pointermove', e => { if (!drag || drag.id !== e.pointerId) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; drag.moved += Math.abs(dx) + Math.abs(dy); this.look.dx += dx; this.look.dy += dy; });
-    canvas.addEventListener('pointerup', e => { if (drag && drag.moved < 6 && e.pointerType === 'mouse') this.onWater(); drag = null; });
-    canvas.addEventListener('wheel', e => { this.zoom += e.deltaY * 0.01; }, { passive: true });
+    canvas.addEventListener('pointermove', e => { this.onPointer(e.clientX, e.clientY, true); if (!drag || drag.id !== e.pointerId) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; drag.moved += Math.abs(dx) + Math.abs(dy); this.look.dx += dx; this.look.dy += dy; });
+    canvas.addEventListener('pointerup', e => { if (drag && drag.moved < 6) { this.onPointer(e.clientX, e.clientY, true); if (!this.onClick(e.button) && e.pointerType === 'mouse' && e.button === 0) this.onWater(); } drag = null; });
+    canvas.addEventListener('pointerleave', e => this.onPointer(e.clientX, e.clientY, false));
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+    canvas.addEventListener('wheel', e => { if (!this.onWheel(e.deltaY)) this.zoom += e.deltaY * 0.01; }, { passive: true });
     // touch joystick
     const stick = document.getElementById('stick'), knob = stick.querySelector('.knob');
     const moveJoy = e => { const r = stick.getBoundingClientRect(); let x = (e.clientX - r.left - r.width / 2) / (r.width / 2), y = (e.clientY - r.top - r.height / 2) / (r.height / 2); const l = Math.hypot(x, y); if (l > 1) { x /= l; y /= l; } this.joy = { x, y, id: e.pointerId }; knob.style.transform = `translate(${x * 35}px, ${y * 35}px)`; };

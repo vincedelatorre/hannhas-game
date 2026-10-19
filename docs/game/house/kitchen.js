@@ -19,6 +19,13 @@ const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
 export const KITCHEN = { x0: 3, x1: 12.5, z0: -3, z1: 6, ceil: 3.8 };
 
 // ------------------------------------------------------------------ walls, floors, windows
+/** island size [length, cabinet depth, top depth]; ?island=small|medium|large picks a mockup size */
+function islandSize() {
+  const SIZES = { small: [4.2, 0.95, 1.25], medium: [4.8, 1.1, 1.55], large: [5.4, 1.2, 1.75], grand: [5.4, 1.85, 2.25] };
+  let k = 'grand'; try { k = new URLSearchParams(globalThis.location?.search || '').get('island') || k; } catch (e) { /* no location */ }
+  return SIZES[k] || SIZES.grand;
+}
+
 export function buildShell(H) {
   const b = H.b, M = H.M, R = H.root;
   // ---- foyer (x -3..3, z 0..6), unchanged
@@ -138,13 +145,35 @@ export function buildKitchen(H) {
     const base = new THREE.Group(); base.position.set(7.75, 1.48, -2.86); R.add(base);
     const mount = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.05, 14), M.brass); mount.rotation.x = Math.PI / 2; mount.position.z = 0.025; base.add(mount);
     const arm = new THREE.Group(); arm.position.z = 0.05; base.add(arm);
-    const a1 = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.3, 10), M.brass); a1.rotation.z = Math.PI / 2; a1.position.x = 0.15; arm.add(a1);
-    const elbow = new THREE.Group(); elbow.position.x = 0.3; arm.add(elbow);
-    const a2 = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.26, 10), M.brass); a2.rotation.z = Math.PI / 2; a2.position.x = 0.13; elbow.add(a2);
-    const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.01, 0.08, 10), M.brass); spout.position.set(0.26, -0.04, 0); elbow.add(spout);
+    const a1 = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.32, 10), M.brass); a1.rotation.z = Math.PI / 2; a1.position.x = 0.16; arm.add(a1);
+    const elbow = new THREE.Group(); elbow.position.x = 0.32; arm.add(elbow);
+    const knuckle = new THREE.Mesh(new THREE.SphereGeometry(0.018, 12, 8), M.brass); elbow.add(knuckle);
+    const a2 = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.32, 10), M.brass); a2.rotation.z = Math.PI / 2; a2.position.x = 0.16; elbow.add(a2);
+    const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.01, 0.08, 10), M.brass); spout.position.set(0.32, -0.04, 0); elbow.add(spout);
     elbow.rotation.y = Math.PI * 0.95; arm.rotation.y = 0;
     const h = sys.add(new Hinge({ id: 'pot_filler', name: 'pot filler', object: base, anchor: [0.1, 0, 0.1], pivot: arm, axis: 'y', angle: -70, duration: 0.6, sound: 'tap', radius: 1.9, verbOpen: 'Swing out the', verbClose: 'Fold away the' }));
-    const u = h.update.bind(h); h.update = dt => { u(dt); elbow.rotation.y = Math.PI * 0.95 - h.openAmount * Math.PI * 0.7; };
+    // folded: the elbow tucks back along the wall. Swung out: a two-joint reach that aims the
+    // spout over whichever burner has a pot (H.potFiller.target), else a resting pose
+    const PF = H.potFiller = { hinge: h, spout, base, arm, elbow, target: null, a1: 0, a2: Math.PI * 0.95 };
+    const u = h.update.bind(h);
+    h.update = dt => {
+      u(dt);
+      const k = h.openAmount;
+      let w1 = -70 * Math.PI / 180, w2 = Math.PI * 0.25;
+      if (PF.target) {
+        base.updateWorldMatrix(true, false);
+        const t = base.worldToLocal(PF.target.clone()); t.z -= 0.05;      // arm pivot sits 5 cm off the wall
+        const L1 = 0.32, L2 = 0.32, dx = t.x, dz = t.z, d = Math.min(L1 + L2 - 1e-3, Math.hypot(dx, dz));
+        const al = Math.atan2(-dz, dx), be = Math.acos(THREE.MathUtils.clamp((L1 * L1 + d * d - L2 * L2) / (2 * L1 * d), -1, 1));
+        const pick = th => -L1 * Math.sin(th);            // elbow's distance out from the wall
+        const th1 = pick(al + be) > pick(al - be) ? al + be : al - be;
+        const ex = L1 * Math.cos(th1), ez = -L1 * Math.sin(th1);
+        w1 = th1; w2 = Math.atan2(-(dz - ez), dx - ex) - th1;
+      }
+      PF.a1 += ((k > 0.05 ? w1 : 0) - PF.a1) * Math.min(1, dt * 6);
+      PF.a2 += ((k > 0.05 ? w2 : Math.PI * 0.95) - PF.a2) * Math.min(1, dt * 6);
+      arm.rotation.y = PF.a1 * Math.min(1, k * 1.5); elbow.rotation.y = k > 0.05 ? PF.a2 : Math.PI * 0.95;
+    };
   }
   // under-cabinet light switch (left of the range) and the hood (light + fan) are on the wall
   H.underLights = [];
@@ -184,26 +213,36 @@ export function buildKitchen(H) {
     for (let i = 0; i < 6; i++) { const l = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 8), lem); l.scale.set(1, 0.85, 1.25); const a = i * 1.05; l.position.set(0.95 + Math.cos(a) * 0.07 * (i < 5), 0.98 + (i === 5) * 0.05, -0.05 + Math.sin(a) * 0.07 * (i < 5)); ER.add(l); }
   }
   // Bird of Paradise in the corner the fridge freed (beyond the freezer door's swing)
-  H.birdOfParadise = birdOfParadise(H, L(12.04, 0, -2.47));
+  // (the freezer door sweeps x < 11.66 for z > -2.05 when open, so the leaves stay north/east of it)
+  H.birdOfParadise = birdOfParadise(H, L(12.04, 0, -2.47), { seed: 7, bounds: { x0: 10.9, x1: 12.38, z0: -2.88, z1: -2.05 } });
 
-  // ---- island: soapstone top, drawers / trash / cupboards / microwave drawer on the range side
-  H.island = cabinetRun(b, M, sys, { id: 'island', at: L(9.85, 0, -0.125), rotY: Math.PI, d: 0.95, noTop: true, game,
-    modules: [{ kind: 'drawers', w: 0.9 }, { kind: 'trash', w: 0.6 }, { kind: 'doors2', w: 0.9 }, { kind: 'microwave', w: 0.7 }, { kind: 'drawers', w: 1.1 }] });
+  // ---- island: soapstone top, drawers / trash / cupboards / microwave drawer on the range side.
+  // Its range-side face stays at z = -0.6 (1.6 m from the range); it grows in length and toward
+  // the dining side. ISLAND sizes: [length, cabinet depth, top depth]
+  const IS = H.islandSize = islandSize();
+  const [IL, ID, IT] = IS, IX = 7.75, zI = IT > 2 ? -0.75 : -0.6, zTop1 = zI + IT, x0 = IX - IL / 2, RD = Math.min(ID, 0.8);
+  H.island = cabinetRun(b, M, sys, { id: 'island', at: L(IX + IL / 2, 0, zI + RD / 2), rotY: Math.PI, d: RD, noTop: true, game,
+    modules: [{ kind: 'drawers', w: 0.9 }, { kind: 'trash', w: 0.6 }, { kind: 'doors2', w: 0.9 }, { kind: 'microwave', w: 0.7 }, { kind: 'drawers', w: IL - 3.1 }] });
   H.microwave = H.island.info[3].mw;
-  b.box(M.soapstone, [7.75, 0.895, 0.01], [4.3, 0.05, 1.3], { round: 0.01 });
-  b.box(M.sage, [7.75, 0.5, 0.362], [4.2, 0.82, 0.02], { collide: false });
-  for (let i = 0; i < 4; i++) b.box(M.sageDark, [6.275 + i * 1.05, 0.5, 0.376], [0.9, 0.62, 0.01], { collide: false, cast: false });
-  b.box(M.blackWood, [7.75, 0.05, 0.3], [4.2, 0.1, 0.08], { collide: false, cast: false });
-  H.islandSlots = [6.0, 6.7, 7.4, 8.1, 8.8].map((x, i) => sys.addSlot(new Slot({ id: `island_top_${i}`, name: 'on the island', parent: R, pos: [x, 0.92, -0.25] })));
-  // four woven counter stools on the overhang side
-  H.stools = [6.25, 7.25, 8.25, 9.25].map((x, i) => {
-    const st = counterStool(b, M, { at: L(x, 0, 0.98), rotY: Math.PI });
+  b.box(M.soapstone, [IX, 0.895, (zI - 0.03 + zTop1) / 2], [IL + 0.1, 0.05, IT + 0.03], { round: 0.01 });
+  if (ID > RD) b.box(M.sage, [IX, 0.46, zI + RD + (ID - RD) / 2], [IL - 0.01, 0.84, ID - RD], {});      // solid core behind the drawers
+  b.box(M.sage, [IX, 0.5, zI + ID + 0.012], [IL, 0.82, 0.02], { collide: false });
+  const np = Math.max(3, Math.round(IL / 1.05)), pw = IL / np;
+  for (let i = 0; i < np; i++) b.box(M.sageDark, [x0 + pw * (i + 0.5), 0.5, zI + ID + 0.026], [pw - 0.15, 0.62, 0.01], { collide: false, cast: false });
+  b.box(M.blackWood, [IX, 0.05, zI + ID - 0.05], [IL, 0.1, 0.08], { collide: false, cast: false });
+  const ns = Math.max(5, Math.round(IL / 0.7));
+  H.islandSlots = Array.from({ length: ns }, (_, i) => sys.addSlot(new Slot({ id: `island_top_${i}`, name: 'on the island', parent: R, pos: [x0 + 0.3 + i * (IL - 0.6) / (ns - 1), 0.92, zI + 0.35] })));
+  // counter stools on the overhang side
+  const nStools = IL >= 5 ? 5 : IL > 4.6 ? 3 : 4, sp = IL / (nStools + 0.25);
+  H.stools = Array.from({ length: nStools }, (_, i) => {
+    const x = IX + (i - (nStools - 1) / 2) * sp;
+    const st = counterStool(b, M, { at: L(x, 0, zTop1 + 0.33), rotY: Math.PI });
     sys.add(new Seat({ id: `island_stool_${i}`, name: 'stool', object: st, anchor: [0, 0.7, 0], seatY: 0.64, facing: Math.PI, back: -0.72, radius: 1.5 }));
     return st;
   });
   // cookbook on a little stand: each use turns to the next recipe
   {
-    const g = new THREE.Group(); g.position.set(9.5, 0.92, 0.36); g.rotation.y = Math.PI; R.add(g);
+    const g = new THREE.Group(); g.position.set(IX + IL / 2 - 0.35, 0.92, zTop1 - 0.28); g.rotation.y = Math.PI; R.add(g);
     b.box(M.whiteOak, [0, 0.015, 0], [0.28, 0.03, 0.18], { parent: g, collide: false });
     const book = new THREE.Group(); book.position.set(0, 0.03, 0.02); book.rotation.x = -1.15; g.add(book);
     const pages = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.26, 0.025), M.white); pages.position.y = 0.13; book.add(pages);
@@ -223,7 +262,7 @@ export function buildKitchen(H) {
       onSet: (v, lvl, s) => { coverPivot.rotation.y = lvl ? -Math.PI * 0.95 : 0; if (lvl && s) s.toast(RECIPES[lvl]); } }));
   }
   // two black cage pendants over the island, switched by the door
-  H.pendants = [6.75, 8.75].map(x => pendant(b, M, { at: L(x, 0, 0.0), drop: 1.75, ceiling: KITCHEN.ceil }));
+  H.pendants = (IL > 4.6 ? [IX - IL / 3, IX, IX + IL / 3] : [6.75, 8.75]).map(x => pendant(b, M, { at: L(x, 0, zI + IT / 2), drop: 1.75, ceiling: KITCHEN.ceil }));
   H.pendantSwitch = wallSwitch(H, { id: 'kitchen_lights', name: 'kitchen lights', at: L(3.122, 1.2, 2.65), ry: Math.PI / 2, initial: true,
     onSet: on => { for (const p of H.pendants) p.bulb.visible = on; } });
 
@@ -231,7 +270,7 @@ export function buildKitchen(H) {
   buildSinkNiche(H);
 
   // ---- dining nook: round oak table, four black ladder-back chairs
-  const TX = 10.3, TZ = 4.2;
+  const TX = 10.3, TZ = H.islandSize[2] > 2 ? 4.5 : 4.2;     // the deep island pushes the table a little south
   roundTable(b, M, { at: L(TX, 0, TZ) });
   H.chairs = [[0, -0.78, 0], [0, 0.78, Math.PI], [-0.78, 0, Math.PI / 2], [0.78, 0, -Math.PI / 2]].map(([dx, dz, ry], i) => {
     const ch = ladderChair(b, M, { at: L(TX + dx, 0, TZ + dz), rotY: ry });
@@ -242,8 +281,7 @@ export function buildKitchen(H) {
   H.tableSlots = [[0, 0], [0.3, 0.14], [-0.3, 0.12], [0.06, -0.32], [-0.14, 0.34]].map(([x, z], i) => sys.addSlot(new Slot({ id: `kitchen_table_${i}`, name: 'on the table', parent: TG, pos: [x, 0, z] })));
 
   // ---- plants and copper
-  placeProp('SM_House_Monstera', 1.35, 3.52, 0, -2.42, 0.6, cyl(0.3, 1.2, 0x2f7d32));
-  { const c = new THREE.Mesh(); c.visible = false; c.position.set(3.52, 0.6, -2.42); R.add(c); b.solid(c, 0.5, 1.2, 0.5); }
+  H.birdOfParadise2 = birdOfParadise(H, L(3.5, 0, -2.45), { seed: 31, bounds: { x0: 3.12, x1: 4.6, z0: -2.88, z1: -1.98 } });
   placeProp('SM_House_Monstera', 1.5, 12.0, 0, 5.5, 2.2, cyl(0.3, 1.3, 0x2f7d32));
   { const c = new THREE.Mesh(); c.visible = false; c.position.set(12.0, 0.6, 5.5); R.add(c); b.solid(c, 0.5, 1.2, 0.5); }
   placeProp('SM_Kitchen_CopperPots', 0.3, 9.75, 0.92, -2.62, 0, cyl(0.15, 0.25, 0xb87333));
@@ -321,7 +359,7 @@ function buildSinkNiche(H) {
   const { b, M, sys, A, game } = H, R = H.root;
   const W = 3.3, d = 0.64, zs = W / 2;     // run centred on z = 0, from z +1.65 (south, left) to -1.65 (north, right)
   // cream shaker cabinets, white stone top, brass pulls; left to right: drawers, soda fridge, sink, dishwasher, drawers
-  H.runW = cabinetRun(b, M, sys, { id: 'kitchen_runW', at: V3(3.12 + d / 2, 0, zs), rotY: Math.PI / 2, game, finish: { sage: M.cream, soapstone: M.quartz, bronze: M.brass },
+  H.runW = cabinetRun(b, M, sys, { id: 'kitchen_runW', at: V3(3.12 + d / 2, 0, zs), rotY: Math.PI / 2, game, finish: { sage: M.cream, soapstone: M.quartz, bronze: M.brass, cupPulls: false },
     modules: [{ kind: 'drawers', w: 0.6 }, { kind: 'bevfridge', w: 0.6 }, { kind: 'farmsink', w: 0.9 }, { kind: 'dishwasher', w: 0.6 }, { kind: 'drawers', w: 0.6 }] });
   const NR = H.runW.root;            // local: x along the run (north), z out into the room, back wall at z = -d/2
   H.sink = H.runW.info[2].sink;
@@ -413,54 +451,91 @@ function buildSinkNiche(H) {
   };
 }
 
-// ------------------------------------------------------------------ Bird of Paradise (Strelitzia nicolai)
-/** tall, narrow floor plant in an ivory matte planter; leaves sway gently. Collides only at the pot. */
-function birdOfParadise(H, at, { height = 2.15, seed = 7 } = {}) {
-  const { b, M } = H, R = H.root;
+// ------------------------------------------------------------------ Bird of Paradise (Strelitzia reginae, flowering)
+/**
+ * Fanned bird of paradise in a tall ivory planter: paddle leaves on long stems spreading out
+ * from the pot, with orange-and-blue "bird" flowers held above. Leaves gently sway.
+ * bounds: house-local box { x0, x1, z0, z1 } the leaf tips must stay inside (walls, door swings).
+ * Only the pot collides.
+ */
+function birdOfParadise(H, at, { height = 1.85, seed = 7, bounds = null, flowers = 3 } = {}) {
+  const { b } = H, R = H.root;
   const root = new THREE.Group(); root.position.copy(at); R.add(root);
   let s = seed; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-  // planter: a rounded ivory ceramic pot (lathe), matte with a soft speckle
-  const potMat = new THREE.MeshStandardNodeMaterial({ roughness: 0.92 });
-  potMat.colorNode = mix(color(0xEDE6D6), color(0xD9CFBC), mx_noise_float(positionWorld.mul(38)).mul(0.5).add(0.5).mul(0.6));
-  const prof = [[0.0, 0], [0.17, 0.0], [0.215, 0.05], [0.245, 0.17], [0.25, 0.3], [0.235, 0.4], [0.225, 0.44], [0.21, 0.44], [0.205, 0.41]].map(([x, y]) => new THREE.Vector2(x, y));
-  const pot = new THREE.Mesh(new THREE.LatheGeometry(prof, 40), potMat); pot.castShadow = pot.receiveShadow = true; root.add(pot);
-  const soil = new THREE.Mesh(new THREE.CircleGeometry(0.205, 28), new THREE.MeshStandardNodeMaterial({ color: 0x3a2a1e, roughness: 1 })); soil.rotation.x = -Math.PI / 2; soil.position.y = 0.4; root.add(soil);
-  const c = new THREE.Mesh(); c.visible = false; c.position.set(0, 0.22, 0); root.add(c); b.solid(c, 0.48, 0.44, 0.48);
-  // leaf material: deep green, lighter midrib, fine parallel veins running out from the rib
-  const leafMat = new THREE.MeshStandardNodeMaterial({ roughness: 0.55, side: THREE.DoubleSide });
-  const u = uv().x, v = uv().y, rib = smoothstep(0.06, 0.0, abs(u.sub(0.5)));
-  const veins = sin(u.sub(0.5).abs().mul(90).add(v.mul(14))).mul(0.5).add(0.5).mul(0.12);
-  const varN = mx_noise_float(vec3(u.mul(3), v.mul(6), 0)).mul(0.08);
-  leafMat.colorNode = mix(vec3(0.035, 0.16, 0.06).mul(float(1).sub(veins).add(varN)), vec3(0.32, 0.5, 0.2), rib.mul(0.7));
-  const stemMat = new THREE.MeshStandardNodeMaterial({ color: 0x4F7A3A, roughness: 0.6 });
-  // one paddle leaf: tapered blade, folded slightly along the rib, curling back at the tip,
-  // with a few natural splits along the edge
+  // ---- planter: tall, softly tapered ivory ceramic with a rolled rim (matte, speckled)
+  const potMat = new THREE.MeshStandardNodeMaterial({ roughness: 0.94 });
+  potMat.colorNode = mix(color(0xF1ECE2), color(0xDCD4C4), mx_noise_float(positionWorld.mul(42)).mul(0.5).add(0.5).mul(0.5));
+  const potH = 0.46;
+  const prof = [[0, 0.01], [0.19, 0.0], [0.205, 0.02], [0.225, potH * 0.5], [0.245, potH - 0.015], [0.24, potH], [0.222, potH], [0.218, potH - 0.03]].map(([x, y]) => new THREE.Vector2(x, y));
+  const pot = new THREE.Mesh(new THREE.LatheGeometry(prof, 48), potMat); pot.castShadow = pot.receiveShadow = true; root.add(pot);
+  const soil = new THREE.Mesh(new THREE.CircleGeometry(0.218, 32), new THREE.MeshStandardNodeMaterial({ color: 0x35271c, roughness: 1 })); soil.rotation.x = -Math.PI / 2; soil.position.y = potH - 0.03; root.add(soil);
+  const c = new THREE.Mesh(); c.visible = false; c.position.set(0, potH / 2, 0); root.add(c); b.solid(c, 0.5, potH, 0.5);
+  // ---- materials
+  const leafMat = new THREE.MeshStandardNodeMaterial({ roughness: 0.5, side: THREE.DoubleSide });
+  const u = uv().x, v = uv().y, rib = smoothstep(0.05, 0.0, abs(u.sub(0.5)));
+  const veins = sin(u.sub(0.5).abs().mul(70).sub(v.mul(10))).mul(0.5).add(0.5).mul(0.1);
+  const varN = mx_noise_float(vec3(u.mul(3), v.mul(5), 0)).mul(0.06);
+  const edge = smoothstep(0.42, 0.5, abs(u.sub(0.5)));
+  leafMat.colorNode = mix(mix(vec3(0.03, 0.15, 0.055).mul(float(1).sub(veins).add(varN)), vec3(0.26, 0.42, 0.16), rib.mul(0.75)), vec3(0.18, 0.32, 0.1), edge.mul(0.4));
+  const stemMat = new THREE.MeshStandardNodeMaterial({ color: 0x55803F, roughness: 0.6 });
+  const orange = new THREE.MeshStandardNodeMaterial({ color: 0xF2721C, roughness: 0.45 }); orange.emissiveNode = vec3(0.35, 0.09, 0.0);
+  const blue = new THREE.MeshStandardNodeMaterial({ color: 0x2B3FD6, roughness: 0.4 }); blue.emissiveNode = vec3(0.02, 0.03, 0.18);
+  const spatheMat = new THREE.MeshStandardNodeMaterial({ roughness: 0.5 });
+  spatheMat.colorNode = mix(vec3(0.12, 0.3, 0.12), vec3(0.45, 0.12, 0.18), smoothstep(0.2, 0.9, uv().y));
+  // ---- a paddle leaf: elliptic blade folded along the rib, tip curling, slight wave on the edge
   const leafGeo = (L, W) => {
-    const g = new THREE.PlaneGeometry(1, 1, 6, 16); const p = g.attributes.position;
+    const g = new THREE.PlaneGeometry(1, 1, 8, 18); const p = g.attributes.position;
     for (let i = 0; i < p.count; i++) {
-      const x = p.getX(i), y = p.getY(i) + 0.5;                 // y: 0 at base .. 1 at tip
-      const width = W * Math.pow(Math.sin(Math.PI * Math.min(1, y * 0.92 + 0.04)), 0.7);
-      const split = (Math.abs(x) > 0.3 && (Math.floor(y * 9) % 3 === 1)) ? 0.85 : 1;
-      const xx = x * width * split, fold = Math.abs(xx) * 0.35, curl = -Math.pow(y, 2.2) * L * 0.18;
-      p.setXYZ(i, xx, y * L, fold + curl);
+      const x = p.getX(i), y = p.getY(i) + 0.5;
+      const width = W * Math.pow(Math.sin(Math.PI * Math.min(1, y * 0.96 + 0.02)), 0.62);
+      const xx = x * width, wave = Math.sin(y * 18 + x * 3) * 0.006 * Math.abs(x) * 2;
+      p.setXYZ(i, xx, y * L, Math.abs(xx) * 0.32 - Math.pow(y, 2) * L * 0.16 + wave);
     }
     g.computeVertexNormals(); return g;
   };
+  // ---- leaves fan out all around; each lean is shrunk until its tip stays inside `bounds`
+  const local = (ang, lean, len) => new THREE.Vector3(Math.cos(ang) * Math.sin(lean) * len, Math.cos(lean) * len, Math.sin(ang) * Math.sin(lean) * len);
+  const fits = (ang, lean, stemH, tilt, L) => {
+    if (!bounds) return true;
+    const tip = local(ang, lean, stemH).add(local(ang, lean + tilt, L)).add(at).add(new THREE.Vector3(0, 0, 0));
+    const pad = 0.08;
+    return tip.x > bounds.x0 + pad && tip.x < bounds.x1 - pad && tip.z > bounds.z0 + pad && tip.z < bounds.z1 - pad;
+  };
   root.leaves = [];
-  const N = 11;
+  const N = 12;
   for (let i = 0; i < N; i++) {
-    const a = (i / N) * Math.PI * 2 + rnd() * 0.5, lean = 0.05 + rnd() * 0.1;
-    const stemH = height * (0.3 + rnd() * 0.36), L = 0.7 + rnd() * 0.32, W = 0.27 + rnd() * 0.09;
-    const g = new THREE.Group(); g.position.set(Math.cos(a) * 0.04, 0.4, Math.sin(a) * 0.04); g.rotation.y = -a + Math.PI / 2; g.rotation.z = 0; root.add(g);
-    const tilt = new THREE.Group(); tilt.rotation.x = lean; g.add(tilt);
-    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.014, stemH, 6), stemMat); stem.position.y = stemH / 2; tilt.add(stem);
-    const leaf = new THREE.Mesh(leafGeo(L, W), leafMat); leaf.position.y = stemH - 0.02; leaf.rotation.x = 0.05 + rnd() * 0.2; leaf.rotation.y = (rnd() - 0.5) * 0.6; leaf.castShadow = true; tilt.add(leaf);
-    root.leaves.push({ tilt, base: lean, ph: rnd() * 6.28, sp: 0.6 + rnd() * 0.5 });
+    const ang = (i / N) * Math.PI * 2 + rnd() * 0.4;
+    const stemH = height * (0.32 + rnd() * 0.3), L = 0.42 + rnd() * 0.2, W = 0.15 + rnd() * 0.05;
+    let lean = 0.22 + rnd() * 0.32, tilt = 0.25 + rnd() * 0.35;
+    for (let k = 0; k < 12 && !fits(ang, lean, stemH, tilt, L); k++) { lean *= 0.8; tilt *= 0.85; }
+    const g = new THREE.Group(); g.position.set(Math.cos(ang) * 0.03, potH - 0.03, Math.sin(ang) * 0.03); g.rotation.y = -ang + Math.PI / 2; root.add(g);
+    const sway = new THREE.Group(); sway.rotation.x = lean; g.add(sway);
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.013, stemH, 6), stemMat); stem.position.y = stemH / 2; sway.add(stem);
+    const leaf = new THREE.Mesh(leafGeo(L, W), leafMat); leaf.position.y = stemH - 0.015; leaf.rotation.x = tilt; leaf.rotation.y = (rnd() - 0.5) * 0.7; leaf.castShadow = true; sway.add(leaf);
+    root.leaves.push({ tilt: sway, base: lean, ph: rnd() * 6.28, sp: 0.5 + rnd() * 0.5 });
   }
-  // a couple of young rolled leaves in the middle
-  for (let i = 0; i < 2; i++) { const y = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.018, 0.5 + i * 0.25, 6), stemMat); y.position.set(0.02 * (i ? 1 : -1), 0.4 + (0.5 + i * 0.25) / 2 + height * 0.35, 0); root.add(y); const st = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.012, height * 0.35, 6), stemMat); st.position.set(0.02 * (i ? 1 : -1), 0.4 + height * 0.175, 0); root.add(st); }
-  root.scale.set(0.85, 1, 0.85);
-  root.update = t => { for (const l of root.leaves) l.tilt.rotation.x = l.base + Math.sin(t * l.sp + l.ph) * 0.012; };
+  // ---- flowers: a horizontal beak (spathe), orange sepals fanned up, a blue arrow tongue
+  const flower = (ang, lean, stemH) => {
+    const g = new THREE.Group(); g.position.set(0, potH - 0.03, 0); g.rotation.y = -ang + Math.PI / 2; root.add(g);
+    const sway = new THREE.Group(); sway.rotation.x = lean; g.add(sway);
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.011, stemH, 6), stemMat); stem.position.y = stemH / 2; sway.add(stem);
+    const head = new THREE.Group(); head.position.y = stemH; head.rotation.x = -lean; sway.add(head);
+    const beak = new THREE.Mesh(new THREE.ConeGeometry(0.022, 0.2, 10), spatheMat); beak.rotation.z = Math.PI / 2 + 0.25; beak.position.set(0.08, 0.0, 0); head.add(beak);
+    const base = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 8), spatheMat); base.scale.set(1.4, 1, 1); head.add(base);
+    for (let k = 0; k < 4; k++) {
+      const p = new THREE.Mesh(new THREE.ConeGeometry(0.012, 0.14, 6), orange); p.scale.z = 0.4;
+      p.position.set(-0.01 + k * 0.012, 0.07, (k - 1.5) * 0.012); p.rotation.z = 0.15 - k * 0.22; p.rotation.x = (k - 1.5) * 0.18; head.add(p);
+    }
+    for (const k of [0, 1]) { const t = new THREE.Mesh(new THREE.ConeGeometry(0.008, 0.12, 6), blue); t.position.set(0.04, 0.05 + k * 0.01, (k - 0.5) * 0.012); t.rotation.z = -0.9 - k * 0.15; head.add(t); }
+    head.traverse(o => { if (o.isMesh) o.castShadow = true; });
+    root.leaves.push({ tilt: sway, base: lean, ph: rnd() * 6.28, sp: 0.6 });
+  };
+  for (let k = 0; k < flowers; k++) {
+    const ang = rnd() * Math.PI * 2; let lean = 0.15 + rnd() * 0.15; const sh = height * (0.62 + rnd() * 0.12);
+    for (let j = 0; j < 10 && !fits(ang, lean, sh, 0, 0.15); j++) lean *= 0.75;
+    flower(ang, lean, sh);
+  }
+  root.update = t => { for (const l of root.leaves) l.tilt.rotation.x = l.base + Math.sin(t * l.sp + l.ph) * 0.015; };
   return root;
 }
 
@@ -488,7 +563,7 @@ class CoffeeStation {
     this.s = { beans: false, grinding: 0, brewing: 0 };
     this.hopper = sys.addSlot(new Slot({ id: 'coffee_hopper', name: 'into the grinder', parent: CR, pos: [at.grind, top + 0.41, gz], radius: 1.6,
       accepts: it => it.tags.has('beans') && !this.s.beans,
-      onPut: (it, s) => { this.s.beans = true; s.toast('Beans in! Put the coffee handle under the grinder and grind.'); s.sfx('pour');
+      onPut: (it, s) => { this.s.beans = true; this.H.cooking?.flag('beans_in'); s.toast('Beans in! Put the coffee handle under the grinder and grind.'); s.sfx('pour');
         setTimeout(() => { if (it.slot !== this.hopper) return; this.hopper.item = null; s.flyTo(it, () => it.home.world(), () => { s.place(it, it.home); s.changed(); }); }, 700); } }));
     this.fork = sys.addSlot(new Slot({ id: 'coffee_fork', name: 'under the grinder', parent: CR, pos: [at.grind, top + 0.12, gf + 0.02], radius: 1.6, accepts: it => it.tags.has('portafilter') }));
     this.group = sys.addSlot(new Slot({ id: 'coffee_group', name: 'into the espresso machine', parent: CR, pos: [at.mach, top + 0.21, mf - 0.03], radius: 1.6, accepts: it => it.tags.has('portafilter') }));
@@ -557,7 +632,7 @@ class CoffeeStation {
       if (Math.random() < 0.5 && g.fxGlow) { this.root.updateWorldMatrix(true, false); const p = this.fork.world(); p.y += 0.06; g.fxGlow.emit(p, V3(0, -0.4, 0), { life: 0.3, size: 0.02, gravity: 3, color: [0.35, 0.2, 0.1] }); }
       if (this.s.grinding <= 0) {
         this.s.grinding = 0; this.s.beans = false;
-        const p = this.fork.item; if (p) { p.state.ground = true; p.onState(); }
+        const p = this.fork.item; if (p) { p.state.ground = true; p.onState(); } this.H.cooking?.flag('ground');
         sys.toast('Fresh grounds! Now click the handle into the espresso machine.'); sys.changed();
       }
     }
@@ -570,7 +645,7 @@ class CoffeeStation {
       if (this.s.brewing <= 0) {
         this.s.brewing = 0; this.stream.visible = false;
         const p = this.group.item; if (p) { p.state.ground = false; p.onState(); }
-        sys.sfx('ding'); sys.toast('A perfect little coffee! Take it to a grown-up.'); sys.changed();
+        sys.sfx('ding'); sys.toast('A perfect little coffee! Take it to a grown-up.'); this.H.cooking?.flag('coffee'); sys.changed();
       }
     }
   }
@@ -636,18 +711,10 @@ function buildPantry(H) {
     P.toaster = sys.add(new Toggle({ id: 'pantry_toaster', name: 'toaster', object: g, anchor: [0, 0.2, 0.1], persist: false, verbOn: 'Make toast in the', verbOff: 'Pop up the', sound: 'click', radius: 1.6,
       onSet: on => { P.toast.t = on ? 0.0001 : 0; if (on) breadMat.color.set(0xF2D8A8); } }));
   }
-  // shelf slots (where the jars and boxes live; free ones take anything)
-  for (const [yi, y] of [[1, 0.85], [2, 1.25], [3, 1.65]].values()) for (let i = 0; i < 6; i++) P.slots.push(sys.addSlot(new Slot({ id: `pantry_n${yi}_${i}`, name: 'on the shelf', parent: R, pos: [12.85 + i * 0.37, y + 0.018, 0.72], radius: 1.9 })));
-  for (const [yi, y] of [[1, 0.85], [2, 1.25], [3, 1.65]].values()) for (let i = 0; i < 7; i++) P.slots.push(sys.addSlot(new Slot({ id: `pantry_e${yi}_${i}`, name: 'on the shelf', parent: R, pos: [15.18, y + 0.018, 0.9 + i * 0.45], radius: 1.9 })));
-  // decor: baskets on the bottom shelf, cans and bottles up high, flour/sugar canisters
+  // woven baskets on the bottom shelves (root vegetables go in them)
   const basket = new THREE.BoxGeometry(0.36, 0.22, 0.3);
   for (let i = 0; i < 5; i++) { const m = new THREE.Mesh(basket, M.rattan); m.position.set(12.95 + i * 0.46, 0.45 + 0.13, 0.72); m.castShadow = true; R.add(m); }
   for (let i = 0; i < 6; i++) { const m = new THREE.Mesh(basket, M.rattan); m.rotation.y = Math.PI / 2; m.position.set(15.18, 0.45 + 0.13, 0.85 + i * 0.52); R.add(m); }
-  const canCols = [0xC0392B, 0x2E86C1, 0xF1C40F, 0x27AE60, 0xE67E22, 0x8E44AD];
-  for (let i = 0; i < 12; i++) { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.11, 14), new THREE.MeshStandardNodeMaterial({ color: canCols[i % 6], roughness: 0.4, metalness: 0.3 })); m.position.set(12.8 + i * 0.19, 2.05 + 0.073, 0.7); R.add(m); }
-  for (let i = 0; i < 8; i++) { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.04, 0.26, 12), new THREE.MeshStandardNodeMaterial({ color: [0x6B8E23, 0x8B0000, 0xDAA520, 0x2F4F4F][i % 4], roughness: 0.15, transparent: true, opacity: 0.9 })); m.position.set(12.85 + i * 0.29, 2.45 + 0.148, 0.7); R.add(m); }
-  for (let i = 0; i < 6; i++) { const j = jarObject(M, [0xF5F5F0, 0xE8C07A, 0x7B3F1E, 0xF4E1C1, 0xD35400, 0x229954][i], 0.22, 0.065); j.position.set(13.0 + i * 0.36, 2.25 + 0.018, 3.73); R.add(j); }
-  for (let i = 0; i < 7; i++) { const j = jarObject(M, [0xF9E79F, 0xA04000, 0xFAD7A0, 0x1E8449, 0xCB4335, 0xF5B7B1, 0x5D6D7E][i], 0.16, 0.05); j.position.set(15.18, 2.05 + 0.018, 0.85 + i * 0.47); R.add(j); }
   // cereal boxes (atlas of 8 invented box fronts, side by side)
   const atlas = A.textures.T_Cereal_Boxes;
   P.boxMats = Array.from({ length: 8 }, (_, i) => {
@@ -662,24 +729,10 @@ function buildPantry(H) {
     box.position.y = 0.14; box.castShadow = true;
     const g = new THREE.Group(); g.add(box); return g;
   };
-  // a decorative row of boxes up high on the east shelves
-  for (let i = 0; i < 6; i++) { const g = P.cerealBox(i + 2); g.rotation.y = -Math.PI / 2; g.position.set(15.18, 2.45 + 0.018, 0.85 + i * 0.5); R.add(g); }
   P.makeItems = mk => {
     // flour and cookies on the counter
     mk('flour', 'SM_Kitchen_FlourSack', 'flour', 0.2, ['ingredient', 'flour'], 'pantry_run_top_0', simple(new THREE.BoxGeometry(0.14, 0.2, 0.1).translate(0, 0.1, 0), C.cream));
     mk('cookies', 'SM_Kitchen_CookieJar', 'cookie jar', 0.22, ['food'], 'pantry_run_top_2', cyl(0.08, 0.22, 0xd9c9a3));
-    // jars you can pick up
-    const JARS = [['pasta', 0xF3D58A, 'pantry_n2_0'], ['rice', 0xF7F4EC, 'pantry_n2_1'], ['red beans', 0x8E2B1F, 'pantry_n2_2'], ['rainbow candies', 0xEC4899, 'pantry_n2_3'], ['sugar', 0xFFFFFF, 'pantry_n2_4'], ['oats', 0xD9B98A, 'pantry_n2_5'],
-      ['lentils', 0xC2621F, 'pantry_n1_1'], ['chocolate chips', 0x4A2511, 'pantry_n1_3']];
-    for (const [i, [name, col, home]] of JARS.entries()) {
-      const it = new Item({ id: `jar_${i}`, name: `jar of ${name}`, object: jarObject(M, col), tags: ['food', 'jar'], home: sys.slots.get(home) });
-      it.baseScale = 1; sys.add(it); sys.place(it, it.home); H.items[`jar_${i}`] = it;
-    }
-    // cereal boxes you can pick up (fronts face out of the shelf)
-    for (let i = 0; i < 6; i++) {
-      const it = new Item({ id: `cereal_${i}`, name: 'cereal box', object: P.cerealBox(i), tags: ['food', 'cereal'], home: sys.slots.get(`pantry_e2_${i}`) });
-      it.baseScale = 1; it.yaw = -Math.PI / 2; sys.add(it); sys.place(it, it.home); H.items[`cereal_${i}`] = it;
-    }
   };
 }
 
@@ -697,7 +750,7 @@ export function updateKitchen(H, dt) {
     const it = sk.slot.item;
     if (it?.tags.has('fillable')) {
       it.state.fill = Math.min(1, (it.state.fill || 0) + dt * 0.22); it.state.coffee = false; it.state.cocoa = false; it.onState?.();
-      if (it.state.fill >= 1 && !it._fullSaid) { it._fullSaid = true; g.toast(`The ${it.name} is full!`); sys.changed(); }
+      if (it.state.fill >= 1 && !it._fullSaid) { it._fullSaid = true; g.toast(`The ${it.name} is full!`); H.cooking?.flag('mug_filled'); sys.changed(); }
     } else if (it && it._fullSaid) it._fullSaid = false;
     if (it?.tags.has('washable') && !it.tags.has('fillable')) {
       it._wash = (it._wash || 0) + dt;
@@ -744,7 +797,7 @@ export function updateKitchen(H, dt) {
     } else { ov.glow.intensity = 0; ov.coil.material.color.set(0x3a2a22); }
   }
   // ---- appliances
-  H.birdOfParadise?.update(performance.now() / 1000);
+  const tt = performance.now() / 1000; H.birdOfParadise?.update(tt); H.birdOfParadise2?.update(tt);
   H.dishwasher.update(dt); H.microwave.update(dt); H.freezer.update(dt); H.fridge.update(dt); H.coffee.update(dt);
   // ---- toaster
   const T = H.pantry.toast;

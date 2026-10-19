@@ -160,7 +160,7 @@ export class Item extends Interactable {
     this.flying = null;
   }
   verb(sys) {
-    if (this.held || sys.held) return null;
+    if (this.held || sys.held || this.state.gone || this.state.worn) return null;
     if (this.slot && !this.slot.enabled()) return null;
     return { label: `Take ${this.name}`, clip: 'PickUp', run: () => sys.pickUp(this) };
   }
@@ -274,9 +274,24 @@ export class InteractionSystem {
     item.flying = { t: 0, dur: 0.28, from: wp.clone(), to: toFn, done };
   }
 
+  /** in first person (V or a close-up) the held item shows at the bottom of the view */
+  syncHeldView() {
+    const g = this.game, it = this.held;
+    if (!this.fpHold) { this.fpHold = new THREE.Group(); this.fpHold.position.set(0.17, -0.16, -0.4); g.camera.add(this.fpHold); }
+    const fp = !!(g.focus || g.view === 'first');
+    if (!it || it.flying) return;
+    const o = it.object;
+    if (fp && o.parent !== this.fpHold) { this.fpHold.add(o); o.position.set(0, 0, 0); o.quaternion.identity(); o.rotation.set(0.35, -0.5, 0); o.scale.setScalar(it.baseScale); }
+    else if (!fp && o.parent === this.fpHold) {
+      const hand = g.wren.bones?.RightHand;
+      if (hand) { hand.add(o); const ws = new THREE.Vector3(); hand.getWorldScale(ws); o.scale.setScalar(it.baseScale / ws.x); o.position.copy(it.gripOffset).divideScalar(ws.x); o.quaternion.identity(); }
+    }
+  }
+
   // --------------------------------------------------------------- per frame
   update(dt) {
     for (const x of this.list) x.update(dt);
+    this.syncHeldView();
     this.cool -= dt;
     if (!this.enabled) { this.show(null); return; }
     const g = this.game, P = g.player.pos, face = g.player.face;
@@ -297,6 +312,12 @@ export class InteractionSystem {
       consider(x.anchor(new THREE.Vector3()), x.radius, () => x.verb(this), x instanceof Item ? 0.15 : 0);
     }
     if (this.held) {
+      // use what you hold on something ("Add flour to the bowl", "Drain the pasta")
+      if (this.combine) for (const x of this.items.values()) {
+        if (x === this.held || x.held || x.state.gone || !x.object.visible || (x.slot && !x.slot.enabled())) continue;
+        const v = this.combine(this.held, x); if (!v) continue;
+        consider(x.anchor(new THREE.Vector3()), x.radius, () => v, 0.55);
+      }
       for (const s of this.slots.values()) {
         if (s.item || !s.enabled() || !s.accepts(this.held)) continue;
         consider(s.world(new THREE.Vector3()), s.radius, () => ({ label: `Put ${this.held.name} ${s.name}`, clip: 'PickUp', run: () => this.putIn(s) }), 0.5);

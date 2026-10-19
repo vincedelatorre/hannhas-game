@@ -46,8 +46,12 @@ export function makeMaterials(T) {
   // ---- Mediterranean kitchen (Option A: sage & copper) ----
   // downstairs floor: matte wide-plank natural oak (the family's pick)
   M.oakFloor = std({ roughness: 0.88 }, T.T_Natural_Oak_Floor ? worldTiled(T.T_Natural_Oak_Floor, 0.75) : T.T_Oak_Floor ? worldTiled(T.T_Oak_Floor, 0.32) : color(0xB08A60));
-  M.sage = std({ roughness: 0.55 }, T.T_Sage_Cabinet ? worldTiled(T.T_Sage_Cabinet, 0.9) : color(0x9AA88A));
-  M.sageDark = std({ roughness: 0.55 }, T.T_Sage_Cabinet ? worldTiled(T.T_Sage_Cabinet, 0.9, 0.82) : color(0x7E8C6F));
+  // English-country olive sage (#777B6B): the painted-wood texture keeps its grain but its colour is
+  // pulled to a warm grey-green base, satin rather than gloss
+  const SAGE = 0x777B6B;
+  const sageNode = k => T.T_Sage_Cabinet ? mix(worldTiled(T.T_Sage_Cabinet, 0.9).mul(vec3(0.72, 0.66, 0.7)), color(SAGE), float(0.5)).mul(k) : color(SAGE).mul(k);
+  M.sage = std({ roughness: 0.46 }, sageNode(1));
+  M.sageDark = std({ roughness: 0.46 }, sageNode(0.84));
   M.limestone = std({ roughness: 0.6 }, T.T_Limestone_Tile ? worldTiled(T.T_Limestone_Tile, 0.75) : color(0xD8CBB4));
   M.soapstone = std({ roughness: 0.62 }, T.T_Soapstone ? worldTiled(T.T_Soapstone, 0.6) : color(0x3B3C3D));
   M.limewash = std({ roughness: 0.9 }, T.T_Limewash ? worldTiled(T.T_Limewash, 0.35) : color(0xEFE8DC));

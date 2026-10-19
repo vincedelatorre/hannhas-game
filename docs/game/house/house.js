@@ -19,6 +19,11 @@ import { buildDoor } from './parts.js';
 import { InteractionSystem, Interactable, Item, Slot, Seat, CLIP_RANGES } from './interact.js';
 import { prop, simple, cyl } from './props.js';
 import { buildShell, buildKitchen, updateKitchen } from './kitchen.js';
+import { Cooking, TIMES } from './cooking.js';
+import { stockKitchen, placeName } from './stock.js';
+import { Focus } from './focus.js';
+import { RecipeBook } from './recipebook.js';
+import { ITEM_DEFS } from './items.js';
 import { V, H } from '../world.js';
 
 export const HOUSE_ORIGIN = new THREE.Vector3(0, 400, -400);
@@ -28,6 +33,8 @@ export const HOUSE_MODELS = ['SM_Kitchen_Cupcake', 'SM_Kitchen_MilkBottle', 'SM_
   'SM_Kitchen_EspressoMachine', 'SM_Kitchen_Grinder', 'SM_Kitchen_Skillet', 'SM_Kitchen_DutchOven', 'SM_Kitchen_Herbs', 'SM_Kitchen_StandMixer'];
 export const HOUSE_TEXTURES = ['T_Wall_Plaster', 'T_Cabinet_Turquoise', 'T_Honey_Wood', 'T_Window_View', 'T_Art_Fruit', 'T_Art_Turtle',
   'T_Oak_Floor', 'T_Sage_Cabinet', 'T_Limestone_Tile', 'T_Soapstone', 'T_Limewash', 'T_Aged_Copper', 'T_White_Oak', 'T_Cereal_Boxes', 'T_Cookbook', 'T_Countertop_Marble', 'T_Zellige_Tile', 'T_Natural_Oak_Floor'];
+
+const cap = s => s ? s[0].toUpperCase() + s.slice(1) : s;
 
 export class House {
   constructor(game, scene, A, physics) {
@@ -41,13 +48,24 @@ export class House {
     this.sys.saveKey = 'hg.save.house.v2';      // the kitchen was rebuilt: old saves no longer fit
     this.windows = [];
     buildShell(this);
+    this.itemDefs = ITEM_DEFS;
+    if (!scene.children.includes(game.camera)) scene.add(game.camera);     // so things held in first person render
     const bowl = buildKitchen(this);
+    this.bowl = bowl;
     this.buildCupcakes(bowl);
+    this.cooking = new Cooking(this);
+    stockKitchen(this);
+    this.tagLegacyItems();
+    this.focus = new Focus(this);
+    this.buildFocusViews();
+    this.recipeBook = new RecipeBook(this);
+    this.buildMitts();
+    for (const ov of this.range.ovens) ov.state.onDone = () => this.bakeIn(ov);
     this.buildFoyer();
     this.buildLights();
     this.buildExteriorDoor();
-    this.sys.extraSave = () => ({ recipe: this.recipe.save(), cupcakes: this.cupcakes.filter(c => c.live).length });
-    this.sys.extraLoad = d => { this.recipe.load(d.recipe); };
+    this.sys.extraSave = () => ({ cooking: this.cooking.save(), book: this.recipeBook.save(), mitts: !!this.game.mitts });
+    this.sys.extraLoad = d => { this.cooking.load(d.cooking); this.recipeBook.load(d.book); if (d.mitts) this.wearMitts(this.items.oven_mitts_mitts || this.mittsItem, true); for (const it of this.sys.items.values()) { if (it.state.gone) { it.object.visible = false; if (it.slot) { it.slot.item = null; it.slot = null; } } if (it.state.chopped) this.cooking.applyChopped(it); if (it.state.c) this.cooking.syncVisual(it); } };
   }
 
   local(x, y, z) { return new THREE.Vector3(x, y, z); }
@@ -55,8 +73,6 @@ export class House {
 
   buildCupcakes(bowl) {
     const sys = this.sys, A = this.A, R = this.root;
-    this.recipe = new CupcakeRecipe(this, bowl);
-    sys.add(this.recipe);
     this.cupcakes = [];
     for (let i = 0; i < 3; i++) {
       const c = new Item({ id: `cupcake_${i}`, name: 'cupcake', object: prop(A, 'SM_Kitchen_Cupcake', 0.09, cyl(0.035, 0.08, C.pink)), tags: ['food', 'edible', 'cupcake'],
@@ -69,6 +85,114 @@ export class House {
       sys.add(c); R.add(c.object);
       this.cupcakes.push(c);
     }
+  }
+
+  // --------------------------------------------------------------- kitchen systems glue
+  /** where an item is right now, in words (for the recipe book and inspect card) */
+  whereIs(it) {
+    if (it.held) return 'In your hands';
+    if (it.state.gone) return 'Used up';
+    if (!it.slot) return 'Somewhere in the kitchen';
+    return this.places?.get(it.slot) || placeName(it.slot);
+  }
+  /** older generated items join the cooking system */
+  tagLegacyItems() {
+    const I = this.items, tag = (id, tags, def, extra = {}) => { const it = I[id]; if (!it) return; for (const t of tags) it.tags.add(t); if (def) it.def = def; Object.assign(it.state, extra); };
+    tag('apple', ['fruit', 'choppable', 'apple_red'], 'apple_red');
+    tag('strawberries', ['fruit', 'choppable', 'berries'], 'strawberries');
+    tag('cheese', ['cheese', 'cheddar', 'dairy']);
+    tag('milk', ['dairy', 'pourable'], null, { qty: I.milk?.state.qty ?? 1000 }); if (I.milk) I.milk.unit = 'ml';
+    tag('flour', ['baking'], null, { qty: I.flour?.state.qty ?? 1000 }); if (I.flour) I.flour.unit = 'g';
+    tag('mug', ['mug', 'cup']);
+    tag('bowl', ['bowl', 'mixing', 'container']);
+    tag('skillet', ['pan', 'container']); tag('dutch_oven', ['pot', 'container']);
+    for (const k of [1, 2]) tag(`plate_${k}`, ['servable', 'dish'], 'dinner_plate');
+    tag('spoon', ['spoon']);
+    // a banana bunch, grapes and an orange in the fruit bowl's company on the island for the fruit salad
+    for (const it of this.sys.items.values()) { if (it.def && !it.baseName) it.baseName = it.name; if (it.tags.has('servable')) this.cooking.makeEdible(it); }
+  }
+  /** first-person close-up views for every storage space and station */
+  buildFocusViews() {
+    const F = this.focus, V = (o, opts) => Focus.view(o, opts);
+    F.attach(this.fridge.door, V(this.fridge.root, { at: [0, 1.0, 0], dist: 1.15, up: 0.3, name: 'Fridge', radius: 1.3 }));
+    F.attach(this.freezer.door, V(this.freezer.root, { at: [0, 1.0, 0], dist: 1.15, up: 0.3, name: 'Freezer', radius: 1.3 }));
+    for (const col of [this.fridge, this.freezer]) for (const c of col.crispers) F.attach(c.slide, V(col.root, { at: [c.part.position.x, 0.3, 0.25], dist: 0.75, up: 0.6, name: col === this.fridge ? 'Produce drawer' : 'Freezer basket', radius: 0.9 }));
+    const runs = [[this.runNL, 'Range-wall cupboards'], [this.runNR, 'Range-wall cupboards'], [this.island, 'Island'], [this.runE, 'Serving counter'], [this.runW, 'Sink counter'], [this.pantry.run, 'Pantry counter']];
+    for (const [run, label] of runs) for (const m of run.info) {
+      const name = this.places?.get(m.slots?.[0]) || null;
+      const nm = s => (this.places && [...this.places.entries()].find(([sl, v]) => sl.id.startsWith(s))?.[1]?.split('→').pop().trim());
+      if (m.doors) for (const d of m.doors) F.attach(d, V(run.root, { at: [m.xc, 0.35, 0.05], dist: 0.95, up: 0.55, name: cap(nm(`${run.id}_${run.info.indexOf(m)}_cg`) || 'cupboard'), radius: 0.9 }));
+      if (m.drawer) F.attach(m.drawer, V(run.root, { at: [m.xc, 0.7, 0.3], dist: 0.65, up: 0.6, name: cap(nm(`${m.drawer.id}_g`) || (m.kind === 'trash' ? 'trash and recycling' : 'drawer')), radius: 0.8 }));
+      if (m.dw) F.attach(m.dw.door, V(run.root, { at: [m.xc, 0.45, 0.3], dist: 0.85, up: 0.75, name: 'Dishwasher', radius: 0.9 }));
+      if (m.mw) F.attach(m.mw.drawer, V(run.root, { at: [m.xc, 0.55, 0.35], dist: 0.7, up: 0.55, name: 'Microwave drawer', radius: 0.8 }));
+      if (m.bev) F.attach(m.bev.door, V(run.root, { at: [m.xc, 0.45, 0.1], dist: 0.8, up: 0.55, name: 'Soda fridge', radius: 0.8 }));
+    }
+    for (const [g, n] of [[this.glassL, 'Left glass cupboard'], [this.glassR, 'Right glass cupboard']]) for (const d of g.doors) F.attach(d, V(g.root, { at: [0.82, 0.55, 0.05], dist: 1.05, up: -0.25, name: n, radius: 1.0 }));
+    for (const ov of this.range.ovens) F.attach(ov.door, V(this.range.root, { at: [ov.slot.parent.position.x, 0.35, 0.25], dist: 0.9, up: 0.6, name: ov.door.name === 'big oven' ? 'Big oven' : 'Small oven', radius: 0.9 }));
+    // stations: step up and look
+    const R = this.root, rg = this.range;
+    F.station('station_range', 'range', 'Cook at the range', rg.root, [0, 1.15, 0.45], V(rg.root, { at: [0, 0.95, 0.0], dist: 0.62, up: 0.62, name: 'Cooking at the range', radius: 1.05 }));
+    const sk = this.sink; F.station('station_sink', 'sink', 'Use the sink', sk.root, [sk.mouth.x, 1.15, 0.5], V(sk.root, { at: [sk.mouth.x, 0.85, 0.05], dist: 0.62, up: 0.6, name: 'At the sink', radius: 0.95 }));
+    const [IL, , IT] = this.islandSize, zI = IT > 2 ? -0.75 : -0.6;
+    const prep = new THREE.Object3D(); prep.position.set(7.75, 0, zI + 0.35); R.add(prep);
+    F.station('station_island', 'island', 'Prepare food at the island', prep, [0, 1.1, -0.45], V(prep, { at: [0, 0.92, 0.05], n: [0, 0, -1], dist: 0.8, up: 0.62, name: 'Island prep area', radius: 1.6 }));
+    const shelf = (id, label, pos, n, radius) => { const o = new THREE.Object3D(); o.position.set(...pos); R.add(o); F.station(id, 'shelf', label, o, [n[0] * 0.6, 0.2, n[2] * 0.6], V(o, { at: [0, 0, 0], n, dist: 1.05, up: 0.15, name: label.replace('Inspect the ', '').replace(/^./, c => c.toUpperCase()), radius })); };
+    shelf('station_pantry_n', 'Inspect the pasta & grains shelf', [13.8, 1.45, 0.72], [0, 0, 1], 1.5);
+    shelf('station_pantry_e', 'Inspect the baking & snacks shelf', [15.18, 1.45, 2.2], [-1, 0, 0], 1.9);
+    shelf('station_pantry_s', 'Inspect the spice rack', [13.8, 1.75, 3.73], [0, 0, -1], 1.4);
+    const cf = this.coffee.root; F.station('station_coffee', 'coffee', 'Make coffee', cf, [0.55, 1.2, 0.5], V(cf, { at: [0.55, 1.05, 0.05], dist: 0.7, up: 0.35, name: 'Coffee nook', radius: 0.8 }));
+  }
+  /** oven mitts: a wearable that lets you take hot trays out of the oven */
+  buildMitts() {
+    const sys = this.sys, m = [...sys.items.values()].find(i => i.def === 'oven_mitts'); this.mittsItem = m;
+    if (!m) return;
+    m.useVerb = () => ({ label: 'Put on the oven mitts', clip: 'PickUp', run: () => this.wearMitts(m) });
+    const d0 = sys.drop.bind(sys);
+    sys.drop = () => { if (!sys.held && this.game.mitts) { this.takeOffMitts(); return true; } return d0(); };
+    // hot trays need mitts
+    const v0 = Object.getPrototypeOf(m).verb;
+    for (const it of sys.items.values()) if (it.tags.has('tray')) it.verb = function (s) { if (this.state.c?.hot && !s.game.mitts && !this.held && this.slot?.enabled()) return { label: 'Too hot! Put on oven mitts first', disabled: true, run: () => s.toast('The oven mitts are in the towel drawer to the right of the range.') }; return v0.call(this, s); };
+    const p0 = sys.pickUp.bind(sys);
+    sys.pickUp = it => { p0(it); if (it.state.c?.baked) this.cooking.flag('cookies_out'); };
+  }
+  wearMitts(m, quiet) {
+    const sys = this.sys, g = this.game; if (!m) return;
+    if (sys.held === m) { sys.held = null; }
+    m.held = false; if (m.slot) { m.slot.item = null; m.slot = null; }
+    m.state.worn = true; g.mitts = true;
+    const hand = g.wren.bones?.LeftHand;
+    if (hand) { hand.add(m.object); const ws = new THREE.Vector3(); hand.getWorldScale(ws); m.object.scale.setScalar(1.3 / ws.x); m.object.position.set(0, 0.04 / ws.x, 0); m.object.visible = true; }
+    if (!quiet) { sys.toast('Oven mitts on! Now you can carry hot trays. (Q with empty hands takes them off.)'); sys.changed(); }
+  }
+  takeOffMitts() {
+    const m = this.mittsItem, sys = this.sys; if (!m) return;
+    this.game.mitts = false; m.state.worn = false;
+    if (m.home && !m.home.item) sys.place(m, m.home); else this.root.add(m.object);
+    sys.toast('Oven mitts off.'); sys.changed();
+  }
+  /** the oven finished: cupcake batter becomes cupcakes, cookie dough becomes cookies */
+  bakeIn(ov) {
+    const sys = this.sys, it = ov.slot.item, c = it?.state.c;
+    sys.sfx('ding');
+    if (c?.mix === 'cupcake_batter') return this.bakeCupcakes(ov, it);
+    if (it?.tags.has('tray') && c?.dough) { c.dough = false; c.baked = true; c.hot = TIMES.cool; this.cooking.changed(it, 'Ding! The cookies are baked. Put on oven mitts to take the tray out.'); this.cooking.flag('cookies_baked'); return; }
+    sys.toast(it ? `Ding! The ${it.name} is nice and warm.` : 'Ding!');
+  }
+  bakeCupcakes(ov, bowl) {
+    const sys = this.sys, g = this.game, c = bowl.state.c;
+    c.mix = null; c.add = {}; bowl.tags.delete('bakeable'); this.cooking.changed(bowl);
+    const free = [...sys.slots.values()].find(s => !s.item && s.id.startsWith('island_top') && s.enabled());
+    sys.place(bowl, free || bowl.home);
+    let first = true;
+    for (const cc of this.cupcakes) {
+      if (cc.live) continue; cc.live = true;
+      if (first) { sys.place(cc, ov.slot); first = false; }
+      else { const f2 = this.tableSlots.find(s => !s.item) || [...sys.slots.values()].find(s => !s.item && s.id.startsWith('island_top')); if (f2) sys.place(cc, f2); }
+    }
+    sys.toast('Cupcakes are ready! One is in the oven and the rest are on the table.');
+    this.cooking.flag('cupcakes_baked');
+    g.wren.play('Cheer', CLIP_RANGES.Cheer); g.friend?.cheer?.(); g.speech?.say('cupcakes', { force: true }); g.audio?.chime?.(988);
+    sys.changed();
   }
 
   /** eat food: crumbs, a happy sound, and the item goes away (fruit returns to its home later) */
@@ -191,98 +315,7 @@ export class House {
     for (const p of this.pendants) p.light.intensity = this.indoors && this.pendantSwitch.on ? 7 * (0.6 + night * 0.6) : 0;
     for (const l of this.underLights) l.intensity = this.indoors && this.underSwitch.on ? 1.6 : 0;
     updateKitchen(this, dt);
-    this.recipe.update(dt);
+    this.cooking.update(dt); this.focus.update(dt); this.recipeBook.update(dt);
   }
 }
 
-// ------------------------------------------------------------------ cupcake activity
-class CupcakeRecipe extends Interactable {
-  constructor(house, bowl) {
-    super({ id: 'recipe_cupcake', name: 'cupcakes', object: bowl.object, anchor: [0, 0.1, 0], radius: 1.6, save: false });
-    this.house = house; this.bowl = bowl;
-    this.s = { flour: false, milk: false, stirred: false, baked: false };
-    this.stirT = 0;
-    // batter inside the bowl (two looks: lumpy mix, smooth golden batter)
-    const disk = this.batter = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.07, 0.04, 24), new THREE.MeshStandardNodeMaterial({ roughness: 0.6, color: 0xf3e3c3 }));
-    disk.visible = false; bowl.object.add(disk); this.syncBatter();
-    // a slot inside the bowl for ingredients (only while the bowl sits on the counter or table)
-    const sys = house.sys;
-    this.slot = sys.addSlot(new Slot({ id: 'bowl_in', name: 'into the bowl', parent: bowl.object, pos: [0, 0.06 / bowl.baseScale, 0], radius: 1.6,
-      enabled: () => !bowl.held && !this.s.stirred && !!bowl.slot && !bowl.slot.id.includes('rack'),
-      accepts: it => (it.tags.has('flour') && !this.s.flour) || (it.tags.has('milk') && !this.s.milk),
-      onPut: (it, s) => this.add(it, s) }));
-    // the oven turns stirred batter into cupcakes
-    house.oven.state.onDone = () => this.bake();
-  }
-  syncBatter() {
-    const s = this.s, b = this.batter, inv = 1 / (this.bowl.baseScale || 1);
-    b.visible = s.flour || s.milk; b.scale.setScalar(inv); b.position.y = 0.065 * inv;
-    b.material.color.set(s.stirred ? 0xe8b75a : s.flour && s.milk ? 0xf3e3c3 : s.flour ? 0xfbf6ec : 0xffffff);
-    this.bowl.tags[s.stirred ? 'add' : 'delete']('bakeable');
-  }
-  add(it, sys) {
-    const k = it.tags.has('flour') ? 'flour' : 'milk';
-    this.s[k] = true; this.syncBatter();
-    sys.toast(this.s.flour && this.s.milk ? 'Flour and milk are in! Now stir it with a wooden spoon.' : k === 'flour' ? 'Flour in! Add some milk from the fridge.' : 'Milk in! Add some flour from the pantry.');
-    sys.sfx('pour');
-    // the ingredient hops back out onto the nearest free counter spot
-    setTimeout(() => {
-      if (it.slot !== this.slot) return;
-      let best = null, bd = 9; const p = this.slot.world();
-      for (const s of sys.slots.values()) { if (s.item || s === this.slot || !s.enabled() || !s.id.includes('top')) continue; const d = s.world().distanceTo(p); if (d < bd) { bd = d; best = s; } }
-      const target = best || it.home;
-      this.slot.item = null; sys.flyTo(it, () => target.world(), () => { sys.place(it, target); sys.changed(); });
-    }, 700);
-  }
-  verb(sys) {
-    const s = this.s, bowl = this.bowl;
-    if (bowl.held || !bowl.slot || this.stirT > 0) return null;
-    if (s.flour && s.milk && !s.stirred) {
-      if (sys.held?.tags.has('spoon')) return { label: 'Stir the batter', clip: 'PickUp', run: () => this.stir(sys) };
-      return { label: 'Stir it: get the wooden spoon from the drawer', disabled: true, run: () => sys.toast('The wooden spoon is in the top drawer at the end of the island.') };
-    }
-    return null;
-  }
-  stir(sys) {
-    this.stirT = 2.2; sys.sfx('stir');
-    sys.toast('Stir, stir, stir…');
-  }
-  update(dt) {
-    const sys = this.house.sys;
-    if (this.stirT > 0) {
-      this.stirT -= dt;
-      const sp = sys.held; if (sp?.tags.has('spoon')) { sp.object.rotation.y += dt * 12; }
-      this.batter.rotation.y += dt * 8;
-      if (this.stirT <= 0) {
-        this.s.stirred = true; this.syncBatter();
-        sys.toast('Smooth batter! Put the bowl in the big oven (the right one), close it and turn its red knob.');
-        sys.changed();
-      }
-    }
-  }
-  bake() {
-    const sys = this.house.sys, ov = this.house.oven, g = this.house.game;
-    sys.sfx('ding');
-    const item = ov.slot.item;
-    if (!item || item !== this.bowl || !this.s.stirred) { sys.toast('Ding! (Nothing to bake.)'); return; }
-    // the bowl goes back to the counter, washed; three cupcakes appear on the oven tray
-    this.s = { flour: false, milk: false, stirred: false, baked: true }; this.syncBatter();
-    sys.place(this.bowl, this.bowl.home.item ? [...sys.slots.values()].find(s => !s.item && s.id.includes('island_top')) || this.bowl.home : this.bowl.home);
-    const tray = ov.slot; let first = true;
-    for (const c of this.house.cupcakes) {
-      if (c.live) continue;
-      c.live = true;
-      if (first) { sys.place(c, tray); first = false; }
-      else {
-        const free = this.house.tableSlots.find(s => !s.item) || [...sys.slots.values()].find(s => !s.item && s.id.includes('top'));
-        if (free) sys.place(c, free);
-      }
-    }
-    sys.toast('Cupcakes are ready! One is in the oven and the rest are on the table.');
-    g.wren.play('Cheer', CLIP_RANGES.Cheer); g.friend?.cheer?.(); g.speech?.say('cupcakes', { force: true });
-    g.audio?.chime?.(988);
-    sys.changed();
-  }
-  save() { return this.s; }
-  load(s) { if (s) { this.s = { ...this.s, ...s }; this.syncBatter(); } }
-}

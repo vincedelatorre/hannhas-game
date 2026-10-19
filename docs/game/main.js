@@ -115,7 +115,18 @@ async function boot() {
   game.interact = new InteractionSystem(game, scene);
   game.house = new House(game, scene, A, physics);
   game.interact.load();
-  input.onUse = () => game.started && !game.photo && !game.ride.riding && game.interact.use();
+  const FOCUS = () => game.house.focus, BOOK = () => game.house.recipeBook;
+  input.onUse = () => {
+    if (!game.started || game.photo || game.ride.riding) return false;
+    if (FOCUS().active) { if (FOCUS().hover) FOCUS().click(0); else FOCUS().exit(); return true; }
+    return game.interact.use();
+  };
+  input.onPointer = (x, y, inside) => FOCUS().pointer(x, y, inside);
+  input.onClick = b => FOCUS().active ? FOCUS().click(b) : false;
+  input.onWheel = d => FOCUS().wheel(d);
+  input.onEscape = () => { if (BOOK().isOpen) BOOK().close(); else if (FOCUS().active) FOCUS().exit(); else if (game.view === 'first') game.view = 'third'; };
+  input.onRecipe = () => { if (!game.started) return; if (BOOK().isOpen) BOOK().close(); else { FOCUS().exit(); BOOK().open(BOOK().active?.id); } };
+  $('b-book')?.addEventListener('click', () => input.onRecipe());
   input.onDrop = () => game.started && game.interact.drop();
   game.dolphins = new Dolphins(scene, A, game.fxWater, { level: zone.seaLevel });
   game.parrots = new Parrots(scene, A, zone);
@@ -254,11 +265,24 @@ function updateCamera(dt, t) {
   I.look.dx = I.look.dy = 0;
   C.dist = THREE.MathUtils.clamp(C.dist + I.zoom, game.indoors ? 1.6 : 2.5, game.indoors ? 4.2 : 16); I.zoom = 0;
   const feet = game.wren.root.position;
+  if (!C.look) C.look = C.target.clone();
+  const blend = 1 - Math.exp(-dt * 8);          // ~0.35 s glide between views
+  if (game.focus) {
+    // first-person close-up of a cupboard, the fridge, the range…
+    I.look.dx = I.look.dy = 0;
+    const f = game.focus;
+    cam.position.lerp(f.pos, blend); C.look.lerp(f.look, blend); cam.lookAt(C.look);
+    cam.fov += ((f.fov || 55) - cam.fov) * blend; cam.updateProjectionMatrix();
+    game.wren.root.visible = cam.position.distanceTo(feet) > 2.2;
+    return;
+  }
   if (game.view === 'first') {
-    const eye = feet.clone().add(new THREE.Vector3(0, 1.42, 0)).add(new THREE.Vector3(Math.sin(P.face), 0, Math.cos(P.face)).multiplyScalar(0.12));
-    cam.position.copy(eye);
-    cam.lookAt(eye.clone().add(new THREE.Vector3(-Math.sin(C.yaw) * Math.cos(C.pitch), -Math.sin(C.pitch) * 0.8, -Math.cos(C.yaw) * Math.cos(C.pitch))));
-    game.wren.root.visible = false;
+    const eye = feet.clone().add(new THREE.Vector3(0, game.crouch ? 0.95 : 1.42, 0)).add(new THREE.Vector3(Math.sin(P.face), 0, Math.cos(P.face)).multiplyScalar(0.12));
+    const look = eye.clone().add(new THREE.Vector3(-Math.sin(C.yaw) * Math.cos(C.pitch), -Math.sin(C.pitch) * 0.8, -Math.cos(C.yaw) * Math.cos(C.pitch)));
+    const near = cam.position.distanceTo(eye) < 0.25;
+    cam.position.lerp(eye, near ? 1 : blend); C.look.lerp(look, near ? 1 : blend); cam.lookAt(C.look);
+    cam.fov += (60 - cam.fov) * blend; cam.updateProjectionMatrix();
+    game.wren.root.visible = cam.position.distanceTo(eye) > 0.6;
     return;
   }
   game.wren.root.visible = true;
@@ -275,7 +299,7 @@ function updateCamera(dt, t) {
   else want.y = Math.max(want.y, G(want.x, want.z) + 0.4, wl + 0.25);
   cam.position.lerp(want, Math.min(1, dt * 12));
   const fovT = P.sprinting ? 64 : 52; cam.fov += (fovT - cam.fov) * Math.min(1, dt * 4); cam.updateProjectionMatrix();
-  cam.lookAt(C.target);
+  C.look.lerp(C.target, Math.min(1, dt * 14)); cam.lookAt(C.look);
 }
 
 // ------------------------------------------------------------------ loop
@@ -312,7 +336,9 @@ function tick(dt) {
     else if (game.ride.riding) rideStep(dt);
     else if (game.sliding >= 0) slideStep(dt);
     else if (game.onSwing) swingStep(dt, t);
+    else if (game.house.focus.active && !(Math.abs(I.x) > 0.3 || Math.abs(I.y) > 0.3 || I.jumpPressed)) { P.vel.set(0, P.vel.y, 0); game.wren.update(dt, 0); game.wren.root.position.copy(P.pos); game.wren.root.rotation.y = P.face; }
     else {
+      if (game.house.focus.active) game.house.focus.exit();
       const r = P.update(dt, game.cam.yaw);
       if (r.jumped) game.audio.jump();
       if (P.sprinting && Math.random() < 0.7) game.powers.speedTrail();
@@ -366,10 +392,11 @@ function tick(dt) {
   D.torchLights.forEach((l, i) => { const f = near[i]; if (!f) return; l.position.copy(f.base); l.intensity = (6 + night * 30) * (1 + Math.sin(t * 11 + f.ph) * 0.12); });
 
   if (!game.ride.riding) updateCamera(dt, t);
-  game.interact.enabled = game.started && !game.ride.riding && !game.onSwing && !game.photo;
+  game.interact.enabled = game.started && !game.ride.riding && !game.onSwing && !game.photo && !game.house.focus.active && !game.house.recipeBook.isOpen;
   game.interact.update(dt);
   game.house.update(dt);
   $('map').style.visibility = game.indoors ? 'hidden' : '';
+  { const bb = $('b-book'); if (bb && bb.hidden === !!game.indoors) bb.hidden = !game.indoors; }
   game.under.update(dt, game.camera, P, game.friend);
   if (game.friend) game.speech.update(dt, game.camera, game.friend.pos.clone().add(new THREE.Vector3(0, 2.05, 0)), game.renderer.domElement);
   const diveBtn = $('b-dive'), upBtn = $('b-surface'); const canDive = game.started && (P.c.swimming || P.underwater), canUp = game.started && (P.diving || P.underwater); if (diveBtn.hidden === canDive) diveBtn.hidden = !canDive; if (upBtn.hidden === canUp) upBtn.hidden = !canUp;
