@@ -64,7 +64,7 @@ export class MouseMode {
   /** something on screen needs the normal mouse (menus, dialogue, recipe book, photo mode) */
   get menuOpen() {
     const g = this.g;
-    return !!(g.photo || g.house?.recipeBook?.isOpen || g.actions?.s.talk || !$('inventory')?.hidden || !$('settings')?.hidden || document.body.classList.contains('bigmap') || document.body.classList.contains('ctl-open') || !$('win')?.hidden || g.ride?.riding);
+    return !!(g.photo || g.house?.recipeBook?.isOpen || g.actions?.s.talk || !$('inventory')?.hidden || !$('settings')?.hidden || ($('deco-menu') && !$('deco-menu').hidden) || document.body.classList.contains('bigmap') || document.body.classList.contains('ctl-open') || !$('win')?.hidden || g.ride?.riding);
   }
   // one mode only: the cursor is always free, hovering always shows what you can use, drag to look
   // the mouse always steers the view (captured, no button needed); the centre of the screen selects.

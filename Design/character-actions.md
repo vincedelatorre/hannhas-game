@@ -100,3 +100,15 @@ Touch screens keep drag-to-look and tap-to-select.
 - Centre dot → becomes a small crisp white-glove hand (≈18–26 px, half the old size) when it's on something usable
   within ~5 ft; the object glows and shows "Name · action". Left-click or E does it. Clicks never use powers.
 - Station close-ups (the range) show the same glove as a free cursor.
+
+## Halloween inflatables (`docs/game/decor/halloween.js`)
+
+Reusable `HalloweenPumpkin` prefab (any position, facing, size, seed) plus `HalloweenYard` (one shared warm light in
+the nearest lit pumpkin, one blower hum loop). Three are placed in front of the clubhouse (two flanking the path,
+one on flat sand found by search). Pumpkin: 10 stitched nylon panels, painted jack-o'-lantern face, inner glow that
+grows at night, blower breathing / fabric ripples, squash when the ghost drops in, solid cylinder collider.
+Ghost: face with pink cheeks, arms, purple witch hat (orange band, gold buckle) with lagging wobble, BOO! sign; it
+deflates as it sinks so it hides fully inside. States OFF → IDLE_HIDDEN → RISING → EXTENDED → RETRACTING (dt-driven,
+randomised). Aim + click: Turn on / Make the ghost pop up. Right-click: Turn off, pop up, speed slow/normal/fast,
+sound on/off (saved per pumpkin). Sounds: soft inflate whoosh, cartoon "boo", deflate hiss, quiet blower hum,
+volume by distance. Built in code because generated 3D meshes can't have a moving ghost inside.

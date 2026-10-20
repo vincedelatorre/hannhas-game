@@ -26,6 +26,7 @@ import { Actions } from './actions.js';
 import { HudExtra } from './hud.js';
 import { Party } from './party.js';
 import { MouseMode } from './mousemode.js';
+import { HalloweenPumpkin, HalloweenYard } from './decor/halloween.js';
 window.__H = H;
 
 const $ = id => document.getElementById(id);
@@ -248,6 +249,21 @@ function setupMoves() {
   A.addNapSpot({ name: 'beach towel', center: towel, face: Math.PI / 2, inside: false });
   { const bx = towel.x - 1.4, bz = towel.z - 1.2; A.placeBalls(new THREE.Vector3(bx, G(bx, bz) + 0.3, bz), null); }
   game.house.addActionSpots?.(A);
+  setupHalloween();
+}
+
+/** inflatable jack-o'-lanterns with pop-up ghosts in front of the clubhouse (reusable prefab) */
+function setupHalloween() {
+  const d = game.house.doorOutside; if (!d) return;
+  const spots = [[2.7, 2.6, -0.25], [-2.7, 2.6, 0.25]];
+  // a third one on flat, dry sand a little further out (searched, so it never lands on a slope or in water)
+  for (let r = 5; r < 14 && spots.length < 3; r += 0.5) for (let a = -1.2; a <= 1.2 && spots.length < 3; a += 0.15) {
+    const dx = Math.sin(a) * r, dz = Math.cos(a) * r, x = d.x + dx, z = d.z + dz, h = G(x, z);
+    const flat = Math.max(...[[0.8, 0], [-0.8, 0], [0, 0.8], [0, -0.8]].map(([u, v]) => Math.abs(G(x + u, z + v) - h))) < 0.12;
+    if (flat && h > 0.4 && Math.abs(dx) > 2.2 && game.player.waterLevelAt(new THREE.Vector3(x, h, z)) < h - 0.2) spots.push([dx, dz, -a * 0.6]);
+  }
+  const list = spots.map(([dx, dz, f], i) => { const x = d.x + dx, z = d.z + dz; return new HalloweenPumpkin(game, { id: i, at: new THREE.Vector3(x, G(x, z) - 0.02, z), face: f, seed: i * 97 + 5, scale: i === 2 ? 0.85 : 1 }); });
+  game.halloween = new HalloweenYard(game, list);
 }
 
 /** a striped beach towel on the sand (a nap spot) */
@@ -501,6 +517,7 @@ function tick(dt) {
   game.interact.update(dt);
   game.house.update(dt);
   game.hudExtra?.update(dt);
+  game.halloween?.update(dt);
   game.mouseMode?.update(dt);
   $('map').style.visibility = game.indoors ? 'hidden' : '';
   { const bb = $('b-book'); if (bb && bb.hidden === !!game.indoors) bb.hidden = !game.indoors; }

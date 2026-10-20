@@ -306,6 +306,16 @@ body.photo #mode-chip, body.photo #look-dot, body.photo #hand-cursor { display: 
 #hand-cursor.hot svg { filter: drop-shadow(0 1px 1px rgba(10, 20, 26, 0.55)) drop-shadow(0 0 3px rgba(255, 214, 120, 0.95)); }
 #hand-cursor .hc-badge circle { stroke-width: 2.5; }
 #hand-cursor.reticle { transition: opacity 0.12s; }
+
+/* ---- decoration right-click menu ---- */
+#deco-menu { position: fixed; z-index: 9; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(340px, calc(100vw - 32px)); display: grid; gap: 8px; font-size: 0.85rem; }
+#deco-menu[hidden] { display: none; }
+#deco-menu h4 { margin: 0; font: 600 1.05rem var(--display); color: var(--lagoon-deep); }
+#deco-menu .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+#deco-menu .row span { min-width: 52px; color: #7a6a52; font-weight: 700; }
+#deco-menu button { font: 600 0.82rem var(--display); border: 2px solid #eadfc8; background: #fff; border-radius: 999px; padding: 5px 11px; cursor: pointer; color: var(--ink); }
+#deco-menu button.on { border-color: #FF8A1C; background: #fff1e0; }
+#deco-menu .close { justify-self: end; background: var(--lagoon); color: #fff; border-color: var(--lagoon); }
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;700&display=swap">
 </head>

@@ -134,7 +134,7 @@ export class Focus {
     if (!this.picking) return false;
     if (this.inspecting) { this.endInspect(); return true; }
     const h = this.hover;
-    if (button === 2) { if (h?.item) this.inspect(h.item); return true; }
+    if (button === 2) { if (h?.item) this.inspect(h.item); else if (h?.x?.menu) h.x.menu(); return true; }
     if (!h || !h.v) return true;
     if (h.v.disabled) { h.v.run(this.sys); return true; }
     const wr = this.game.wren;
@@ -204,6 +204,7 @@ export class Focus {
     _ray.setFromCamera(_ndc, cam);
     let rayHit = null, rayD = Infinity;
     for (const x of sys.list) {
+      if (x.rayPick && !(x instanceof Item)) { if (!x.object.visible) continue; x.object.getWorldPosition(_v); if ((free ? Math.hypot(_v.x - look.x, _v.z - look.z) : _v.distanceTo(look)) > R + (x.reachBonus || 0)) continue; const hits = _ray.intersectObject(x.object, true); if (hits.length && hits[0].distance < rayD) { rayD = hits[0].distance; rayHit = x; } continue; }
       if (!(x instanceof Item) || x === sys.held || x.state.gone || x.flying || !x.object.visible) continue;
       x.object.getWorldPosition(_v); if ((free ? Math.hypot(_v.x - look.x, _v.z - look.z) : _v.distanceTo(look)) > R) continue;
       const hits = _ray.intersectObject(x.object, true);
@@ -241,6 +242,7 @@ export class Focus {
       } else {
         if (['house_front_outside', 'house_front_inside'].includes(x.id)) continue;
         const a = x.anchor(V3(0, 0, 0));
+        if (x === rayHit) { const v = x.verb(sys); if (v) { best = { x, v, p: a }; bd = -1e9; } continue; }   // big things picked by their real shape (decorations)
         consider(a, () => { const v = x.verb(sys); return v ? { x, v, p: a } : null; });
       }
     }
@@ -265,7 +267,7 @@ export class Focus {
     else { this.sys.marker.position.copy(h.p || (h.box ? h.box.getCenter(V3(0, 0, 0)) : this.sys.marker.position)); this.sys.marker.visible = true; this.sys.marker.scale.setScalar(0.07); }
     const name = h.item ? h.item.name : h.slot ? '' : h.x?.name || '';
     this.label.hidden = false;
-    this.label.innerHTML = `${name ? `<b>${name[0].toUpperCase() + name.slice(1)}</b> · ` : ''}${h.v.label}${this.centerPick ? ' <i>click or E</i>' : h.item && !this.sys.held ? ' <i>right-click to look closer</i>' : ''}`;
+    this.label.innerHTML = `${name ? `<b>${name[0].toUpperCase() + name.slice(1)}</b> · ` : ''}${h.v.label}${this.centerPick ? ' <i>click or E</i>' : h.item && !this.sys.held ? ' <i>right-click to look closer</i>' : ''}${h.x?.menu ? ' <i>right-click for more</i>' : ''}`;
     this.label.classList.toggle('disabled', !!h.v.disabled);
     const r = el.getBoundingClientRect();
     this.label.style.left = `${Math.min(r.width - 140, this.mouse.x + (this.centerPick ? 14 : 16))}px`; this.label.style.top = `${this.mouse.y + (this.centerPick ? 14 : 18)}px`;
