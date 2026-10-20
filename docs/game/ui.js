@@ -55,7 +55,7 @@ export class Input {
     addEventListener('blur', () => this.keys.clear());
     let drag = null;
     canvas.addEventListener('pointerdown', e => { if (!this.enabled) return; if (this.onPointerDown?.(e)) { drag = null; this._swallow = true; return; } drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 }; if (!document.pointerLockElement) { try { canvas.setPointerCapture(e.pointerId); } catch (er) { /* not capturable */ } } });
-    canvas.addEventListener('pointermove', e => { this.onPointer(e.clientX, e.clientY, true); if (!drag || drag.id !== e.pointerId) return; if (this.lookBlocked) return; /* hand cursor: the mouse points, it doesn't turn the camera */ const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; drag.moved += Math.abs(dx) + Math.abs(dy); this.look.dx += dx; this.look.dy += dy; });
+    canvas.addEventListener('pointermove', e => { this.onPointer(e.clientX, e.clientY, true); if (!drag || drag.id !== e.pointerId) return; if (this.lookBlocked || (e.pointerType === 'mouse' && !this.mouseDrag)) return; /* desktop looks with pointer lock only; touch drags */ const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; drag.moved += Math.abs(dx) + Math.abs(dy); this.look.dx += dx; this.look.dy += dy; });
     canvas.addEventListener('pointerup', e => { if (this._swallow) { this._swallow = false; drag = null; return; } if (drag && drag.moved < 6) { this.onPointer(e.clientX, e.clientY, true); this.onClick(e.button); } drag = null; });
     canvas.addEventListener('pointerleave', e => this.onPointer(e.clientX, e.clientY, false));
     canvas.addEventListener('contextmenu', e => e.preventDefault());

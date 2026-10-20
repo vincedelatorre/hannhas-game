@@ -252,7 +252,8 @@ export class Player {
     const realSpeed = dt > 0 ? Math.hypot(moved.x, moved.z) / dt : 0;
     // face the direction of travel
     const hs = Math.hypot(this.vel.x, this.vel.z);
-    if (hs > 0.3) {
+    if (this.faceLock !== undefined && this.faceLock !== null) this.face = this.faceLock;   // first person: the body turns with the mouse, arrows strafe
+    else if (hs > 0.3) {
       const want = Math.atan2(this.vel.x, this.vel.z);
       let d = want - this.face; d = Math.atan2(Math.sin(d), Math.cos(d));
       this.face += d * Math.min(1, dt * 12);

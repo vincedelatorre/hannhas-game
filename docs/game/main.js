@@ -141,7 +141,7 @@ async function boot() {
     return false;
   };
   input.onWheel = d => FOCUS().wheel(d);
-  input.onEscape = () => { if (game.actions?.s.talk) game.actions.dialogue.close(); else if (game.hudExtra?.closeTop()) return; else if (BOOK().isOpen) BOOK().close(); else if (FOCUS().active) FOCUS().exit(); else if (game.view === 'first') game.mouseMode?.release(); };
+  input.onEscape = () => { if (game.actions?.s.talk) game.actions.dialogue.close(); else if (game.hudExtra?.closeTop()) return; else if (BOOK().isOpen) BOOK().close(); else if (FOCUS().active) FOCUS().exit(); else game.mouseMode?.release(); };
   input.onRecipe = () => { if (!game.started) return; if (BOOK().isOpen) BOOK().close(); else { FOCUS().exit(); BOOK().open(BOOK().active?.id); } };
   $('b-book')?.addEventListener('click', () => input.onRecipe());
   input.onDrop = () => game.started && game.interact.drop();
@@ -349,7 +349,7 @@ function updateCamera(dt, t) {
   // calmer, smoothed mouse look: drag movement is scaled by the Mouse speed setting and eased in over ~60 ms
   const sens = game.mouseSpeed ?? 0.45;
   C.pendYaw = (C.pendYaw || 0) - I.look.dx * 0.005 * sens; C.pendPitch = (C.pendPitch || 0) + I.look.dy * 0.004 * sens;
-  const take = Math.min(1, dt * 16);
+  const take = Math.min(1, dt * 30);   // just enough easing to hide mouse jitter, no noticeable lag
   C.yaw += C.pendYaw * take; C.pendYaw *= 1 - take;
   C.pitch = THREE.MathUtils.clamp(C.pitch + C.pendPitch * take, game.view === 'first' ? -1.15 : -0.35, game.view === 'first' ? 1.35 : 1.25); C.pendPitch *= 1 - take;
   I.look.dx = I.look.dy = 0;
@@ -439,6 +439,7 @@ function tick(dt) {
     else if (game.house.focus.active && !(Math.abs(I.x) > 0.3 || Math.abs(I.y) > 0.3 || I.jumpPressed)) { P.vel.set(0, P.vel.y, 0); game.wren.update(dt, 0); game.wren.root.position.copy(P.pos); game.wren.root.rotation.y = P.face; }
     else {
       if (game.house.focus.active) game.house.focus.exit();
+      P.faceLock = game.view === 'first' && !game.focus ? game.cam.yaw + Math.PI : null;
       const r = P.update(dt, game.cam.yaw);
       if (r.speed > 0.6 || r.jumped) game.actions.moved();
       if (r.jumped) game.audio.jump();

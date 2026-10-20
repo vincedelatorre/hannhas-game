@@ -90,3 +90,13 @@ The mouse is captured while playing (pointer lock): moving it always turns the v
 views. A centre dot selects: whatever it's on within ~5 ft glows and shows its name; click or E uses it, right-click
 inspects. Esc frees the mouse for the on-screen buttons (a hint says click to resume); menus free it automatically.
 Touch screens keep drag-to-look and tap-to-select.
+
+## Unified mouse controller (final)
+
+- One controller in `docs/game/mousemode.js`: pointer lock while playing, in both views; `movementX/Y` → camera.
+  Desktop click-and-drag looking is removed (touch screens and photo mode still drag). Esc or any menu frees
+  the mouse; a click on the game re-captures it (that click never acts).
+- First person: the body turns with the mouse; ← → strafe; ↑ ↓ walk where you look.
+- Centre dot → becomes a small crisp white-glove hand (≈18–26 px, half the old size) when it's on something usable
+  within ~5 ft; the object glows and shows "Name · action". Left-click or E does it. Clicks never use powers.
+- Station close-ups (the range) show the same glove as a free cursor.

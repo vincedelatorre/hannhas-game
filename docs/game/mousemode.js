@@ -1,31 +1,29 @@
-// First-person mouse modes.
+// The mouse while playing.
 //
-//   NAVIGATION (default in first person): the mouse is captured (pointer lock) and simply moving
-//     it looks around. No button needs to be held. A tiny dot marks the centre of the view.
-//   INTERACTION (Tab): the camera stops following the mouse and a small animated hand cursor
-//     appears. Hover outlines what can be used; left-click uses / grabs / places, right-click
-//     looks closer. Tab again recaptures the mouse and free-look resumes.
-//
-// Close-ups (an open cupboard, the fridge, the range…) switch to the hand automatically and hand
-// back to whatever mode you were in when you step away. Picking itself is the house's Focus
-// picker (a ray through the cursor, range limited, blocked by walls and counters), so every
-// interactable in the house works the same way in both places.
+// One controller, no modes. While playing, the mouse is captured (pointer lock): moving it always turns
+// the view in first and third person, no button held. A small dot marks the centre of the screen; when it's
+// on something usable within ~5 ft it becomes a small white-glove hand, the object glows and its name and
+// action show; left-click (or E) does it, right-click inspects. Esc (and any menu) frees the mouse; a click
+// on the game takes it back. Close-ups at stations (the range…) show the glove as a free cursor instead.
+// Touch screens drag to look and tap to use.
 import { Item, Hinge, Slide, Seat } from './house/interact.js';
 
 const $ = id => document.getElementById(id);
 
-const HAND_SVG = `<svg viewBox="0 0 64 64" aria-hidden="true">
-  <defs><linearGradient id="hc-skin" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#FFFBF3"/><stop offset="1" stop-color="#F0DDC2"/></linearGradient></defs>
+const HAND_SVG = `<svg viewBox="0 0 64 72" aria-hidden="true" shape-rendering="geometricPrecision">
+  <defs><linearGradient id="hc-glove" x1="0" y1="0" x2="0.35" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="0.65" stop-color="#F7F9FB"/><stop offset="1" stop-color="#E3E9EE"/></linearGradient></defs>
   <g class="hc-hand">
     <rect class="f f-thumb" x="7" y="33" width="10" height="20" rx="5"/>
     <rect class="f f-index" x="17" y="3" width="10.5" height="32" rx="5.25"/>
     <rect class="f f-middle" x="27.5" y="8" width="10.5" height="28" rx="5.25"/>
     <rect class="f f-ring" x="38" y="12" width="9.5" height="25" rx="4.75"/>
     <rect class="f f-pinky" x="47.5" y="18" width="8.5" height="20" rx="4.25"/>
-    <path class="f palm" d="M15 34 Q15 29 20 29 L51 30 Q57 30 57 35.5 L57 46 Q57 61 41 61 L29 61 Q15 61 15 48 Z"/>
-    <path class="crease" d="M27 30 v6 M37.5 31 v5.5 M47.5 32 v5" />
+    <path class="f palm" d="M15 34 Q15 29 20 29 L51 30 Q57 30 57 35.5 L57 46 Q57 60 42 60 L29 60 Q15 60 15 48 Z"/>
+    <path class="stitch" d="M30.5 38 v12 M37 38 v12 M43.5 38 v12" />
+    <rect class="f cuff" x="18.5" y="57" width="36" height="12" rx="5"/>
+    <path class="stitch" d="M21 63 h31" />
   </g>
-  <g class="hc-badge"><circle cx="54" cy="54" r="9"/><text x="54" y="58.5" text-anchor="middle"></text></g>
+  <g class="hc-badge"><circle cx="55" cy="60" r="9"/><text x="55" y="64.5" text-anchor="middle"></text></g>
 </svg>`;
 
 export class MouseMode {
@@ -92,7 +90,6 @@ export class MouseMode {
   /** V switched views: first person always starts in Navigation mode */
   viewChanged() {
     if (this.firstPerson && !this.wasFirst && this.touch) this.notify('First person · drag to look');
-    if (!this.firstPerson && this.wasFirst) { this.unlock(); this.mode = 'NAVIGATION'; }
     this.wasFirst = this.firstPerson;
   }
   lock() {
@@ -127,9 +124,15 @@ export class MouseMode {
     const hand = this.handShown;
     const center = want && this.locked && !this.focusOn;
     if (F) { F.free = (hand && !this.focusOn) || center; F.centerPick = center && !hand; }
-    g.input.lookBlocked = false;   // dragging always turns the camera; a click without dragging selects
+    g.input.lookBlocked = false; g.input.mouseDrag = !!g.photo;   // photo mode's free camera still drags   // dragging always turns the camera; a click without dragging selects
     // hand cursor art follows what's under it
-    const show = hand && !this.touch && this.mouse.inside && !F?.inspecting;
+    // free cursor (close-ups, menus) → the glove follows the mouse; captured look → the centre reticle becomes the glove on a target
+    const reticle = !!(F?.centerPick && F.hover && !F.hover.v?.disabled && !F.inspecting);
+    if (reticle) this.handEl.style.transform = `translate(${innerWidth / 2}px, ${innerHeight / 2}px)`;
+    else if (this._wasReticle) this.place();
+    this._wasReticle = reticle;
+    this.handEl.classList.toggle('reticle', reticle);
+    const show = reticle || (hand && !this.touch && this.mouse.inside && !F?.inspecting);
     this.handEl.classList.toggle('show', show);
     document.body.classList.toggle('hand-mode', hand && !this.touch);
     if (show) {
@@ -144,12 +147,12 @@ export class MouseMode {
       else if (h) st = 'point';
       else if (sys.held) st = 'hold';
       if (sys.held && st !== 'point') st = h ? 'point' : 'hold';
-      if (this.handEl.dataset.s !== st) { this.handEl.className = `show ${st}`; this.handEl.dataset.s = st; }
+      if (this.handEl.dataset.s !== st) { this.handEl.className = `show ${st}${reticle ? ' reticle' : ''}`; this.handEl.dataset.s = st; }
       const b = this.handEl.querySelector('.hc-badge text'); if (b.textContent !== badge) { b.textContent = badge; this.handEl.classList.toggle('badge', !!badge); }
       this.handEl.classList.toggle('hot', !!h && !h.v?.disabled);
     }
     // centre dot while looking; mode chip only in first person / close-ups
-    const dot = want && this.locked;
+    const dot = want && this.locked && !reticle;
     if (this.dot.classList.contains('show') !== dot) this.dot.classList.toggle('show', dot);
     const hot = dot && !!F?.hover && !F.hover.v?.disabled;
     if (this.dot.classList.contains('hot') !== hot) this.dot.classList.toggle('hot', hot);
