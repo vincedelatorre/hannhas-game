@@ -8,9 +8,9 @@ export const KEYMAP = {
   KeyD: { action: 'dive', legacy: '_dive' }, KeyS: { action: 'surface', legacy: '_surface' },
   KeyL: { action: 'love', legacy: 'onLove' }, KeyE: { action: 'use', legacy: 'onUse' }, KeyQ: { action: 'drop', legacy: 'onDrop' },
   KeyV: { action: 'view', legacy: 'onToggleView' }, KeyP: { action: 'photo', legacy: 'onPhoto' }, F3: { action: 'stats', prevent: true, legacy: 'onStats' },
-  KeyA: { action: 'shell' }, KeyH: { action: 'whistle' }, KeyJ: { action: 'dismiss' }, Backquote: { action: 'mousemode', always: true }, KeyR: { action: 'run' }, KeyF: { action: 'dance' }, KeyG: { action: 'wave' }, KeyB: { action: 'sit' }, KeyN: { action: 'nap' },
+  KeyA: { action: 'shell' }, KeyH: { action: 'whistle' }, KeyJ: { action: 'dismiss' }, KeyR: { action: 'run' }, KeyF: { action: 'dance' }, KeyG: { action: 'wave' }, KeyB: { action: 'sit' }, KeyN: { action: 'nap' },
   KeyT: { action: 'talk' }, KeyY: { action: 'cheer' }, KeyK: { action: 'kick' }, KeyU: { action: 'light' }, KeyZ: { action: 'crouch' },
-  KeyI: { action: 'inventory' }, KeyM: { action: 'map' }, KeyO: { action: 'objectives', always: true }, Tab: { action: 'mousemode', always: true, prevent: true }, F6: { action: 'quickhud', always: true, prevent: true },
+  KeyI: { action: 'inventory' }, KeyM: { action: 'map' }, KeyO: { action: 'objectives', always: true }, Tab: { action: 'switch', prevent: true }, F6: { action: 'quickhud', always: true, prevent: true },
   F1: { action: 'controls', always: true, prevent: true }, F2: { action: 'settings', always: true, prevent: true }, F4: { action: 'photohud', always: true, prevent: true },
   F5: { action: 'save', always: true, prevent: true }, F9: { action: 'load', always: true, prevent: true },
   Backspace: { action: 'close', always: true, prevent: true }, Enter: { action: 'confirm', always: true },
@@ -20,8 +20,8 @@ export const KEYMAP = {
 /** the Controls panel: section, keys, what it does */
 export const CONTROLS = [
   ['Move', [['← ↑ → ↓', 'Move'], ['C', 'Walk (hold)'], ['Shift', 'Super speed (hold)'], ['R', 'Run on / off'], ['Z', 'Crouch and sneak'], ['Space', 'Jump (twice = backflip)'], ['Drag', 'Look around']]],
-  ['First person', [['V', 'First-person view'], ['Mouse', 'Look around (no click needed)'], ['Tab', 'Interaction mode: hand cursor on / off'], ['Click', 'Use, open, grab or put down (like E)'], ['Right-click', 'Look closer (hand)']]],
-  ['Characters', [['1', 'Play as Hannah'], ['2', 'Play as Friend'], ['H', 'Whistle: call the other one over'], ['J', 'Stay here (stop following)']]],
+  ['First person', [['V', 'First-person view'], ['Drag', 'Look around'], ['Point', 'Shows the name of anything within 5 ft'], ['Click', 'Use, open, grab or put down'], ['Right-click', 'Look closer at an item']]],
+  ['Characters', [['Tab', 'Switch character'], ['1 / 2', 'Play as Hannah / Friend'], ['H', 'Whistle: call the other one over'], ['J', 'Stay here (stop following)']]],
   ['Shell powers', [['A', 'Take out / put away shell'], ['W', 'Water (hold)'], ['L', 'Love'], ['D', 'Dive (again = deeper)'], ['S', 'Swim up']]],
   ['Things to do', [['E / Click', 'Use / pick up'], ['Q', 'Put down'], ['B', 'Sit / stand'], ['N', 'Nap / wake up'], ['K', 'Kick a ball'], ['U', 'Magic flashlight'], ['X', 'Recipe book']]],
   ['Friends and fun', [['T', 'Talk'], ['G', 'Wave'], ['F', 'Dance'], ['Y', 'Celebrate']]],

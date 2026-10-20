@@ -135,8 +135,7 @@ async function boot() {
   input.onPointer = (x, y, inside) => FOCUS().pointer(x, y, inside);
   input.onClick = b => {
     // right-click brings the hand cursor out in first person, and puts it away over empty space
-    if (b === 2 && game.view === 'first' && !FOCUS().active && (!FOCUS().free || !FOCUS().hover)) { game.mouseMode?.toggle(); return true; }
-    if (FOCUS().picking) return FOCUS().click(b);
+    if (FOCUS().picking && (FOCUS().hover || FOCUS().active || FOCUS().inspecting)) return FOCUS().click(b);
     // a click never sprays water (that's W): it does exactly what E does
     if (b === 0) { input.onUse(); return true; }
     return false;
@@ -220,7 +219,6 @@ function setupMoves() {
   I.on('objectives', () => X.toggleObjectives());
   I.on('controls', () => X.toggleControls());
   I.on('quickhud', () => X.toggleQuick());
-  I.on('mousemode', () => { if (game.started && !BOOK().isOpen && !A.s.talk) game.mouseMode.toggle(); });
   // two characters: Tab switches, H whistles the other one over, J tells them to stay put
   I.on('switch', () => { if (!BOOK().isOpen) game.party?.switchTo(); });
   I.on('whistle', () => game.party?.whistle());
@@ -492,7 +490,7 @@ function tick(dt) {
   D.torchLights.forEach((l, i) => { const f = near[i]; if (!f) return; l.position.copy(f.base); l.intensity = (6 + night * 30) * (1 + Math.sin(t * 11 + f.ph) * 0.12); });
 
   if (!game.ride.riding) updateCamera(dt, t);
-  game.interact.enabled = game.started && !game.ride.riding && !game.onSwing && !game.photo && !game.house.focus.active && !game.house.focus.free && !game.house.recipeBook.isOpen;
+  game.interact.enabled = game.started && !game.ride.riding && !game.onSwing && !game.photo && !game.house.focus.active && !(game.house.focus.free && game.house.focus.hover) && !game.house.recipeBook.isOpen;
   game.interact.update(dt);
   game.house.update(dt);
   game.hudExtra?.update(dt);

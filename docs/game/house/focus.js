@@ -49,6 +49,7 @@ class Glow {
 }
 
 const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+const REACH = 1.6;    // 5 ft around the character, measured flat so high and low shelves both count
 const _b = new THREE.Box3(), _v = new THREE.Vector3(), _ray = new THREE.Raycaster(), _ndc = new THREE.Vector2();
 
 export class Focus {
@@ -189,11 +190,14 @@ export class Focus {
   /** find what's under the mouse: items, slots (while holding), knobs and doors */
   pick() {
     const g = this.game, sys = this.sys, cam = g.camera, el = g.renderer.domElement, r = el.getBoundingClientRect();
+    // centre pick: while the mouse steers the camera, whatever is in the middle of the view is selectable
+    if (this.centerPick) this.mouse = { x: r.left + r.width / 2, y: r.top + r.height / 2, inside: true };
     if (!this.mouse.inside) { this.setHover(null); return; }
     const mx = this.mouse.x - r.left, my = this.mouse.y - r.top;
     const free = !this.view;
-    const look = free ? cam.position : (this.view.look || g.focus.look), R = free ? 3.2 : (this.view.radius || 1.0) + 0.3;
-    let best = null, bd = (free ? 34 : 52) * Math.max(0.8, r.width / 1400);
+    // free picking reaches 5 ft (≈1.6 m) around the character's chest; close-ups use their own framing
+    const look = free ? g.player.pos.clone().add(V3(0, 0.95, 0)) : (this.view.look || g.focus.look), R = free ? REACH : (this.view.radius || 1.0) + 0.3;
+    let best = null, bd = (free ? (this.centerPick ? 60 : 44) : 52) * Math.max(0.8, r.width / 1400);
     const camPos = cam.position;
     // what's really under the cursor: a ray through the pixel against the nearby objects' meshes
     _ndc.set(mx / r.width * 2 - 1, -(my / r.height) * 2 + 1);
@@ -201,7 +205,7 @@ export class Focus {
     let rayHit = null, rayD = Infinity;
     for (const x of sys.list) {
       if (!(x instanceof Item) || x === sys.held || x.state.gone || x.flying || !x.object.visible) continue;
-      if (x.object.getWorldPosition(_v).distanceTo(look) > R) continue;
+      x.object.getWorldPosition(_v); if ((free ? Math.hypot(_v.x - look.x, _v.z - look.z) : _v.distanceTo(look)) > R) continue;
       const hits = _ray.intersectObject(x.object, true);
       if (hits.length && hits[0].distance < rayD) { rayD = hits[0].distance; rayHit = x; }
     }
@@ -214,7 +218,7 @@ export class Focus {
       return !!h && h.toi < len - 0.45;
     };
     const consider = (p, make, bias = 0) => {
-      if (p.distanceTo(look) > R) return;
+      if ((free ? Math.hypot(p.x - look.x, p.z - look.z) : p.distanceTo(look)) > R) return;
       const s = p.clone().project(cam); if (s.z > 1) return;
       const sx = (s.x * 0.5 + 0.5) * r.width, sy = (-s.y * 0.5 + 0.5) * r.height;
       const d = Math.hypot(sx - mx, sy - my) - bias; if (d >= bd) return;
@@ -261,9 +265,10 @@ export class Focus {
     else { this.sys.marker.position.copy(h.p || (h.box ? h.box.getCenter(V3(0, 0, 0)) : this.sys.marker.position)); this.sys.marker.visible = true; this.sys.marker.scale.setScalar(0.07); }
     const name = h.item ? h.item.name : h.slot ? '' : h.x?.name || '';
     this.label.hidden = false;
-    this.label.innerHTML = `${name ? `<b>${name[0].toUpperCase() + name.slice(1)}</b> · ` : ''}${h.v.label}${h.item && !this.sys.held ? ' <i>right-click to look closer</i>' : ''}`;
+    this.label.innerHTML = `${name ? `<b>${name[0].toUpperCase() + name.slice(1)}</b> · ` : ''}${h.v.label}${this.centerPick ? ' <i>click or E</i>' : h.item && !this.sys.held ? ' <i>right-click to look closer</i>' : ''}`;
     this.label.classList.toggle('disabled', !!h.v.disabled);
     const r = el.getBoundingClientRect();
-    this.label.style.left = `${Math.min(r.width - 140, this.mouse.x + 16)}px`; this.label.style.top = `${this.mouse.y + 18}px`;
+    this.label.style.left = `${Math.min(r.width - 140, this.mouse.x + (this.centerPick ? 14 : 16))}px`; this.label.style.top = `${this.mouse.y + (this.centerPick ? 14 : 18)}px`;
+    this.label.classList.toggle('center', !!this.centerPick);
   }
 }

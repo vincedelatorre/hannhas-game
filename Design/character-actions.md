@@ -75,3 +75,11 @@ Superseded by the two-character system above: he is independent by default; Talk
   right-click and ~ also work. Notices read "Gameplay Mode" / "Interaction Mode".
 - Hover highlight now follows the object's silhouette: a thin gold rim plus a faint wider glow (back-face shells
   on the object's own geometry, thickness as a uniform so no shader recompiles), fading in/out in ~150 ms.
+
+## One mouse mode (latest, replaces the Tab/Interaction mode above)
+
+There is no interaction mode any more. In first and third person the hand cursor is always there:
+point at anything within ~5 ft of the character (measured flat, so every shelf height counts) and it glows
+and shows its name and action; left-click does it; right-click looks closer at an item; drag to look around.
+Clicking empty space does what E does; clicks never spray water (W does). Opening the fridge or a cupboard
+no longer jumps to a close-up, so you just point at what's inside. Tab = switch character again (1 / 2 too).

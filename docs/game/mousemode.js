@@ -68,12 +68,14 @@ export class MouseMode {
     const g = this.g;
     return !!(g.photo || g.house?.recipeBook?.isOpen || g.actions?.s.talk || !$('inventory')?.hidden || !$('settings')?.hidden || document.body.classList.contains('bigmap') || document.body.classList.contains('ctl-open') || !$('win')?.hidden || g.ride?.riding);
   }
-  get wantLock() { return !this.touch && this.g.started && this.firstPerson && this.mode === 'NAVIGATION' && !this.focusOn && !this.menuOpen; }
-  get handShown() { return this.focusOn || (this.g.started && this.firstPerson && this.mode === 'INTERACTION' && !this.menuOpen); }
+  // one mode only: the cursor is always free, hovering always shows what you can use, drag to look
+  get wantLock() { return false; }
+  get handShown() { return this.focusOn || (this.g.started && !this.menuOpen && !this.g.photo); }
 
   // ------------------------------------------------------------------ switching
   /** Tab: in first person flip between looking and the hand; from third person go to first person with the hand ready */
   toggle() {
+    return;   // no separate interaction mode any more
     const g = this.g; if (!g.started || g.photo) return;
     if (this.focusOn) { g.house.focus.exit(); this.set('NAVIGATION'); return; }
     if (!this.firstPerson) { g.view = 'first'; this.wasFirst = true; this.set('INTERACTION'); return; }
@@ -87,7 +89,7 @@ export class MouseMode {
   }
   /** V switched views: first person always starts in Navigation mode */
   viewChanged() {
-    if (this.firstPerson && !this.wasFirst) { this.mode = 'NAVIGATION'; this.lock(); this.notify(this.touch ? 'First person · drag to look' : 'First person · move the mouse to look · Tab for the hand'); }
+    if (this.firstPerson && !this.wasFirst) this.notify(this.touch ? 'First person · drag to look' : 'First person · drag to look · point at things to use them');
     if (!this.firstPerson && this.wasFirst) { this.unlock(); this.mode = 'NAVIGATION'; }
     this.wasFirst = this.firstPerson;
   }
@@ -121,8 +123,9 @@ export class MouseMode {
     if (this.resume.classList.contains('show') !== showResume) this.resume.classList.toggle('show', showResume);
     // the free hand picks with the house picker; drag-to-look is off while the hand is out
     const hand = this.handShown;
-    if (F) F.free = hand && !this.focusOn;
-    g.input.lookBlocked = hand && !this.touch;
+    const center = want && this.locked && !this.focusOn;
+    if (F) { F.free = (hand && !this.focusOn) || center; F.centerPick = center && !hand; }
+    g.input.lookBlocked = false;   // dragging always turns the camera; a click without dragging selects
     // hand cursor art follows what's under it
     const show = hand && !this.touch && this.mouse.inside && !F?.inspecting;
     this.handEl.classList.toggle('show', show);
@@ -146,7 +149,9 @@ export class MouseMode {
     // centre dot while looking; mode chip only in first person / close-ups
     const dot = want && this.locked;
     if (this.dot.classList.contains('show') !== dot) this.dot.classList.toggle('show', dot);
-    const chipOn = g.started && (this.firstPerson || this.focusOn) && !g.photo;
+    const hot = dot && !!F?.hover && !F.hover.v?.disabled;
+    if (this.dot.classList.contains('hot') !== hot) this.dot.classList.toggle('hot', hot);
+    const chipOn = false;
     this.chip.hidden = !chipOn;
     if (chipOn) {
       const ico = hand ? '✋' : '🖱️', lbl = hand ? 'Hand' : 'Look';
