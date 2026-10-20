@@ -24,6 +24,8 @@ import { House, HOUSE_MODELS, HOUSE_TEXTURES } from './house/house.js';
 import { InteractionSystem, Item, Slot, Seat } from './house/interact.js';
 import { Actions } from './actions.js';
 import { HudExtra } from './hud.js';
+import { Party } from './party.js';
+import { MouseMode } from './mousemode.js';
 window.__H = H;
 
 const $ = id => document.getElementById(id);
@@ -97,7 +99,13 @@ async function boot() {
     const boyBody = physics.character({ x: bx, y: H(bx, by) + 0.05, z: -by, radius: 0.27, height: 1.6 });
     boyBody.collider.setCollisionGroups(groups);
     const boy = new Character(scene, A.models.Boy, A.clips.Boy || {}, { name: 'Boy' });
-    game.friend = new Companion(boy, boyBody, player);
+    // the friend is a full playable character too (Tab switches); whoever you don't control is independent
+    const boyPlayer = new Player(boy, boyBody, input, { level: zone.seaLevel });
+    boyPlayer.lagoon = zone.lagoon; boyPlayer.groundAt = (x, z) => G(x, z);
+    game.party = new Party(game, [
+      { key: 'Wren', name: 'Hannah', char: game.wren, body: wrenBody, player },
+      { key: 'Boy', name: 'Friend', char: boy, body: boyBody, player: boyPlayer },
+    ]);
     game.friend.face = 0;
   }
 
@@ -121,12 +129,17 @@ async function boot() {
   input.onUse = () => {
     if (!game.started || game.photo || game.ride.riding) return false;
     if (FOCUS().active) { if (FOCUS().hover) FOCUS().click(0); else FOCUS().exit(); return true; }
+    if (FOCUS().free && FOCUS().hover) { FOCUS().click(0); return true; }
     return game.interact.use();
   };
   input.onPointer = (x, y, inside) => FOCUS().pointer(x, y, inside);
-  input.onClick = b => FOCUS().active ? FOCUS().click(b) : false;
+  input.onClick = b => {
+    // right-click brings the hand cursor out in first person, and puts it away over empty space
+    if (b === 2 && game.view === 'first' && !FOCUS().active && (!FOCUS().free || !FOCUS().hover)) { game.mouseMode?.toggle(); return true; }
+    return FOCUS().picking ? FOCUS().click(b) : false;
+  };
   input.onWheel = d => FOCUS().wheel(d);
-  input.onEscape = () => { if (game.actions?.s.talk) game.actions.dialogue.close(); else if (game.hudExtra?.closeTop()) return; else if (BOOK().isOpen) BOOK().close(); else if (FOCUS().active) FOCUS().exit(); else if (game.view === 'first') game.view = 'third'; };
+  input.onEscape = () => { if (game.actions?.s.talk) game.actions.dialogue.close(); else if (game.hudExtra?.closeTop()) return; else if (BOOK().isOpen) BOOK().close(); else if (FOCUS().active) FOCUS().exit(); else if (game.view === 'first') game.mouseMode?.release(); };
   input.onRecipe = () => { if (!game.started) return; if (BOOK().isOpen) BOOK().close(); else { FOCUS().exit(); BOOK().open(BOOK().active?.id); } };
   $('b-book')?.addEventListener('click', () => input.onRecipe());
   input.onDrop = () => game.started && game.interact.drop();
@@ -144,13 +157,16 @@ async function boot() {
   input.onLove = () => game.started && game.actions.ensureShell() && game.powers.love();
   // ---- Wren's extra moves, the shell inventory and the tidy HUD
   game.houseKit = { Item, Slot, Seat };
+  game.groundFn = (x, z) => G(x, z);
   game.rayHit = (from, dir, len) => { const h = physics.world.castRayAndGetNormal(new RAPIER.Ray(from, dir), len, true, undefined, (0x0001 << 16) | 0x0001); return h ? { toi: h.timeOfImpact, normal: new THREE.Vector3(h.normal.x, h.normal.y, h.normal.z) } : null; };
   game.floorAt = (p, inside) => inside ? game.house.floorY : Math.max(G(p.x, p.z), player.waterLevelAt(p) - 0.12);
   game.toySpot = () => { const pl = game.quests.pools?.[game.quests.pools.length - 1]; const x = pl ? pl.x + 2.2 : 14, z = pl ? -pl.y + 1.6 : 2; return new THREE.Vector3(x, G(x, z) + 0.01, z); };
   game.actions = new Actions(game);
   game.hudExtra = new HudExtra(game);
+  game.mouseMode = new MouseMode(game);
+  input.onPointerDown = e => game.mouseMode.claimClick(e);
   setupMoves();
-  input.onToggleView = () => { game.view = game.view === 'third' ? 'first' : 'third'; };
+  input.onToggleView = () => { game.view = game.view === 'third' ? 'first' : 'third'; game.mouseMode?.viewChanged(); };
   input.onStats = () => { hud.fps.visible = !hud.fps.visible; };
   input.onPhoto = () => game.started && togglePhoto();
   $('photo-btn').addEventListener('click', () => game.started && togglePhoto());
@@ -201,14 +217,20 @@ function setupMoves() {
   I.on('objectives', () => X.toggleObjectives());
   I.on('controls', () => X.toggleControls());
   I.on('quickhud', () => X.toggleQuick());
+  I.on('mousemode', () => { if (game.started && !BOOK().isOpen && !A.s.talk) game.mouseMode.toggle(); });
+  // two characters: Tab switches, H whistles the other one over, J tells them to stay put
+  I.on('switch', () => { if (!BOOK().isOpen) game.party?.switchTo(); });
+  I.on('whistle', () => game.party?.whistle());
+  I.on('dismiss', () => game.party?.dismiss());
   I.on('settings', () => { const p = $('settings'); p.hidden = !p.hidden; $('gear').setAttribute('aria-expanded', String(!p.hidden)); });
   I.on('photohud', () => document.body.classList.toggle('photo-clean'));
   I.on('save', () => { try { game.interact.save?.(); game.house.saveExtra?.(); A.save(); game.quests.save?.(); } catch (e) { console.warn(e); } game.toast('Game saved! 💾'); });
   I.on('load', () => { if (confirm('Load your last save? Anything since then will be lost.')) location.reload(); });
   I.on('close', () => { if (A.s.talk) A.dialogue.close(); else if (!X.closeTop()) I.onEscape(); });
   I.on('confirm', () => { if (A.s.talk) A.dialogue.choose(0); });
-  for (const n of [1, 2, 3]) I.on(`choice${n}`, () => { if (A.s.talk) A.dialogue.choose(n - 1); });
+  for (const n of [1, 2, 3, 4]) I.on(`choice${n}`, () => { if (A.s.talk) A.dialogue.choose(n - 1); });
   // R toggles running: a speed between jogging and super speed; Z sneaks slowly
+  for (const m of game.party?.m || []) m.player.speedHook = max => A.speedScale(max);
   game.player.speedHook = max => A.speedScale(max);
   // things to kick and places to nap
   const [sx, sy] = zone.spawn.pos;
@@ -321,7 +343,7 @@ function updateCamera(dt, t) {
     cam.lookAt(0, 5, -16);
     return;
   }
-  C.yaw -= I.look.dx * 0.005; C.pitch = THREE.MathUtils.clamp(C.pitch + I.look.dy * 0.004, -0.35, 1.25);
+  C.yaw -= I.look.dx * 0.005; C.pitch = THREE.MathUtils.clamp(C.pitch + I.look.dy * 0.004, game.view === 'first' ? -1.15 : -0.35, game.view === 'first' ? 1.35 : 1.25);
   I.look.dx = I.look.dy = 0;
   C.dist = THREE.MathUtils.clamp(C.dist + I.zoom, game.indoors ? 1.6 : 2.5, game.indoors ? 4.2 : 16); I.zoom = 0;
   const feet = game.wren.root.position;
@@ -345,7 +367,7 @@ function updateCamera(dt, t) {
   }
   if (game.view === 'first') {
     const eye = feet.clone().add(new THREE.Vector3(0, game.crouch ? 0.95 : 1.42, 0)).add(new THREE.Vector3(Math.sin(P.face), 0, Math.cos(P.face)).multiplyScalar(0.12));
-    const look = eye.clone().add(new THREE.Vector3(-Math.sin(C.yaw) * Math.cos(C.pitch), -Math.sin(C.pitch) * 0.8, -Math.cos(C.yaw) * Math.cos(C.pitch)));
+    const look = eye.clone().add(new THREE.Vector3(-Math.sin(C.yaw) * Math.cos(C.pitch), -Math.sin(C.pitch), -Math.cos(C.yaw) * Math.cos(C.pitch)));
     const near = cam.position.distanceTo(eye) < 0.25;
     cam.position.lerp(eye, near ? 1 : blend); C.look.lerp(look, near ? 1 : blend); cam.lookAt(C.look);
     cam.fov += (60 - cam.fov) * blend; cam.updateProjectionMatrix();
@@ -353,7 +375,8 @@ function updateCamera(dt, t) {
     return;
   }
   game.wren.root.visible = true;
-  C.target.lerp(feet.clone().add(new THREE.Vector3(0, 1.35, 0)), Math.min(1, dt * 10));
+  const ease = game.camEase > 0;   // gliding over to the other character after Tab
+  C.target.lerp(feet.clone().add(new THREE.Vector3(0, 1.35, 0)), Math.min(1, dt * (ease ? 4.5 : 10)));
   const dir = new THREE.Vector3(Math.sin(C.yaw) * Math.cos(C.pitch), Math.sin(C.pitch), Math.cos(C.yaw) * Math.cos(C.pitch));
   // pull the camera in if something is in the way
   let dist = C.dist;
@@ -364,7 +387,8 @@ function updateCamera(dt, t) {
   if (game.indoors) { /* walls and ceiling are handled by the ray above */ }
   else if (P.underwater) want.y = Math.min(Math.max(want.y, G(want.x, want.z) + 0.4), wl - 0.3);   // stay under with her
   else want.y = Math.max(want.y, G(want.x, want.z) + 0.4, wl + 0.25);
-  cam.position.lerp(want, Math.min(1, dt * 12));
+  if (ease) want.y += Math.sin(Math.PI * THREE.MathUtils.clamp(1 - game.camEase / 0.65, 0, 1)) * 1.6;   // ease up and over, then settle behind them
+  cam.position.lerp(want, Math.min(1, dt * (ease ? 5 : 12)));
   const fovT = P.sprinting ? 64 : 52; cam.fov += (fovT - cam.fov) * Math.min(1, dt * 4); cam.updateProjectionMatrix();
   C.look.lerp(C.target, Math.min(1, dt * 14)); cam.lookAt(C.look);
 }
@@ -422,6 +446,7 @@ function tick(dt) {
     const near = game.quests.shells.filter(s => !s.got).map(s => s.g.position).sort((a, b) => a.distanceToSquared(P.pos) - b.distanceToSquared(P.pos))[0];
     game.wren.lookTarget = near && near.distanceTo(P.pos) < 6 ? near : (game.friend && game.friend.pos.distanceTo(P.pos) < 6 ? game.friend.pos : null);
     if (!game.ride.riding) game.friend?.update(dt);
+    game.party?.update(dt);
     game.powers.update(dt);
     game.actions.update(dt);
     game.quests.update(dt, t);
@@ -436,7 +461,8 @@ function tick(dt) {
   }
 
   // footprints in the sand, ripples where anyone wades
-  for (const [id, who] of [['wren', game.player], ['friend', game.friend]]) {
+  for (const [id0, who] of [['wren', game.player], ['friend', game.friend]]) {
+    const id = who?.c?.name || id0;
     if (!who || game.sliding >= 0 && id === 'wren') continue;
     const p = who.pos, gy = G(p.x, p.z), wl = game.player.waterLevelAt(p);
     const onGround = Math.abs(p.y - gy) < 0.25;
@@ -462,10 +488,11 @@ function tick(dt) {
   D.torchLights.forEach((l, i) => { const f = near[i]; if (!f) return; l.position.copy(f.base); l.intensity = (6 + night * 30) * (1 + Math.sin(t * 11 + f.ph) * 0.12); });
 
   if (!game.ride.riding) updateCamera(dt, t);
-  game.interact.enabled = game.started && !game.ride.riding && !game.onSwing && !game.photo && !game.house.focus.active && !game.house.recipeBook.isOpen;
+  game.interact.enabled = game.started && !game.ride.riding && !game.onSwing && !game.photo && !game.house.focus.active && !game.house.focus.free && !game.house.recipeBook.isOpen;
   game.interact.update(dt);
   game.house.update(dt);
   game.hudExtra?.update(dt);
+  game.mouseMode?.update(dt);
   $('map').style.visibility = game.indoors ? 'hidden' : '';
   { const bb = $('b-book'); if (bb && bb.hidden === !!game.indoors) bb.hidden = !game.indoors; }
   game.under.update(dt, game.camera, P, game.friend);

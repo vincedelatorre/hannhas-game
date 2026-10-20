@@ -5,25 +5,27 @@ import { H } from './world.js';
 export const KEYMAP = {
   Escape: { action: 'escape', always: true, only: true, legacy: 'onEscape' },
   KeyX: { action: 'recipe', always: true, only: true, legacy: 'onRecipe' },
-  KeyJ: { action: 'dive', legacy: '_dive' }, KeyD: { action: 'dive', legacy: '_dive' }, KeyS: { action: 'surface', legacy: '_surface' },
+  KeyD: { action: 'dive', legacy: '_dive' }, KeyS: { action: 'surface', legacy: '_surface' },
   KeyL: { action: 'love', legacy: 'onLove' }, KeyE: { action: 'use', legacy: 'onUse' }, KeyQ: { action: 'drop', legacy: 'onDrop' },
   KeyV: { action: 'view', legacy: 'onToggleView' }, KeyP: { action: 'photo', legacy: 'onPhoto' }, F3: { action: 'stats', prevent: true, legacy: 'onStats' },
-  KeyH: { action: 'shell' }, KeyR: { action: 'run' }, KeyF: { action: 'dance' }, KeyG: { action: 'wave' }, KeyB: { action: 'sit' }, KeyN: { action: 'nap' },
+  KeyA: { action: 'shell' }, KeyH: { action: 'whistle' }, KeyJ: { action: 'dismiss' }, Backquote: { action: 'mousemode', always: true }, KeyR: { action: 'run' }, KeyF: { action: 'dance' }, KeyG: { action: 'wave' }, KeyB: { action: 'sit' }, KeyN: { action: 'nap' },
   KeyT: { action: 'talk' }, KeyY: { action: 'cheer' }, KeyK: { action: 'kick' }, KeyU: { action: 'light' }, KeyZ: { action: 'crouch' },
-  KeyI: { action: 'inventory' }, KeyM: { action: 'map' }, KeyO: { action: 'objectives', always: true }, Tab: { action: 'quickhud', always: true, prevent: true },
+  KeyI: { action: 'inventory' }, KeyM: { action: 'map' }, KeyO: { action: 'objectives', always: true }, Tab: { action: 'switch', prevent: true }, F6: { action: 'quickhud', always: true, prevent: true },
   F1: { action: 'controls', always: true, prevent: true }, F2: { action: 'settings', always: true, prevent: true }, F4: { action: 'photohud', always: true, prevent: true },
   F5: { action: 'save', always: true, prevent: true }, F9: { action: 'load', always: true, prevent: true },
   Backspace: { action: 'close', always: true, prevent: true }, Enter: { action: 'confirm', always: true },
-  Digit1: { action: 'choice1', always: true }, Digit2: { action: 'choice2', always: true }, Digit3: { action: 'choice3', always: true },
+  Digit1: { action: 'choice1', always: true }, Digit2: { action: 'choice2', always: true }, Digit3: { action: 'choice3', always: true }, Digit4: { action: 'choice4', always: true },
 };
 
 /** the Controls panel: section, keys, what it does */
 export const CONTROLS = [
   ['Move', [['← ↑ → ↓', 'Move'], ['C', 'Walk (hold)'], ['Shift', 'Super speed (hold)'], ['R', 'Run on / off'], ['Z', 'Crouch and sneak'], ['Space', 'Jump (twice = backflip)'], ['Drag', 'Look around']]],
-  ['Shell powers', [['H', 'Take out / put away shell'], ['W', 'Water (or click)'], ['L', 'Love'], ['D', 'Dive (again = deeper)'], ['S', 'Swim up']]],
+  ['First person', [['V', 'First-person view'], ['Mouse', 'Look around (no click needed)'], ['~ / Right-click', 'Hand cursor on / off'], ['Click', 'Use, grab or put down (hand)'], ['Right-click', 'Look closer (hand)']]],
+  ['Characters', [['Tab', 'Switch character'], ['H', 'Whistle: call the other one over'], ['J', 'Stay here (stop following)']]],
+  ['Shell powers', [['A', 'Take out / put away shell'], ['W', 'Water (or click)'], ['L', 'Love'], ['D', 'Dive (again = deeper)'], ['S', 'Swim up']]],
   ['Things to do', [['E', 'Use / pick up'], ['Q', 'Put down'], ['B', 'Sit / stand'], ['N', 'Nap / wake up'], ['K', 'Kick a ball'], ['U', 'Magic flashlight'], ['X', 'Recipe book']]],
   ['Friends and fun', [['T', 'Talk'], ['G', 'Wave'], ['F', 'Dance'], ['Y', 'Celebrate']]],
-  ['Menus', [['O', 'Objectives'], ['I', 'Inventory'], ['M', 'Big map'], ['F1', 'Controls'], ['F2', 'Settings'], ['Tab', 'Hide / show the screen buttons'], ['V', 'First-person view'], ['P', 'Photo mode'], ['F4', 'Hide photo buttons'], ['F5', 'Save'], ['F9', 'Load'], ['Esc / Backspace', 'Close']]],
+  ['Menus', [['O', 'Objectives'], ['I', 'Inventory'], ['M', 'Big map'], ['F1', 'Controls'], ['F2', 'Settings'], ['F6', 'Hide / show the screen buttons'], ['P', 'Photo mode'], ['F4', 'Hide photo buttons'], ['F5', 'Save'], ['F9', 'Load'], ['Esc / Backspace', 'Close']]],
 ];
 
 export class Input {
@@ -52,9 +54,9 @@ export class Input {
     addEventListener('keyup', e => this.keys.delete(e.code));
     addEventListener('blur', () => this.keys.clear());
     let drag = null;
-    canvas.addEventListener('pointerdown', e => { if (!this.enabled) return; drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 }; canvas.setPointerCapture(e.pointerId); });
-    canvas.addEventListener('pointermove', e => { this.onPointer(e.clientX, e.clientY, true); if (!drag || drag.id !== e.pointerId) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; drag.moved += Math.abs(dx) + Math.abs(dy); this.look.dx += dx; this.look.dy += dy; });
-    canvas.addEventListener('pointerup', e => { if (drag && drag.moved < 6) { this.onPointer(e.clientX, e.clientY, true); if (!this.onClick(e.button) && e.pointerType === 'mouse' && e.button === 0) this.onWater(); } drag = null; });
+    canvas.addEventListener('pointerdown', e => { if (!this.enabled) return; if (this.onPointerDown?.(e)) { drag = null; this._swallow = true; return; } drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 }; canvas.setPointerCapture(e.pointerId); });
+    canvas.addEventListener('pointermove', e => { this.onPointer(e.clientX, e.clientY, true); if (!drag || drag.id !== e.pointerId) return; if (this.lookBlocked) return; /* hand cursor: the mouse points, it doesn't turn the camera */ const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; drag.moved += Math.abs(dx) + Math.abs(dy); this.look.dx += dx; this.look.dy += dy; });
+    canvas.addEventListener('pointerup', e => { if (this._swallow) { this._swallow = false; drag = null; return; } if (drag && drag.moved < 6) { this.onPointer(e.clientX, e.clientY, true); if (!this.onClick(e.button) && e.pointerType === 'mouse' && e.button === 0) this.onWater(); } drag = null; });
     canvas.addEventListener('pointerleave', e => this.onPointer(e.clientX, e.clientY, false));
     canvas.addEventListener('contextmenu', e => e.preventDefault());
     canvas.addEventListener('wheel', e => { if (!this.onWheel(e.deltaY)) this.zoom += e.deltaY * 0.01; }, { passive: true });
@@ -309,6 +311,12 @@ export class Audio {
     g.gain.setValueAtTime(vol, AC.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + dur);
     o.connect(g).connect(this.sfxBus); o.start(); o.stop(AC.currentTime + dur + 0.02);
   }
+  /** a friendly two-note whistle (rising, then a little up-and-down) */
+  whistle() {
+    const AC = this.AC; if (!AC || this.muted) return;
+    const tone = (t0, f0, f1, f2, dur) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; const t = AC.currentTime + t0; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur * 0.6); o.frequency.exponentialRampToValueAtTime(f2, t + dur); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.12, t + 0.03); g.gain.setValueAtTime(0.12, t + dur - 0.05); g.gain.linearRampToValueAtTime(0, t + dur); o.connect(g).connect(this.sfxBus); o.start(t); o.stop(t + dur + 0.02); };
+    tone(0, 1250, 2100, 2000, 0.22); tone(0.32, 1500, 2500, 1700, 0.34);
+  }
   chime(base = 784) { [0, 0.09, 0.18].forEach((t, i) => setTimeout(() => this.sfx(base * [1, 1.25, 1.5][i], 0.35, 'sine', 0.07), t * 1000)); }
   toggle() { this.muted = !this.muted; if (this.master) this.master.gain.value = this.muted ? 0 : 0.8; return this.muted; }
   /** louder surf near the waterline, more birds inland */
@@ -326,7 +334,7 @@ export class Speech {
   }
   /** say a line for an event; low-priority lines wait for silence */
   say(event, { force = false } = {}) {
-    const L = this.lines[event]; if (!L || !L.length) return false;
+    const L = this.lines[event]; if (!L || !L.length || this.muted) return false;
     if (!force && (this.t > 0 || this.cool > 0)) return false;
     let line = L[Math.floor(Math.random() * L.length)];
     if (L.length > 1 && line === this.last[event]) line = L[(L.indexOf(line) + 1) % L.length];
@@ -335,6 +343,8 @@ export class Speech {
     this.t = 2.2 + line.length * 0.045; this.cool = 1.5; this.quiet = 0;
     return true;
   }
+  /** muted while you play the friend (his own lines would come from your own mouth) */
+  get on() { return !this.muted; }
   /** show any line right now (dialogue reactions) */
   show(line, secs = 2.2) { this.text.textContent = line; this.el.classList.add('show'); this.t = secs; this.cool = 1; this.quiet = 0; }
   update(dt, camera, anchor, canvas) {

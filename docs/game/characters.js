@@ -288,22 +288,35 @@ export class Companion {
     this.c = char; this.body = body; this.leader = leader;
     this.vel = new THREE.Vector3(); this.face = 0; this.vy = 0; this.idle = 0; this.mood = 0;
     this.side = 1;
+    this.follow = false;            // waits at home unless Wren asks him to come along (Talk)
+    this.home = null; this.wander = null; this.wanderT = 2;
   }
   get pos() { return this.body.feet; }
 
   update(dt) {
     const me = this.pos, lp = this.leader.pos;
     const lf = this.leader.face;
-    // stay a little behind and beside Wren
-    const back = new THREE.Vector3(Math.sin(lf), 0, Math.cos(lf)).multiplyScalar(-1.8);
-    const side = new THREE.Vector3(Math.cos(lf), 0, -Math.sin(lf)).multiplyScalar(1.4 * this.side);
-    const goal = lp.clone().add(back).add(side);
+    if (!this.home) this.home = me.clone();
+    let goal;
+    if (this.follow) {
+      // stay a little behind and beside Wren
+      const back = new THREE.Vector3(Math.sin(lf), 0, Math.cos(lf)).multiplyScalar(-1.8);
+      const side = new THREE.Vector3(Math.cos(lf), 0, -Math.sin(lf)).multiplyScalar(1.4 * this.side);
+      goal = lp.clone().add(back).add(side);
+    } else {
+      // potter about near his spot by the lagoon, a few steps at a time
+      this.wanderT -= dt;
+      if (this.wanderT <= 0 || !this.wander) { const a = Math.random() * 6.283, r = Math.random() * 2.5; this.wander = this.home.clone().add(new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r)); this.wanderT = 5 + Math.random() * 6; }
+      goal = this.wander.clone();
+    }
     const to = goal.sub(me); to.y = 0;
     const d = to.length();
-    if (d > 30) { this.body.teleport(lp.x - 2, lp.y + 0.5, lp.z + 2); return; }
+    if (this.follow && d > 30 && !this.leader.indoors) { this.body.teleport(lp.x - 2, lp.y + 0.5, lp.z + 2); return; }
+    if (!this.follow && me.distanceTo(this.home) > 40) { this.body.teleport(this.home.x, this.home.y + 0.5, this.home.z); return; }
     const leaderSpeed = Math.hypot(this.leader.vel.x, this.leader.vel.z);
     let want = 0;
     if (this.talking || this.dancing) want = 0;
+    else if (!this.follow) { if (d > 0.4) want = Math.min(1.4, d * 1.5); }
     else if (d > 0.6) want = Math.min(d > 6 ? 12 : d > 2.5 ? 4.4 : 1.6, Math.max(1.4, leaderSpeed * 1.05));
     const target = d > 0.01 ? to.normalize().multiplyScalar(want) : new THREE.Vector3();
     const dv = target.sub(new THREE.Vector3(this.vel.x, 0, this.vel.z));
@@ -314,7 +327,7 @@ export class Companion {
     if (this.body.grounded && this.vy <= 0) this.vy = -2; else this.vy -= (depth > 0.9 ? 6 : 22) * dt;
     if (depth > 1.15) this.vy = Math.max(this.vy, (this.leader.waterLevelAt(me) - 1.15 - me.y) * 4);
     // hop when blocked and Wren is above
-    if (this.body.grounded && want > 1 && lp.y - me.y > 0.6 && d < 4) this.vy = 8;
+    if (this.follow && this.body.grounded && want > 1 && lp.y - me.y > 0.6 && d < 4) this.vy = 8;
     this.body.move(new THREE.Vector3(this.vel.x * dt, this.vy * dt, this.vel.z * dt));
     const hs = Math.hypot(this.vel.x, this.vel.z);
     if (hs > 0.25) { const w = Math.atan2(this.vel.x, this.vel.z); let a = w - this.face; a = Math.atan2(Math.sin(a), Math.cos(a)); this.face += a * Math.min(1, dt * 8); }

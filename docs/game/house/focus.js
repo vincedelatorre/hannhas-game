@@ -12,7 +12,7 @@ import * as THREE from 'three/webgpu';
 import { Item, Interactable, CLIP_RANGES } from './interact.js';
 
 const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
-const _b = new THREE.Box3(), _v = new THREE.Vector3();
+const _b = new THREE.Box3(), _v = new THREE.Vector3(), _ray = new THREE.Raycaster(), _ndc = new THREE.Vector2();
 
 export class Focus {
   constructor(H) {
@@ -55,7 +55,7 @@ export class Focus {
       const v = run0(s); if (!v || v.disabled) return v;
       const opening = onOpenOnly ? !(x.isOpen) : true;
       if (!opening) return v;
-      return { ...v, run: sys => { v.run(sys); this.enter(viewFn, x); } };
+      return { ...v, run: sys => { v.run(sys); if (!this.free) this.enter(viewFn, x); } };
     };
   }
   /** a standing spot ("Cook at the range") that only opens a view */
@@ -89,8 +89,10 @@ export class Focus {
 
   // ------------------------------------------------------------------ input
   pointer(x, y, inside = true) { this.mouse = { x, y, inside }; }
+  /** the free hand cursor (Tab in first person) picks with the same rules anywhere in the world */
+  get picking() { return !!this.view || this.free; }
   click(button) {
-    if (!this.view) return false;
+    if (!this.picking) return false;
     if (this.inspecting) { this.endInspect(); return true; }
     const h = this.hover;
     if (button === 2) { if (h?.item) this.inspect(h.item); return true; }
@@ -135,7 +137,7 @@ export class Focus {
   // ------------------------------------------------------------------ per frame
   update(dt) {
     const g = this.game;
-    if (!this.view) return;
+    if (!this.view) { if (this.inspecting) { const h = this.inspecting.holder; h.rotation.y += dt * 0.8; h.position.z = this.inspectZoom || 0; this.label.hidden = true; this.outline.visible = false; return; } if (this.free) this.pick(); else if (this.hover) this.setHover(null); return; }
     if (this.inspecting) { const h = this.inspecting.holder; h.rotation.y += dt * 0.8; h.position.z = this.inspectZoom || 0; this.label.hidden = true; this.outline.visible = false; return; }
     // the view follows its object (a drawer sliding, a door opening) and the zoom
     const v = this.view.fn(); const dir = v.pos.clone().sub(v.look); const len = dir.length();
@@ -149,14 +151,34 @@ export class Focus {
     const g = this.game, sys = this.sys, cam = g.camera, el = g.renderer.domElement, r = el.getBoundingClientRect();
     if (!this.mouse.inside) { this.setHover(null); return; }
     const mx = this.mouse.x - r.left, my = this.mouse.y - r.top;
-    const look = this.view.look || g.focus.look, R = (this.view.radius || 1.0) + 0.3;
-    let best = null, bd = 52 * Math.max(0.8, r.width / 1400);
+    const free = !this.view;
+    const look = free ? cam.position : (this.view.look || g.focus.look), R = free ? 3.2 : (this.view.radius || 1.0) + 0.3;
+    let best = null, bd = (free ? 34 : 52) * Math.max(0.8, r.width / 1400);
     const camPos = cam.position;
+    // what's really under the cursor: a ray through the pixel against the nearby objects' meshes
+    _ndc.set(mx / r.width * 2 - 1, -(my / r.height) * 2 + 1);
+    _ray.setFromCamera(_ndc, cam);
+    let rayHit = null, rayD = Infinity;
+    for (const x of sys.list) {
+      if (!(x instanceof Item) || x === sys.held || x.state.gone || x.flying || !x.object.visible) continue;
+      if (x.object.getWorldPosition(_v).distanceTo(look) > R) continue;
+      const hits = _ray.intersectObject(x.object, true);
+      if (hits.length && hits[0].distance < rayD) { rayD = hits[0].distance; rayHit = x; }
+    }
+    if (rayHit && free && g.rayHit) { const h = g.rayHit(_ray.ray.origin, _ray.ray.direction, rayD); if (h && h.toi < rayD - 0.45) rayHit = null; }
+    const blocked = (p) => {
+      // walls, doors and counters in the way (free mode only; close-ups frame their own contents)
+      if (!free || !g.rayHit) return false;
+      const dir = p.clone().sub(camPos); const len = dir.length(); if (len < 0.5) return false;
+      const h = g.rayHit(camPos, dir.divideScalar(len), len);
+      return !!h && h.toi < len - 0.45;
+    };
     const consider = (p, make, bias = 0) => {
       if (p.distanceTo(look) > R) return;
       const s = p.clone().project(cam); if (s.z > 1) return;
       const sx = (s.x * 0.5 + 0.5) * r.width, sy = (-s.y * 0.5 + 0.5) * r.height;
       const d = Math.hypot(sx - mx, sy - my) - bias; if (d >= bd) return;
+      if (bias < 500 && blocked(p)) return;
       const h = make(); if (!h) return;
       bd = d; best = h;
     };
@@ -171,7 +193,7 @@ export class Focus {
         consider(c, () => {
           const v = held ? sys.combine?.(held, x) : x.verb(sys);
           return v ? { item: x, v, box: _b.clone() } : (held ? null : null);
-        }, 8);
+        }, x === rayHit ? 1000 : 8);
       } else {
         if (['house_front_outside', 'house_front_inside'].includes(x.id)) continue;
         const a = x.anchor(V3(0, 0, 0));

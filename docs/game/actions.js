@@ -1,6 +1,6 @@
 // Wren's extra moves, her shell inventory, and the things they touch.
 //
-//   H  equip / store the pearl shell (persistent inventory; W and L fetch it automatically)
+//   A  equip / store the pearl shell (Hannah only; persistent; W and L fetch it automatically)
 //   R  run (toggle)         F  dance (loops)        G  wave (friend waves back)
 //   B  sit / stand          N  nap / wake           T  talk to your friend (dialogue + quest)
 //   Y  celebrate            K  kick a ball          U  magic flashlight     Z  crouch / sneak
@@ -24,13 +24,17 @@ export class Actions {
     this.k = { dance: 0, wave: 0, crouch: 0, kick: 0, talk: 0, nap: 0, store: 0 };   // pose blend weights
     this.t = { wave: 0, kick: 0, store: 0, dance: 0, cheer: 0 };
     this.load();
-    // pose on top of the animation every frame
-    const prev = w.afterPose;
-    w.afterPose = () => { prev?.(); this.pose(); };
-    this.baseY = w.model?.position.y || 0;
-    // her friend can dance too
-    const fc = game.friend?.c;
-    if (fc) { const fp = fc.afterPose; fc.afterPose = () => { fp?.(); this.friendPose(); }; this.friendBaseY = fc.model.position.y; }
+    // pose on top of the animation every frame, for both characters: the one you control gets the
+    // moves, the other one gets their idle / dance / whistle-reaction overlay
+    this.baseYs = new Map();
+    this.chars = (game.party?.m || [{ char: w }]).map(m => m.char);
+    this.hannah = this.chars[0];
+    const R = (n, ax, a, ch) => this.rot(n, ax, a, ch);
+    for (const ch of this.chars) {
+      this.baseYs.set(ch, ch.model?.position.y || 0);
+      const prev = ch.afterPose;
+      ch.afterPose = () => { prev?.(); if (ch === this.g.wren) this.pose(); else this.friendPose(ch); this.g.party?.pose(ch, R); };
+    }
     this.buildFlashlight();
     this.buildBalls();
     this.napSpots = [];
@@ -43,6 +47,8 @@ export class Actions {
 
   // ------------------------------------------------------------------ helpers
   get wren() { return this.g.wren; }
+  get baseY() { return this.baseYs.get(this.g.wren) || 0; }
+  get isHannah() { return this.g.wren === this.hannah; }
   get frozen() { return !!(this.s.nap || this.s.talk); }
   get busyBody() { const g = this.g; return !!(g.seated || g.ride?.riding || g.sliding >= 0 || g.onSwing || g.photo || this.s.nap || this.s.talk || g.house?.focus?.active); }
   get swimming() { const P = this.g.player; return !!(P.c?.swimming || P.underwater || P.diving); }
@@ -63,6 +69,7 @@ export class Actions {
     const g = this.g;
     if (!g.started || g.photo) return;
     if (this.s.talk && a !== 'talk') return;
+    if (a === 'shell' && !this.isHannah) return this.say('Only Hannah carries the pearl shell.');
     switch (a) {
       case 'shell': return this.toggleShell();
       case 'run': if (this.s.crouch) this.s.crouch = false; this.s.run = !this.s.run; this.say(this.s.run ? 'Running!' : 'Back to a stroll.'); break;
@@ -87,7 +94,8 @@ export class Actions {
   }
 
   // ------------------------------------------------------------------ shell (H)
-  applyShell(quiet) { const c = this.g.clam; if (c) c.visible = this.inv.shell.equipped && !this.g.interact?.held; }
+  hannahHolding() { return this.g.party ? this.g.party.heldBy('Wren') : this.g.interact?.held; }
+  applyShell(quiet) { const c = this.g.clam; if (c) c.visible = this.inv.shell.equipped && !this.hannahHolding(); }
   toggleShell(force) {
     const S = this.inv.shell, want = force ?? !S.equipped, g = this.g, sys = g.interact;
     if (want === S.equipped) return;
@@ -103,6 +111,7 @@ export class Actions {
   }
   /** W and L: fetch the shell first if it's stored */
   ensureShell() {
+    if (!this.isHannah) { const n = performance.now(); if (!(this._onlyT > n)) { this._onlyT = n + 3000; this.say('Only Hannah has the pearl shell powers. Tab to switch to her!'); } return false; }
     if (this.inv.shell.equipped) return true;
     const sys = this.g.interact;
     if (sys?.held) { sys.drop(); }
@@ -126,7 +135,8 @@ export class Actions {
     const f = this.g.friend;
     if (f && f.pos.distanceTo(this.g.player.pos) < 12) {
       const P = this.g.player, d = f.pos.clone().sub(P.pos); P.face = Math.atan2(d.x, d.z);
-      setTimeout(() => { f.c.play?.('Wave', { fadeIn: 0.15 }); this.g.audio?.chime?.(660); this.g.speech?.show('Hi Hannah! 👋', 2.2); }, 500);
+      const me = this.g.party?.active.name || 'Hannah';
+      setTimeout(() => { f.wave ? f.wave() : f.c.play?.('Wave', { fadeIn: 0.15 }); this.g.audio?.chime?.(660); f.say ? f.say(`Hi ${me}! 👋`) : this.g.speech?.show(`Hi ${me}! 👋`, 2.2); }, 500);
     }
   }
   cheer() {
@@ -195,7 +205,7 @@ export class Actions {
   talk() {
     if (this.s.talk) { this.dialogue.close(); return; }
     const g = this.g, f = g.friend;
-    if (!f || f.pos.distanceTo(g.player.pos) > 4) { this.say('Walk up to your friend to talk.'); return; }
+    if (!f || f.pos.distanceTo(g.player.pos) > 4) { this.say(`Walk up to ${g.party?.other.name || 'your friend'} to talk.`); return; }
     if (this.busyBody) return;
     this.dialogue.open();
   }
@@ -212,13 +222,24 @@ export class Actions {
     lens.rotation.x = Math.PI / 2; lens.position.z = 0.07; prop.add(lens);
     const pearl = new THREE.Mesh(new THREE.SphereGeometry(0.012, 10, 8), new THREE.MeshStandardNodeMaterial({ color: 0xFFE3F0, roughness: 0.2 })); pearl.position.set(0, 0.02, -0.03); prop.add(pearl);
     prop.visible = false;
-    const hand = g.wren.bones?.LeftHand;
-    if (hand) { hand.add(prop); const ws = new THREE.Vector3(); hand.getWorldScale(ws); prop.scale.setScalar(1 / ws.x); prop.position.set(0, 0.06 / ws.x, 0.03 / ws.x); }
+    this.torches = new Map();
+    for (const ch of this.chars) {
+      const t = ch === this.chars[0] ? prop : prop.clone(true); t.visible = false;
+      const hand = ch.bones?.LeftHand;
+      if (hand) { hand.add(t); const ws = new THREE.Vector3(); hand.getWorldScale(ws); t.scale.setScalar(1 / ws.x); t.position.set(0, 0.06 / ws.x, 0.03 / ws.x); }
+      this.torches.set(ch, t);
+    }
+  }
+  /** after a character switch: show the right torch in the right hand */
+  applyHands() {
+    const P = this.g.party; if (!P) return;
+    for (const m of P.m) { const t = this.torches.get(m.char); if (t) t.visible = m === P.active ? !!this.s.flashlight : !!m.s.flashlight; }
+    this.applyShell();
   }
   toggleLight() {
     if (this.swimming && !this.s.flashlight) return this.say('Not underwater: it might get wet!');
     this.s.flashlight = !this.s.flashlight;
-    this.torch.visible = this.s.flashlight; this.g.audio?.house?.('switch');
+    const t = this.torches.get(this.g.wren); if (t) t.visible = this.s.flashlight; this.g.audio?.house?.('switch');
     this.say(this.s.flashlight ? 'Magic flashlight on ✨' : 'Flashlight off.');
     if (this.s.flashlight) this.sparkle(0.5);
   }
@@ -290,7 +311,7 @@ export class Actions {
       if (Math.random() < dt * 6) g.fxGlow?.emit(hp.clone().addScaledVector(fwd, 0.15), fwd.clone().multiplyScalar(0.4), { life: 0.5, size: 0.04, color: [1, 0.95, 0.7], alpha: 0.8 });
     } else this.light.intensity = 0;
     // the shell hides while she carries something (one hand each), comes back when hands are free
-    const c = g.clam; if (c) { const want2 = this.inv.shell.equipped && !g.interact?.held && !(this.t.store > 0.35 && this.storing === 'out'); if (c.visible !== want2 && !(this.t.store > 0)) c.visible = want2; }
+    const c = g.clam; if (c) { const want2 = this.inv.shell.equipped && !this.hannahHolding() && !(this.t.store > 0.35 && this.storing === 'out'); if (c.visible !== want2 && !(this.t.store > 0)) c.visible = want2; }
     // a running dance can pause for her friend's moves
     if (this.pendingKick && (this.pendingKick.t -= dt) <= 0) { const k = this.pendingKick; this.pendingKick = null; k.run(); }
     this.updateBalls(dt);
@@ -333,16 +354,17 @@ export class Actions {
 
   /** her friend joins in or stops */
   friendJoin(what) { const f = this.g.friend; if (!f) return; f.dancing = what === 'dance' && f.pos.distanceTo(this.g.player.pos) < 14; if (f.dancing) this.g.speech?.show('Dance party! 🎶', 2.5); }
-  friendPose() {
-    const f = this.g.friend; if (!f) return;
+  friendPose(ch) {
+    const f = this.g.friend; if (!f || f.c !== ch) return;
+    const base = this.baseYs.get(ch) || 0;
     f.danceK = (f.danceK || 0) + ((f.dancing ? 1 : 0) - (f.danceK || 0)) * 0.08;
-    const d = f.danceK, c = f.c; if (d < 0.01) { if (c.model.position.y !== this.friendBaseY) c.model.position.y = this.friendBaseY; return; }
+    const d = f.danceK, c = f.c; if (d < 0.01) { if (c.model.position.y !== base) c.model.position.y = base; return; }
     const ph = performance.now() / 1000 * 4.2 + 0.8, up = Math.max(0, Math.sin(ph)), up2 = Math.max(0, Math.sin(ph + Math.PI));
     this.rot('Hips', [0, 1, 0], -0.3 * Math.sin(ph) * d, c);
     this.rot('RightArm', [1, 0, 0], (-1.2 - 1.0 * up) * d, c); this.rot('LeftArm', [1, 0, 0], (-1.2 - 1.0 * up2) * d, c);
     this.rot('RightForeArm', [1, 0, 0], -0.5 * d, c); this.rot('LeftForeArm', [1, 0, 0], -0.5 * d, c);
     this.rot('Head', [0, 0, 1], 0.2 * Math.sin(ph) * d, c);
-    c.model.position.y = this.friendBaseY + Math.abs(Math.sin(ph)) * 0.06 * d;
+    c.model.position.y = base + Math.abs(Math.sin(ph)) * 0.06 * d;
   }
   /** the little key prompts at the bottom of the screen: only what you can do right here */
   contextTips() {
@@ -356,7 +378,7 @@ export class Actions {
     if (this.nearestSeat(1.6)) tips.push(['B', 'Sit']);
     if (this.nearestNap(1.8)) tips.push(['N', 'Nap']);
     if (this.nearestBall(1.4)) tips.push(['K', 'Kick']);
-    if (!this.inv.shell.equipped && !g.interact?.held) tips.push(['H', 'Take out shell']);
+    if (this.isHannah && !this.inv.shell.equipped && !g.interact?.held) tips.push(['A', 'Take out shell']);
     if (this.s.dance) tips.push(['F', 'Stop dancing']);
     if (this.s.crouch) tips.push(['Z', 'Stand up']);
     const dark = g.indoors ? false : (g.sky?.elevation ?? 30) < 4;
@@ -391,6 +413,7 @@ class Dialogue {
   }
   close() { const A = this.A; A.s.talk = null; this.g.camShot = null; this.el.hidden = true; document.body.classList.remove('talking'); if (this.g.friend) this.g.friend.talking = false; }
   start() {
+    if (this.g.party && this.g.party.active.key !== 'Wren') return 'hannah';
     const q = this.quest, held = this.g.interact?.held;
     if (q.state === 'active' && held?.id === 'toy_boat') return 'found';
     if (q.state === 'active') return 'ask';
@@ -399,26 +422,31 @@ class Dialogue {
   }
   node(id) {
     const N = {
-      hello: { text: 'Hi Hannah! Want to help me find my missing toy boat?', face: '😊', choices: [['Yes! Let\'s find it!', 'accept'], ['Where did you last see it?', 'where'], ['Maybe later!', 'later']] },
+      hello: { text: 'Hi Hannah! Want to help me find my missing toy boat?', face: '😊', choices: [['Yes! Let\'s find it!', 'accept'], ['Where did you last see it?', 'where'], ['Maybe later!', 'later'], this.followChoice()] },
       where: { text: 'I was sailing it by the tide pools… then a big wave came! It must have washed up on the sand somewhere.', face: '🤔', choices: [['I\'ll find it!', 'accept'], ['Maybe later!', 'later']] },
       accept: { text: 'Yay! Thank you! It\'s little and red with a white sail. Look near the tide pools and along the beach.', face: '🥳', run: () => this.startQuest(), choices: [['On my way!', null]] },
       later: { text: 'Okay! Come find me anytime.', face: '🙂', choices: [['Bye!', null]] },
-      ask: { text: 'Any luck finding my boat? I think it\'s somewhere near the tide pools.', face: '🙂', choices: [['Still looking!', null], ['Can you give me a hint?', 'hint']] },
+      ask: { text: 'Any luck finding my boat? I think it\'s somewhere near the tide pools.', face: '🙂', choices: [['Still looking!', null], ['Can you give me a hint?', 'hint'], this.followChoice()] },
       hint: { text: this.hint(), face: '🤫', choices: [['Thanks!', null]] },
       found: { text: 'MY BOAT! You found it! You\'re the best, Hannah!', face: '🤩', run: () => this.finishQuest(), choices: [['You\'re welcome!', null]] },
-      chat: { text: ['What should we do next?', 'The sea turtle likes it when you visit!', 'Have you tried cooking pancakes in the kitchen?'][Math.floor(Math.random() * 3)], face: '😄', choices: [['Let\'s dance!', 'dance'], ['Let\'s cook something!', 'cook'], ['See you later!', null]] },
+      chat: { text: ['What should we do next?', 'The sea turtle likes it when you visit!', 'Have you tried cooking pancakes in the kitchen?'][Math.floor(Math.random() * 3)], face: '😄', choices: [['Let\'s dance!', 'dance'], ['Let\'s cook something!', 'cook'], this.followChoice(), ['See you later!', null]] },
       dance: { text: 'Woo! Dance party!', face: '💃', run: () => { this.close(); this.A.toggleDance(true); }, choices: [] },
+      come: { text: 'Yay, adventure! I\'ll stay right behind you.', face: '🤗', run: () => this.setFollow(true), choices: [['Let\'s go!', null]] },
+      stay: { text: 'Okay! I\'ll wait right here. Come say hi anytime!', face: '🙂', run: () => this.setFollow(false), choices: [['See you soon!', null]] },
+      hannah: { text: ['Hi! What should we do?', 'Did you see the dolphins jumping earlier?', 'I love it here. Want to explore together?'][Math.floor(Math.random() * 3)], face: '😊', choices: [['Let\'s dance!', 'dance'], ['Let\'s cook something!', 'cook'], this.followChoice(), ['See you later!', null]] },
       cook: { text: 'The recipe book is on the kitchen island. Press X to open it anytime!', face: '👩‍🍳', choices: [['Okay!', null]] },
     };
     const n = N[id]; if (!n) { this.close(); return; }
     n.run?.();
     if (!this.A.s.talk) return;
     this.el.hidden = false;
-    this.el.innerHTML = `<div class="who"><span class="face">${n.face}</span><b>Your friend</b></div><p>${n.text}</p><div class="choices">${n.choices.map(([t, next], i) => `<button data-next="${next ?? ''}">${i + 1}. ${t}</button>`).join('')}</div><small>Choose with the mouse or number keys · T or Esc to leave</small>`;
+    this.el.innerHTML = `<div class="who"><span class="face">${n.face}</span><b>${this.g.party?.other.name || 'Your friend'}</b></div><p>${n.text}</p><div class="choices">${n.choices.map(([t, next], i) => `<button data-next="${next ?? ''}">${i + 1}. ${t}</button>`).join('')}</div><small>Choose with the mouse or number keys · T or Esc to leave</small>`;
     this.el.querySelectorAll('button').forEach(b => b.onclick = () => { const nx = b.dataset.next; if (nx) this.node(nx); else this.close(); });
     this.el.querySelector('button')?.focus({ preventScroll: true });
     this.g.audio?.chime?.(700 + Math.random() * 200);
   }
+  followChoice() { return this.g.friend?.follow ? ['Wait here for me', 'stay'] : ['Come with me!', 'come']; }
+  setFollow(on) { const P = this.g.party; if (P) { if (on) P.callQuiet(); else P.dismiss(); return; } const f = this.g.friend; if (f) f.follow = on; }
   choose(i) { const b = this.el.querySelectorAll('.choices button')[i]; b?.click(); }
   hint() { const t = this.toy; if (!t) return 'Look near the water!'; const p = t.object.getWorldPosition(V3(0, 0, 0)), P = this.g.player.pos; const dx = p.x - P.x, dz = p.z - P.z; const dir = Math.abs(dx) > Math.abs(dz) ? (dx > 0 ? 'east' : 'west') : (dz > 0 ? 'toward the sea' : 'toward the cliffs'); return `I think it's ${Math.round(Math.hypot(dx, dz))} steps ${dir} from here.`; }
   startQuest() { this.quest = { state: 'active' }; this.spawnToy(); this.A.save(); this.g.toast?.('New quest: find the toy boat!'); this.g.hudExtra?.newObjective('Find your friend\'s toy boat'); }

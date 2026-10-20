@@ -288,7 +288,6 @@ export class House {
     this.root.visible = true; this.setOutdoorsVisible(false);
     const s = this.world(0, 0.05, 3.9);
     P.body.teleport(s.x, s.y, s.z); P.vel.set(0, 0, 0); P.face = Math.PI;
-    if (g.friend) { g.friend.body.teleport(s.x + 0.9, s.y, s.z - 0.4); g.friend.vel.set(0, 0, 0); }
     g.cam.yaw = 0; g.cam.pitch = 0.32; g.cam.dist = 3.6;
     g.cam.target.copy(s).add(new THREE.Vector3(0, 1.35, 0));
     g.camera.position.copy(s).add(new THREE.Vector3(0, 2.3, 3.2));
@@ -298,6 +297,14 @@ export class House {
     if (!this._welcomed) { this._welcomed = true; setTimeout(() => g.speech?.say('house', { force: true }), 1800); }
   }
   exit() { this.fade(() => this.goOutside()); }
+  /** switching to a character on the other side of the front door: show that side, move nobody */
+  setSpace(inside) {
+    const g = this.game;
+    this.indoors = inside; g.indoors = inside; g.player.indoors = inside;
+    this.root.visible = inside; this.setOutdoorsVisible(!inside);
+    g.scene.fog.density = inside ? 0.002 : (g._outFog || 0.0009);
+    g.cam.dist = inside ? 3.6 : 6.5;
+  }
   goOutside() {
     const g = this.game, P = g.player;
     this.indoors = false; g.indoors = false; P.indoors = false;
@@ -305,7 +312,6 @@ export class House {
     const p = this.doorOutside.clone().add(new THREE.Vector3(0, 0, 1.4));
     p.y = H(p.x, -p.z) + 0.1;
     P.body.teleport(p.x, p.y, p.z); P.vel.set(0, 0, 0); P.face = 0;
-    if (g.friend) g.friend.body.teleport(p.x + 1, p.y, p.z + 0.6);
     g.cam.yaw = 0; g.cam.pitch = 0.28; g.cam.dist = 6.5;
     g.cam.target.copy(p).add(new THREE.Vector3(0, 1.35, 0));
     g.camera.position.copy(p).add(new THREE.Vector3(0, 2.5, 6));

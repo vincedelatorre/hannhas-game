@@ -31,6 +31,13 @@ export class HudExtra {
     cb.innerHTML = '<span class="ico">🎮</span><span class="lbl">Controls</span><kbd>F1</kbd>';
     const panel = this.ctlPanel = document.createElement('div'); panel.id = 'ctl-panel';
     panel.innerHTML = CONTROLS.map(([sec, rows]) => `<section><h3>${sec}</h3>${rows.map(([k, what]) => `<div class="row"><span class="keys">${k.split(' / ').map(x => `<kbd>${x}</kbd>`).join(' ')}</span><span>${what}</span></div>`).join('')}</section>`).join('');
+    // the Characters section gets real buttons that call the same commands as Tab / H / J
+    const charSec = [...panel.querySelectorAll('section')].find(x => x.querySelector('h3')?.textContent === 'Characters');
+    if (charSec) {
+      const row = document.createElement('div'); row.className = 'char-btns';
+      for (const [lbl, fn] of [['🔁 Switch', () => game.party?.switchTo()], ['🎵 Whistle', () => game.party?.whistle()], ['✋ Stay here', () => game.party?.dismiss()]]) { const b = document.createElement('button'); b.type = 'button'; b.textContent = lbl; b.addEventListener('click', e => { e.stopPropagation(); fn(); }); row.append(b); }
+      charSec.append(row);
+    }
     help.append(panel, cb);
     cb.addEventListener('click', () => this.toggleControls());
     // ---- objective notification
