@@ -173,6 +173,7 @@ body.focus #prompt, body.focus #help, body.focus #buttons, body.focus #map { dis
 #waypoint-edge { position: fixed; z-index: 6; width: 0; height: 0; border-top: 14px solid transparent; border-bottom: 14px solid transparent; border-left: 24px solid #FFC83D; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35)); pointer-events: none; }
 #b-book { position: fixed; z-index: 5; left: 14px; bottom: 64px; font: 600 0.9rem var(--display); border: 0; border-radius: 999px; padding: 9px 16px; background: rgba(255, 252, 245, 0.88); color: var(--lagoon-deep); box-shadow: 0 4px 16px rgba(20,40,50,0.18); cursor: pointer; }
 body.focus #b-book, body.book #b-book { display: none; }
+#b-book { pointer-events: auto; }   /* .hud ignores the mouse; this button must not */
 
 /* ---- tidy HUD: collapsible objectives and controls, context prompts, wheel ---- */
 #quests { padding: 0; overflow: hidden; pointer-events: auto; width: min(290px, calc(100vw - 190px)); transition: box-shadow 0.3s; }
