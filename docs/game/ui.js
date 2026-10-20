@@ -19,8 +19,8 @@ export const KEYMAP = {
 
 /** the Controls panel: section, keys, what it does */
 export const CONTROLS = [
-  ['Move', [['← ↑ → ↓', 'Move'], ['C', 'Walk (hold)'], ['Shift', 'Super speed (hold)'], ['R', 'Run on / off'], ['Z', 'Crouch and sneak'], ['Space', 'Jump (twice = backflip)'], ['Drag', 'Look around']]],
-  ['First person', [['V', 'First-person view'], ['Drag', 'Look around'], ['Point', 'Shows the name of anything within 5 ft'], ['Click', 'Use, open, grab or put down'], ['Right-click', 'Look closer at an item']]],
+  ['Move', [['← ↑ → ↓', 'Move'], ['C', 'Walk (hold)'], ['Shift', 'Super speed (hold)'], ['R', 'Run on / off'], ['Z', 'Crouch and sneak'], ['Space', 'Jump (twice = backflip)']]],
+  ['Mouse', [['V', 'First-person view'], ['Mouse', 'Look around (no click needed)'], ['Centre dot', 'Shows the name of anything within 5 ft'], ['Click', 'Use, open, grab or put down'], ['Right-click', 'Look closer at an item'], ['Esc', 'Free the mouse for the buttons']]],
   ['Characters', [['Tab', 'Switch character'], ['1 / 2', 'Play as Hannah / Friend'], ['H', 'Whistle: call the other one over'], ['J', 'Stay here (stop following)']]],
   ['Shell powers', [['A', 'Take out / put away shell'], ['W', 'Water (hold)'], ['L', 'Love'], ['D', 'Dive (again = deeper)'], ['S', 'Swim up']]],
   ['Things to do', [['E / Click', 'Use / pick up'], ['Q', 'Put down'], ['B', 'Sit / stand'], ['N', 'Nap / wake up'], ['K', 'Kick a ball'], ['U', 'Magic flashlight'], ['X', 'Recipe book']]],
@@ -54,7 +54,7 @@ export class Input {
     addEventListener('keyup', e => this.keys.delete(e.code));
     addEventListener('blur', () => this.keys.clear());
     let drag = null;
-    canvas.addEventListener('pointerdown', e => { if (!this.enabled) return; if (this.onPointerDown?.(e)) { drag = null; this._swallow = true; return; } drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 }; canvas.setPointerCapture(e.pointerId); });
+    canvas.addEventListener('pointerdown', e => { if (!this.enabled) return; if (this.onPointerDown?.(e)) { drag = null; this._swallow = true; return; } drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 }; if (!document.pointerLockElement) { try { canvas.setPointerCapture(e.pointerId); } catch (er) { /* not capturable */ } } });
     canvas.addEventListener('pointermove', e => { this.onPointer(e.clientX, e.clientY, true); if (!drag || drag.id !== e.pointerId) return; if (this.lookBlocked) return; /* hand cursor: the mouse points, it doesn't turn the camera */ const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; drag.moved += Math.abs(dx) + Math.abs(dy); this.look.dx += dx; this.look.dy += dy; });
     canvas.addEventListener('pointerup', e => { if (this._swallow) { this._swallow = false; drag = null; return; } if (drag && drag.moved < 6) { this.onPointer(e.clientX, e.clientY, true); this.onClick(e.button); } drag = null; });
     canvas.addEventListener('pointerleave', e => this.onPointer(e.clientX, e.clientY, false));

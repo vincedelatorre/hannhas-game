@@ -83,3 +83,10 @@ point at anything within ~5 ft of the character (measured flat, so every shelf h
 and shows its name and action; left-click does it; right-click looks closer at an item; drag to look around.
 Clicking empty space does what E does; clicks never spray water (W does). Opening the fridge or a cupboard
 no longer jumps to a close-up, so you just point at what's inside. Tab = switch character again (1 / 2 too).
+
+## Mouse look always on (latest)
+
+The mouse is captured while playing (pointer lock): moving it always turns the view, no button needed, in both
+views. A centre dot selects: whatever it's on within ~5 ft glows and shows its name; click or E uses it, right-click
+inspects. Esc frees the mouse for the on-screen buttons (a hint says click to resume); menus free it automatically.
+Touch screens keep drag-to-look and tap-to-select.

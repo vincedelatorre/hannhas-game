@@ -39,14 +39,14 @@ export class MouseMode {
     const chip = this.chip = document.createElement('button'); chip.type = 'button'; chip.id = 'mode-chip';
     chip.addEventListener('click', () => this.toggle()); document.body.append(chip);
     this.note = document.createElement('div'); this.note.id = 'mode-note'; this.note.setAttribute('role', 'status'); document.body.append(this.note);
-    this.resume = document.createElement('div'); this.resume.id = 'look-resume'; this.resume.innerHTML = '<span>🖱️</span> Click to look around · <kbd>Tab</kbd> for the hand'; document.body.append(this.resume);
+    this.resume = document.createElement('div'); this.resume.id = 'look-resume'; this.resume.innerHTML = '<span>🖱️</span> Click the game to look around with the mouse · <kbd>Esc</kbd> frees it for the buttons'; document.body.append(this.resume);
     // ---- listeners (one set, never duplicated)
     document.addEventListener('pointerlockchange', () => this.lockChanged());
     document.addEventListener('pointerlockerror', () => { this.lockFailed = true; });
     addEventListener('mousemove', e => {
       if (this.locked) {
-        if (this.mode !== 'NAVIGATION' || this.g.house?.focus?.active) return;
-        const k = 0.55, mx = e.movementX, my = e.movementY;
+        if (this.g.house?.focus?.active) return;
+        const k = 1.0, mx = e.movementX, my = e.movementY;
         if (Math.abs(mx) > 250 || Math.abs(my) > 250) return;   // the occasional browser spike
         this.g.input.look.dx += mx * k; this.g.input.look.dy += my * k;
         return;
@@ -69,8 +69,10 @@ export class MouseMode {
     return !!(g.photo || g.house?.recipeBook?.isOpen || g.actions?.s.talk || !$('inventory')?.hidden || !$('settings')?.hidden || document.body.classList.contains('bigmap') || document.body.classList.contains('ctl-open') || !$('win')?.hidden || g.ride?.riding);
   }
   // one mode only: the cursor is always free, hovering always shows what you can use, drag to look
-  get wantLock() { return false; }
-  get handShown() { return this.focusOn || (this.g.started && !this.menuOpen && !this.g.photo); }
+  // the mouse always steers the view (captured, no button needed); the centre of the screen selects.
+  // Menus and close-ups free the mouse; a click on the game captures it again.
+  get wantLock() { return !this.touch && this.g.started && !this.focusOn && !this.menuOpen && !this.g.photo; }
+  get handShown() { return this.focusOn || (this.touch && this.g.started && !this.menuOpen) || (!this.touch && this.g.started && !this.menuOpen && !this.g.photo && !this.locked && !this.wantLock); }
 
   // ------------------------------------------------------------------ switching
   /** Tab: in first person flip between looking and the hand; from third person go to first person with the hand ready */
@@ -89,7 +91,7 @@ export class MouseMode {
   }
   /** V switched views: first person always starts in Navigation mode */
   viewChanged() {
-    if (this.firstPerson && !this.wasFirst) this.notify(this.touch ? 'First person · drag to look' : 'First person · drag to look · point at things to use them');
+    if (this.firstPerson && !this.wasFirst && this.touch) this.notify('First person · drag to look');
     if (!this.firstPerson && this.wasFirst) { this.unlock(); this.mode = 'NAVIGATION'; }
     this.wasFirst = this.firstPerson;
   }
