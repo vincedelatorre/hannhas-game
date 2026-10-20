@@ -1,6 +1,6 @@
 // Two playable characters: Hannah (Wren) and her friend.
 //
-//   Tab  switch which character you control (the other one stays exactly where they are)
+//   1 / 2  play as Hannah / her friend (the other one stays exactly where they are)
 //   H    whistle: the other character turns, acknowledges, walks over (pathfinding) and hangs out
 //   J    "stay here": they stop following and go back to doing their own thing on the spot
 //

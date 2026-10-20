@@ -10,6 +10,43 @@
 // The same objects, slots and actions as third person are used, so nothing is duplicated.
 import * as THREE from 'three/webgpu';
 import { Item, Interactable, CLIP_RANGES } from './interact.js';
+import { uniform, positionLocal, normalLocal, color, float } from 'three/tsl';
+
+/**
+ * Hover highlight that follows the object's real silhouette: a thin back-face shell pushed out along
+ * the normals (a crisp gold rim) plus a wider, fainter one (the soft glow). Fades in and out in ~150 ms.
+ * The shells share the object's own geometry, never take part in picking, and are removed on exit.
+ */
+class Glow {
+  constructor() { this.cur = null; this.fading = []; }
+  make(obj) {
+    const set = { obj, op: uniform(0), want: 1, hulls: [] };
+    obj.updateWorldMatrix(true, true);
+    const ws = new THREE.Vector3();
+    obj.traverse(m => {
+      if (!m.isMesh || m.userData.glowHull || !m.visible || m.isSkinnedMesh || m.isInstancedMesh || !m.geometry?.attributes?.normal) return;
+      m.getWorldScale(ws); const sc = Math.max(1e-4, (Math.abs(ws.x) + Math.abs(ws.y) + Math.abs(ws.z)) / 3);
+      for (const [t, k] of [[0.0055, 1], [0.016, 0.28]]) {
+        const mat = new THREE.MeshBasicNodeMaterial({ transparent: true, depthWrite: false, side: THREE.BackSide });
+        mat.colorNode = color(k === 1 ? 0xFFE7A0 : 0xFFF4D6); mat.opacityNode = set.op.mul(float(k));
+        mat.positionNode = positionLocal.add(normalLocal.mul(uniform(t / sc)));   // a uniform, so every hover reuses the same two shaders
+        const h = new THREE.Mesh(m.geometry, mat); h.userData.glowHull = true; h.raycast = () => {}; h.renderOrder = 18; h.castShadow = h.receiveShadow = false;
+        m.add(h); set.hulls.push(h);
+      }
+    });
+    return set;
+  }
+  set(obj) {
+    if (this.cur?.obj === obj) return;
+    if (this.cur) { this.cur.want = 0; this.fading.push(this.cur); }
+    this.cur = obj ? this.make(obj) : null;
+  }
+  update(dt) {
+    const k = Math.min(1, dt * 14);
+    for (const s of [this.cur, ...this.fading]) if (s) s.op.value += (s.want - s.op.value) * k;
+    this.fading = this.fading.filter(s => { if (s.op.value > 0.02) return true; for (const h of s.hulls) { h.parent?.remove(h); h.material.dispose(); } return false; });
+  }
+}
 
 const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
 const _b = new THREE.Box3(), _v = new THREE.Vector3(), _ray = new THREE.Raycaster(), _ndc = new THREE.Vector2();
@@ -23,6 +60,7 @@ export class Focus {
     const eg = new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1));
     this.outline = new THREE.LineSegments(eg, new THREE.LineBasicNodeMaterial({ color: 0xFFE08A, transparent: true, opacity: 0.95, depthTest: false }));
     this.outline.renderOrder = 20; this.outline.visible = false; this.game.scene.add(this.outline);
+    this.glow = new Glow();
     // UI
     this.bar = document.getElementById('focus-bar'); this.barTitle = document.getElementById('focus-title'); this.barHint = document.getElementById('focus-hint');
     this.label = document.getElementById('focus-label'); this.card = document.getElementById('inspect-card');
@@ -81,7 +119,7 @@ export class Focus {
   exit() {
     if (!this.view) return;
     this.endInspect();
-    this.view = null; this.game.focus = null; this.hover = null;
+    this.view = null; this.game.focus = null; this.hover = null; this.glow.set(null);
     this.outline.visible = false; this.label.hidden = true; this.bar.hidden = true;
     document.body.classList.remove('focus');
   }
@@ -113,6 +151,7 @@ export class Focus {
   inspect(item) {
     this.endInspect();
     const clone = item.object.clone(true);
+    const strip = []; clone.traverse(o => { if (o.userData.glowHull) strip.push(o); }); strip.forEach(o => o.parent.remove(o));
     clone.position.set(0, 0, 0); clone.rotation.set(0.25, 0, 0); clone.scale.setScalar(item.baseScale || 1);
     _b.setFromObject(clone); const size = _b.getSize(_v); const k = 0.18 / Math.max(size.x, size.y, size.z, 0.02);
     clone.scale.multiplyScalar(k); _b.setFromObject(clone); const c = _b.getCenter(_v); clone.position.sub(c);
@@ -137,6 +176,7 @@ export class Focus {
   // ------------------------------------------------------------------ per frame
   update(dt) {
     const g = this.game;
+    this.glow.update(dt);
     if (!this.view) { if (this.inspecting) { const h = this.inspecting.holder; h.rotation.y += dt * 0.8; h.position.z = this.inspectZoom || 0; this.label.hidden = true; this.outline.visible = false; return; } if (this.free) this.pick(); else if (this.hover) this.setHover(null); return; }
     if (this.inspecting) { const h = this.inspecting.holder; h.rotation.y += dt * 0.8; h.position.z = this.inspectZoom || 0; this.label.hidden = true; this.outline.visible = false; return; }
     // the view follows its object (a drawer sliding, a door opening) and the zoom
@@ -210,12 +250,15 @@ export class Focus {
   setHover(h) {
     this.hover = h;
     const el = this.game.renderer.domElement;
-    if (!h) { this.outline.visible = false; this.label.hidden = true; el.style.cursor = 'default'; this.sys.marker.visible = false; return; }
+    if (!h) { this.outline.visible = false; this.glow.set(null); this.label.hidden = true; el.style.cursor = 'default'; this.sys.marker.visible = false; return; }
     el.style.cursor = h.v.disabled ? 'not-allowed' : 'pointer';
-    if (h.box) {
-      const c = h.box.getCenter(V3(0, 0, 0)), s = h.box.getSize(V3(0, 0, 0)).addScalar(0.012);
-      this.outline.position.copy(c); this.outline.scale.copy(s); this.outline.visible = true; this.sys.marker.visible = false;
-    } else { this.outline.visible = false; this.sys.marker.position.copy(h.p); this.sys.marker.visible = true; this.sys.marker.scale.setScalar(0.07); }
+    // glow the thing itself (an item, a door, a knob); a free spot to put something gets a small sparkle
+    let target = h.item?.object || (h.x && !h.v.disabled ? h.x.object : null);
+    if (target && h.x) { _b.setFromObject(target); const sz = _b.getSize(_v); if (_b.isEmpty() || sz.length() > 2.6 || target === this.H.root) target = null; }
+    this.outline.visible = false;
+    this.glow.set(h.v.disabled ? null : target);
+    if (target) this.sys.marker.visible = false;
+    else { this.sys.marker.position.copy(h.p || (h.box ? h.box.getCenter(V3(0, 0, 0)) : this.sys.marker.position)); this.sys.marker.visible = true; this.sys.marker.scale.setScalar(0.07); }
     const name = h.item ? h.item.name : h.slot ? '' : h.x?.name || '';
     this.label.hidden = false;
     this.label.innerHTML = `${name ? `<b>${name[0].toUpperCase() + name.slice(1)}</b> · ` : ''}${h.v.label}${h.item && !this.sys.held ? ' <i>right-click to look closer</i>' : ''}`;

@@ -10,7 +10,7 @@ export const KEYMAP = {
   KeyV: { action: 'view', legacy: 'onToggleView' }, KeyP: { action: 'photo', legacy: 'onPhoto' }, F3: { action: 'stats', prevent: true, legacy: 'onStats' },
   KeyA: { action: 'shell' }, KeyH: { action: 'whistle' }, KeyJ: { action: 'dismiss' }, Backquote: { action: 'mousemode', always: true }, KeyR: { action: 'run' }, KeyF: { action: 'dance' }, KeyG: { action: 'wave' }, KeyB: { action: 'sit' }, KeyN: { action: 'nap' },
   KeyT: { action: 'talk' }, KeyY: { action: 'cheer' }, KeyK: { action: 'kick' }, KeyU: { action: 'light' }, KeyZ: { action: 'crouch' },
-  KeyI: { action: 'inventory' }, KeyM: { action: 'map' }, KeyO: { action: 'objectives', always: true }, Tab: { action: 'switch', prevent: true }, F6: { action: 'quickhud', always: true, prevent: true },
+  KeyI: { action: 'inventory' }, KeyM: { action: 'map' }, KeyO: { action: 'objectives', always: true }, Tab: { action: 'mousemode', always: true, prevent: true }, F6: { action: 'quickhud', always: true, prevent: true },
   F1: { action: 'controls', always: true, prevent: true }, F2: { action: 'settings', always: true, prevent: true }, F4: { action: 'photohud', always: true, prevent: true },
   F5: { action: 'save', always: true, prevent: true }, F9: { action: 'load', always: true, prevent: true },
   Backspace: { action: 'close', always: true, prevent: true }, Enter: { action: 'confirm', always: true },
@@ -20,10 +20,10 @@ export const KEYMAP = {
 /** the Controls panel: section, keys, what it does */
 export const CONTROLS = [
   ['Move', [['← ↑ → ↓', 'Move'], ['C', 'Walk (hold)'], ['Shift', 'Super speed (hold)'], ['R', 'Run on / off'], ['Z', 'Crouch and sneak'], ['Space', 'Jump (twice = backflip)'], ['Drag', 'Look around']]],
-  ['First person', [['V', 'First-person view'], ['Mouse', 'Look around (no click needed)'], ['~ / Right-click', 'Hand cursor on / off'], ['Click', 'Use, grab or put down (hand)'], ['Right-click', 'Look closer (hand)']]],
-  ['Characters', [['Tab', 'Switch character'], ['H', 'Whistle: call the other one over'], ['J', 'Stay here (stop following)']]],
-  ['Shell powers', [['A', 'Take out / put away shell'], ['W', 'Water (or click)'], ['L', 'Love'], ['D', 'Dive (again = deeper)'], ['S', 'Swim up']]],
-  ['Things to do', [['E', 'Use / pick up'], ['Q', 'Put down'], ['B', 'Sit / stand'], ['N', 'Nap / wake up'], ['K', 'Kick a ball'], ['U', 'Magic flashlight'], ['X', 'Recipe book']]],
+  ['First person', [['V', 'First-person view'], ['Mouse', 'Look around (no click needed)'], ['Tab', 'Interaction mode: hand cursor on / off'], ['Click', 'Use, open, grab or put down (like E)'], ['Right-click', 'Look closer (hand)']]],
+  ['Characters', [['1', 'Play as Hannah'], ['2', 'Play as Friend'], ['H', 'Whistle: call the other one over'], ['J', 'Stay here (stop following)']]],
+  ['Shell powers', [['A', 'Take out / put away shell'], ['W', 'Water (hold)'], ['L', 'Love'], ['D', 'Dive (again = deeper)'], ['S', 'Swim up']]],
+  ['Things to do', [['E / Click', 'Use / pick up'], ['Q', 'Put down'], ['B', 'Sit / stand'], ['N', 'Nap / wake up'], ['K', 'Kick a ball'], ['U', 'Magic flashlight'], ['X', 'Recipe book']]],
   ['Friends and fun', [['T', 'Talk'], ['G', 'Wave'], ['F', 'Dance'], ['Y', 'Celebrate']]],
   ['Menus', [['O', 'Objectives'], ['I', 'Inventory'], ['M', 'Big map'], ['F1', 'Controls'], ['F2', 'Settings'], ['F6', 'Hide / show the screen buttons'], ['P', 'Photo mode'], ['F4', 'Hide photo buttons'], ['F5', 'Save'], ['F9', 'Load'], ['Esc / Backspace', 'Close']]],
 ];
@@ -56,7 +56,7 @@ export class Input {
     let drag = null;
     canvas.addEventListener('pointerdown', e => { if (!this.enabled) return; if (this.onPointerDown?.(e)) { drag = null; this._swallow = true; return; } drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0 }; canvas.setPointerCapture(e.pointerId); });
     canvas.addEventListener('pointermove', e => { this.onPointer(e.clientX, e.clientY, true); if (!drag || drag.id !== e.pointerId) return; if (this.lookBlocked) return; /* hand cursor: the mouse points, it doesn't turn the camera */ const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; drag.moved += Math.abs(dx) + Math.abs(dy); this.look.dx += dx; this.look.dy += dy; });
-    canvas.addEventListener('pointerup', e => { if (this._swallow) { this._swallow = false; drag = null; return; } if (drag && drag.moved < 6) { this.onPointer(e.clientX, e.clientY, true); if (!this.onClick(e.button) && e.pointerType === 'mouse' && e.button === 0) this.onWater(); } drag = null; });
+    canvas.addEventListener('pointerup', e => { if (this._swallow) { this._swallow = false; drag = null; return; } if (drag && drag.moved < 6) { this.onPointer(e.clientX, e.clientY, true); this.onClick(e.button); } drag = null; });
     canvas.addEventListener('pointerleave', e => this.onPointer(e.clientX, e.clientY, false));
     canvas.addEventListener('contextmenu', e => e.preventDefault());
     canvas.addEventListener('wheel', e => { if (!this.onWheel(e.deltaY)) this.zoom += e.deltaY * 0.01; }, { passive: true });

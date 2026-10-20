@@ -136,7 +136,10 @@ async function boot() {
   input.onClick = b => {
     // right-click brings the hand cursor out in first person, and puts it away over empty space
     if (b === 2 && game.view === 'first' && !FOCUS().active && (!FOCUS().free || !FOCUS().hover)) { game.mouseMode?.toggle(); return true; }
-    return FOCUS().picking ? FOCUS().click(b) : false;
+    if (FOCUS().picking) return FOCUS().click(b);
+    // a click never sprays water (that's W): it does exactly what E does
+    if (b === 0) { input.onUse(); return true; }
+    return false;
   };
   input.onWheel = d => FOCUS().wheel(d);
   input.onEscape = () => { if (game.actions?.s.talk) game.actions.dialogue.close(); else if (game.hudExtra?.closeTop()) return; else if (BOOK().isOpen) BOOK().close(); else if (FOCUS().active) FOCUS().exit(); else if (game.view === 'first') game.mouseMode?.release(); };
@@ -228,7 +231,8 @@ function setupMoves() {
   I.on('load', () => { if (confirm('Load your last save? Anything since then will be lost.')) location.reload(); });
   I.on('close', () => { if (A.s.talk) A.dialogue.close(); else if (!X.closeTop()) I.onEscape(); });
   I.on('confirm', () => { if (A.s.talk) A.dialogue.choose(0); });
-  for (const n of [1, 2, 3, 4]) I.on(`choice${n}`, () => { if (A.s.talk) A.dialogue.choose(n - 1); });
+  // 1-4 pick answers while talking; otherwise 1 = play as Hannah, 2 = play as her friend
+  for (const n of [1, 2, 3, 4]) I.on(`choice${n}`, () => { if (A.s.talk) A.dialogue.choose(n - 1); else if (n <= 2 && game.started && !BOOK().isOpen && game.party && game.party.i !== n - 1) game.party.switchTo(); });
   // R toggles running: a speed between jogging and super speed; Z sneaks slowly
   for (const m of game.party?.m || []) m.player.speedHook = max => A.speedScale(max);
   game.player.speedHook = max => A.speedScale(max);

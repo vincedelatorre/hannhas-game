@@ -45,12 +45,12 @@ Keys are ignored while typing in any text box.
 
 | Key | Command |
 |---|---|
-| Tab | Switch between Hannah and her friend (nobody moves; camera glides over, or fades if far / other side of the door) |
+| 1 / 2 | Play as Hannah / her friend (nobody moves; camera glides over, or fades if far / other side of the door) |
 | H | Whistle: the other one turns, waves, walks over with pathfinding, then hangs out |
 | J | Stay here: they stop following and stay where they are now |
 
-Key changes this caused: the shell moved from H to **A**, the hand cursor from Tab to **right-click / ~**,
-J no longer dives (D still does). The Controls panel has a Characters section with Switch / Whistle /
+Key changes this caused: the shell moved from H to **A**, J no longer dives (D still does). Tab went back to
+the hand cursor (Interaction mode) per the later mouse prompt, so switching characters is **1 / 2**. The Controls panel has a Characters section with Switch / Whistle /
 Stay here buttons that call the same functions.
 
 AI states: INDEPENDENT_IDLE, SEATED, RESPONDING_TO_WHISTLE, NAVIGATING_TO_PLAYER, COMPANION_HANGOUT,
@@ -67,3 +67,11 @@ the pearl shell powers. Upstairs isn't built yet, so stairs/floors navigation wa
 
 Superseded by the two-character system above: he is independent by default; Talk's "Come with me!" /
 "Wait here for me" use the same commands as H / J.
+
+## Mouse clicks (latest)
+
+- A left-click never sprays water any more (W does). Outside the hand cursor, a left-click does exactly what E does.
+- **Tab** toggles Gameplay Mode (mouse looks around) / Interaction Mode (free cursor, hand, click objects);
+  right-click and ~ also work. Notices read "Gameplay Mode" / "Interaction Mode".
+- Hover highlight now follows the object's silhouette: a thin gold rim plus a faint wider glow (back-face shells
+  on the object's own geometry, thickness as a uniform so no shader recompiles), fading in/out in ~150 ms.

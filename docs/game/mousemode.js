@@ -39,7 +39,7 @@ export class MouseMode {
     const chip = this.chip = document.createElement('button'); chip.type = 'button'; chip.id = 'mode-chip';
     chip.addEventListener('click', () => this.toggle()); document.body.append(chip);
     this.note = document.createElement('div'); this.note.id = 'mode-note'; this.note.setAttribute('role', 'status'); document.body.append(this.note);
-    this.resume = document.createElement('div'); this.resume.id = 'look-resume'; this.resume.innerHTML = '<span>🖱️</span> Click to look around · <kbd>~</kbd> or right-click for the hand'; document.body.append(this.resume);
+    this.resume = document.createElement('div'); this.resume.id = 'look-resume'; this.resume.innerHTML = '<span>🖱️</span> Click to look around · <kbd>Tab</kbd> for the hand'; document.body.append(this.resume);
     // ---- listeners (one set, never duplicated)
     document.addEventListener('pointerlockchange', () => this.lockChanged());
     document.addEventListener('pointerlockerror', () => { this.lockFailed = true; });
@@ -81,13 +81,13 @@ export class MouseMode {
   }
   set(m) {
     this.mode = m;
-    this.notify(m === 'NAVIGATION' ? (this.touch ? 'Navigation mode · drag to look' : 'Navigation mode · move the mouse to look') : (this.touch ? 'Interaction mode · tap to use things' : 'Interaction mode · click to interact'));
+    this.notify(m === 'NAVIGATION' ? 'Gameplay Mode' : 'Interaction Mode');
     if (m === 'NAVIGATION') this.lock(); else this.unlock();
     this.g.audio?.house?.('click');
   }
   /** V switched views: first person always starts in Navigation mode */
   viewChanged() {
-    if (this.firstPerson && !this.wasFirst) { this.mode = 'NAVIGATION'; this.lock(); this.notify(this.touch ? 'First person · drag to look' : 'First person · move the mouse to look · right-click or ~ for the hand'); }
+    if (this.firstPerson && !this.wasFirst) { this.mode = 'NAVIGATION'; this.lock(); this.notify(this.touch ? 'First person · drag to look' : 'First person · move the mouse to look · Tab for the hand'); }
     if (!this.firstPerson && this.wasFirst) { this.unlock(); this.mode = 'NAVIGATION'; }
     this.wasFirst = this.firstPerson;
   }
@@ -150,7 +150,7 @@ export class MouseMode {
     this.chip.hidden = !chipOn;
     if (chipOn) {
       const ico = hand ? '✋' : '🖱️', lbl = hand ? 'Hand' : 'Look';
-      if (this.chip.dataset.m !== lbl) { this.chip.dataset.m = lbl; this.chip.innerHTML = `<span>${ico}</span><b>${lbl}</b>${this.touch ? '' : '<kbd>~</kbd>'}`; this.chip.setAttribute('aria-label', hand ? 'Interaction mode (~ or right-click to look around)' : 'Navigation mode (~ or right-click for the hand cursor)'); }
+      if (this.chip.dataset.m !== lbl) { this.chip.dataset.m = lbl; this.chip.innerHTML = `<span>${ico}</span><b>${lbl}</b>${this.touch ? '' : '<kbd>Tab</kbd>'}`; this.chip.setAttribute('aria-label', hand ? 'Interaction mode (Tab to go back to gameplay)' : 'Gameplay mode (Tab for the hand cursor)'); }
     }
   }
 }
