@@ -204,6 +204,7 @@ async function boot() {
   $('s-time').addEventListener('input', applySun); $('s-az').addEventListener('input', applySun);
   $('s-sea').addEventListener('input', e => { seaState.amplitude.value = +e.target.value; });
   $('s-wind').addEventListener('input', e => { wind.strength.value = +e.target.value; });
+  { let v = 0.45; try { v = +(localStorage.getItem('hg.mouseSpeed') || 0.45); } catch (e) { /* storage blocked */ } game.mouseSpeed = v; const el = $('s-mouse'); if (el) { el.value = v; el.addEventListener('input', e => { game.mouseSpeed = +e.target.value; try { localStorage.setItem('hg.mouseSpeed', e.target.value); } catch (er) { /* storage blocked */ } }); } }
   $('s-new').addEventListener('click', () => { if (confirm('Start Pearl Cove again from the beginning?')) { Quests.reset(zone.id); location.reload(); } });
   $('gear').addEventListener('click', () => { const p = $('settings'); p.hidden = !p.hidden; $('gear').setAttribute('aria-expanded', String(!p.hidden)); });
 
@@ -345,7 +346,12 @@ function updateCamera(dt, t) {
     cam.lookAt(0, 5, -16);
     return;
   }
-  C.yaw -= I.look.dx * 0.005; C.pitch = THREE.MathUtils.clamp(C.pitch + I.look.dy * 0.004, game.view === 'first' ? -1.15 : -0.35, game.view === 'first' ? 1.35 : 1.25);
+  // calmer, smoothed mouse look: drag movement is scaled by the Mouse speed setting and eased in over ~60 ms
+  const sens = game.mouseSpeed ?? 0.45;
+  C.pendYaw = (C.pendYaw || 0) - I.look.dx * 0.005 * sens; C.pendPitch = (C.pendPitch || 0) + I.look.dy * 0.004 * sens;
+  const take = Math.min(1, dt * 16);
+  C.yaw += C.pendYaw * take; C.pendYaw *= 1 - take;
+  C.pitch = THREE.MathUtils.clamp(C.pitch + C.pendPitch * take, game.view === 'first' ? -1.15 : -0.35, game.view === 'first' ? 1.35 : 1.25); C.pendPitch *= 1 - take;
   I.look.dx = I.look.dy = 0;
   C.dist = THREE.MathUtils.clamp(C.dist + I.zoom, game.indoors ? 1.6 : 2.5, game.indoors ? 4.2 : 16); I.zoom = 0;
   const feet = game.wren.root.position;
