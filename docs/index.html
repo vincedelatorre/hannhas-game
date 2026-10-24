@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hannah's Game</title>
+<meta name="theme-color" content="#1f9fa6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Hannah's Game">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <style>
 /* Layout: full-bleed 3D canvas; HUD chips float in the corners over the sky; one title card on start. */
 /* Single bright world on purpose (tropical afternoon), so colors are set explicitly for both host themes. */
@@ -405,6 +413,12 @@ body.photo #mode-chip, body.photo #look-dot, body.photo #hand-cursor { display: 
 </div>
 <div id="win" hidden><div class="card"><h3>Pearl Cove complete!</h3><p>You found the treasure: a shimmering pearl upgrade for the clam. The boat to the next island arrives soon.</p><button id="again" type="button" style="justify-self:center;font-family:var(--display);font-weight:600;border:0;border-radius:999px;padding:10px 24px;background:var(--shell);color:#fff;cursor:pointer">Keep exploring</button></div></div>
 
+<script>
+// Installable + offline: see sw.js
+if ('serviceWorker' in navigator) {
+  addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+</script>
 <script type="importmap">
 {
   "imports": {
