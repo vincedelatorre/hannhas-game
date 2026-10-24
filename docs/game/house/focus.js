@@ -101,7 +101,7 @@ export class Focus {
   station(id, name, label, obj, anchor, viewFn, radius = 1.6) {
     const st = new Interactable({ id, name, object: obj, anchor, radius, save: false });
     st.verb = () => this.view ? null : { label, clip: null, run: () => this.enter(viewFn, st) };
-    st.isStation = true; this.stations.add(st); this.sys.add(st); return st;
+    st.isStation = true; st.viewFn = viewFn; st.label = label; this.stations.add(st); this.sys.add(st); return st;
   }
 
   enter(viewFn, src) {
@@ -128,6 +128,15 @@ export class Focus {
 
   // ------------------------------------------------------------------ input
   pointer(x, y, inside = true) { this.mouse = { x, y, inside }; }
+  /** jump straight to a station's close-up: step up to it, face it, look */
+  goTo(st) {
+    const g = this.game; if (this.view) this.exit(); if (!st) return;
+    if (g.seated) g.interact.stand();
+    const v = st.viewFn(), dir = v.pos.clone().sub(v.look); dir.y = 0; dir.normalize();
+    const P = g.player, s = v.look.clone().addScaledVector(dir, 0.62);
+    P.body.teleport(s.x, this.H.floorY + 0.05, s.z); P.vel.set(0, 0, 0); P.face = Math.atan2(-dir.x, -dir.z);
+    this.enter(st.viewFn, st);
+  }
   /** the free hand cursor (Tab in first person) picks with the same rules anywhere in the world */
   get picking() { return !!this.view || this.free; }
   click(button) {
@@ -229,7 +238,8 @@ export class Focus {
     };
     const held = sys.held;
     for (const x of sys.list) {
-      if (x === held || x.isStation) continue;
+      if (x === held || (x.isStation && !free)) continue;
+      if (x.isStation) { const a = x.anchor(V3(0, 0, 0)); consider(a, () => { const v = x.verb(sys); return v ? { x, v, p: a } : null; }, -12); continue; }   // look at a counter and click: its close-up view
       if (x instanceof Item) {
         if (x.state.gone || x.flying || !x.object.visible) continue;
         if (x.slot && !x.slot.enabled()) continue;

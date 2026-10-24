@@ -316,6 +316,14 @@ body.photo #mode-chip, body.photo #look-dot, body.photo #hand-cursor { display: 
 #deco-menu button { font: 600 0.82rem var(--display); border: 2px solid #eadfc8; background: #fff; border-radius: 999px; padding: 5px 11px; cursor: pointer; color: var(--ink); }
 #deco-menu button.on { border-color: #FF8A1C; background: #fff1e0; }
 #deco-menu .close { justify-self: end; background: var(--lagoon); color: #fff; border-color: var(--lagoon); }
+
+/* ---- kitchen views bar ---- */
+#kv-bar { left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 6px; align-items: center; background: rgba(255, 251, 242, 0.9); border-radius: 999px; padding: 5px 8px 5px 14px; box-shadow: 0 6px 18px rgba(19, 70, 78, 0.2); pointer-events: auto; flex-wrap: wrap; justify-content: center; width: max-content; max-width: calc(100vw - 24px); }
+#kv-bar[hidden] { display: none; }
+#kv-bar b { font: 600 0.8rem var(--display); color: var(--lagoon-deep); margin-right: 4px; }
+#kv-bar button { display: flex; align-items: center; gap: 5px; border: 0; background: #fff; border-radius: 999px; padding: 5px 10px; font: 600 0.82rem var(--display); color: var(--ink); cursor: pointer; box-shadow: 0 1px 0 #e6dccb; }
+#kv-bar button:hover { background: #e3f4f2; }
+#kv-bar kbd { margin-left: 2px; }
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;700&display=swap">
 </head>

@@ -15,6 +15,7 @@ export const KEYMAP = {
   F5: { action: 'save', always: true, prevent: true }, F9: { action: 'load', always: true, prevent: true },
   Backspace: { action: 'close', always: true, prevent: true }, Enter: { action: 'confirm', always: true },
   Digit1: { action: 'choice1', always: true }, Digit2: { action: 'choice2', always: true }, Digit3: { action: 'choice3', always: true }, Digit4: { action: 'choice4', always: true },
+  Digit5: { action: 'view5' }, Digit6: { action: 'view6' }, Digit7: { action: 'view7' }, Digit8: { action: 'view8' }, Digit9: { action: 'view9' }, Digit0: { action: 'view0' },
 };
 
 /** the Controls panel: section, keys, what it does */
@@ -23,7 +24,7 @@ export const CONTROLS = [
   ['Mouse', [['V', 'First-person view'], ['Mouse', 'Look around (no click needed)'], ['Centre dot', 'Shows the name of anything within 5 ft'], ['Click', 'Use, open, grab or put down'], ['Right-click', 'Look closer at an item'], ['Esc', 'Free the mouse for the buttons']]],
   ['Characters', [['Tab', 'Switch character'], ['1 / 2', 'Play as Hannah / Friend'], ['H', 'Whistle: call the other one over'], ['J', 'Stay here (stop following)']]],
   ['Shell powers', [['A', 'Take out / put away shell'], ['W', 'Water (hold)'], ['L', 'Love'], ['D', 'Dive (again = deeper)'], ['S', 'Swim up']]],
-  ['Things to do', [['E / Click', 'Use / pick up'], ['Q', 'Put down'], ['B', 'Sit / stand'], ['N', 'Nap / wake up'], ['K', 'Kick a ball'], ['U', 'Magic flashlight'], ['X', 'Recipe book']]],
+  ['Things to do', [['E / Click', 'Use / pick up'], ['5 – 0', 'Kitchen views: range, sink, island, coffee, pantry, spices'], ['Q', 'Put down'], ['B', 'Sit / stand'], ['N', 'Nap / wake up'], ['K', 'Kick a ball'], ['U', 'Magic flashlight'], ['X', 'Recipe book']]],
   ['Friends and fun', [['T', 'Talk'], ['G', 'Wave'], ['F', 'Dance'], ['Y', 'Celebrate']]],
   ['Menus', [['O', 'Objectives'], ['I', 'Inventory'], ['M', 'Big map'], ['F1', 'Controls'], ['F2', 'Settings'], ['F6', 'Hide / show the screen buttons'], ['P', 'Photo mode'], ['F4', 'Hide photo buttons'], ['F5', 'Save'], ['F9', 'Load'], ['Esc / Backspace', 'Close']]],
 ];

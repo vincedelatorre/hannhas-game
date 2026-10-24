@@ -216,6 +216,7 @@ async function boot() {
 function setupMoves() {
   const I = game.input, A = game.actions, X = game.hudExtra, BOOK = () => game.house.recipeBook;
   for (const a of ['shell', 'run', 'dance', 'wave', 'sit', 'nap', 'talk', 'cheer', 'kick', 'light', 'crouch']) I.on(a, () => { if (!BOOK().isOpen) A.key(a); });
+  ['5', '6', '7', '8', '9', '0'].forEach((k, i) => I.on(`view${k}`, () => { if (game.started && !BOOK().isOpen && !A.s.talk) game.house.openView(i); }));
   I.on('inventory', () => X.toggleInventory());
   I.on('map', () => X.toggleBigMap());
   I.on('objectives', () => X.toggleObjectives());

@@ -59,6 +59,7 @@ export class House {
     this.tagLegacyItems();
     this.focus = new Focus(this);
     this.buildFocusViews();
+    this.buildViewBar();
     this.recipeBook = new RecipeBook(this);
     this.buildMitts();
     for (const ov of this.range.ovens) ov.state.onDone = () => this.bakeIn(ov);
@@ -143,6 +144,19 @@ export class House {
     shelf('station_pantry_s', 'Inspect the spice rack', [13.8, 1.75, 3.73], [0, 0, -1], 1.4);
     const cf = this.coffee.root; F.station('station_coffee', 'coffee', 'Make coffee', cf, [0.55, 1.2, 0.5], V(cf, { at: [0.55, 1.05, 0.05], dist: 0.7, up: 0.35, name: 'Coffee nook', radius: 0.8 }));
   }
+  /** "Kitchen views": buttons (and number keys 5-0) for the close-up work spots, shown while you're in the kitchen */
+  buildViewBar() {
+    const F = this.focus, st = id => [...F.stations].find(s => s.id === id);
+    this.views = [['5', '🍳', 'Range', 'station_range'], ['6', '🚰', 'Sink', 'station_sink'], ['7', '🔪', 'Island', 'station_island'], ['8', '☕', 'Coffee', 'station_coffee'], ['9', '🥫', 'Pantry', 'station_pantry_n'], ['0', '🧂', 'Spices', 'station_pantry_s']]
+      .map(([k, ico, name, id]) => ({ k, ico, name, st: st(id) })).filter(v => v.st);
+    const bar = this.viewBar = document.createElement('div'); bar.id = 'kv-bar'; bar.className = 'hud'; bar.hidden = true;
+    bar.innerHTML = `<b>Kitchen views</b>${this.views.map((v, i) => `<button type="button" data-i="${i}"><span>${v.ico}</span>${v.name}<kbd>${v.k}</kbd></button>`).join('')}`;
+    bar.addEventListener('click', e => { const b = e.target.closest('button'); if (b) this.openView(+b.dataset.i); });
+    document.body.append(bar);
+  }
+  inKitchen() { const p = this.game.player.pos, O = this.root.position; const x = p.x - O.x, z = p.z - O.z; return this.indoors && x > 3 && x < 15.6 && z > -3.2 && z < 6.2; }
+  openView(i) { const v = this.views?.[i]; if (!v || !this.inKitchen()) return false; this.focus.goTo(v.st); this.game.audio?.house?.('click'); return true; }
+
   /** oven mitts: a wearable that lets you take hot trays out of the oven */
   buildMitts() {
     const sys = this.sys, m = [...sys.items.values()].find(i => i.def === 'oven_mitts'); this.mittsItem = m;
@@ -322,6 +336,7 @@ export class House {
   // --------------------------------------------------------------- per frame
   update(dt) {
     const g = this.game;
+    if (this.viewBar) { const show = this.inKitchen() && !this.focus.active && !this.recipeBook?.isOpen && !g.photo; if (this.viewBar.hidden === show) this.viewBar.hidden = !show; }
     // lamps: brighter at night, always a little on inside
     const night = 1 - THREE.MathUtils.smoothstep(g.sky.elevation, -2, 18);
     for (const [l, base] of this.lights) l.intensity = this.indoors ? base * (0.45 + night * 0.9) : 0;
