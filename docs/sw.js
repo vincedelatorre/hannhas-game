@@ -4,13 +4,13 @@
 //  - three.js / rapier from the CDN and Google Fonts: cache first
 // Everything is cached as it is first loaded, so after one full load of the cove the game works with no signal.
 // Bump VERSION to throw away every cached copy.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CODE = `hg-code-${VERSION}`;
 const STATIC = `hg-static-${VERSION}`;
 
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
+const SHELL = ['./', 'index.html', 'manifest.webmanifest'];
 
-const CDN_HOSTS = new Set(['cdn.jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com']);
+const CDN_HOSTS = new Set(['cdn.jsdelivr.net', 'd8j0ntlcm91z4.cloudfront.net', 'fonts.googleapis.com', 'fonts.gstatic.com']);
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CODE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
